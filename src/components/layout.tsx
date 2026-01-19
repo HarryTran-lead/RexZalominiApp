@@ -8,7 +8,11 @@ import {
 } from "zmp-ui";
 import { AppProps } from "zmp-ui/app";
 
-import HomePage from "@/pages/index";
+import AccountChooserPage from "@/pages/account-chooser";
+import LoginPage from "@/pages/index";
+import ParentPage from "@/pages/parent";
+import StudentPage from "@/pages/student";
+import TeacherPage from "@/pages/teacher";
 
 const Layout = () => {
   return (
@@ -16,11 +20,16 @@ const Layout = () => {
       <SnackbarProvider>
         <ZMPRouter>
           <AnimationRoutes>
-            <Route path="/" element={<HomePage />}></Route>
+            <Route path="/" element={<LoginPage />} />
+            <Route path="/account-chooser" element={<AccountChooserPage />} />
+            <Route path="/student" element={<StudentPage />} />
+            <Route path="/parent" element={<ParentPage />} />
+            <Route path="/teacher" element={<TeacherPage />} />
           </AnimationRoutes>
         </ZMPRouter>
       </SnackbarProvider>
     </App>
   );
 };
+
 export default Layout;
