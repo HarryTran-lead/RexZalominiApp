@@ -4,27 +4,56 @@ import { Button, Page, Text } from "zmp-ui";
 
 import logoRex from "@/static/Logo-Tea-Rex.png";
 
+const mockAccounts = {
+  shared: {
+    label: "Phụ huynh / Học viên",
+    email: "family@rex.edu",
+    password: "rex123",
+    destination: "/account-chooser",
+  },
+  teacher: {
+    label: "Giáo viên",
+    email: "teacher@rex.edu",
+    password: "rex123",
+    destination: "/teacher",
+  },
+};
+
 function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleSubmit = () => {
-    const isTeacher = email.toLowerCase().includes("teacher");
-    if (isTeacher) navigate("/teacher");
-    else navigate("/account-chooser");
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPassword = password.trim();
+
+    const accounts = Object.values(mockAccounts);
+    const matchedAccount = accounts.find(
+      (account) =>
+        account.email.toLowerCase() === normalizedEmail &&
+        account.password === normalizedPassword
+    );
+
+    if (matchedAccount) {
+      setErrorMessage("");
+      navigate(matchedAccount.destination);
+      return;
+    }
+
+    setErrorMessage("Sai tài khoản hoặc mật khẩu. Vui lòng thử lại.");
   };
 
   const canSubmit = email.trim().length > 0 && password.trim().length > 0;
 
   return (
-    <Page className="min-h-screen bg-gradient-to-br from-red-100 via-white to-rose-200 text-slate-900">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6 lg:px-6">
-        {/* Header */}
-        <header className="flex items-center justify-between rounded-full bg-white/85 px-5 py-3 shadow-sm ring-1 ring-red-100/70 backdrop-blur">
+    <Page className="min-h-screen bg-gradient-to-b from-rose-100 via-white to-rose-200 text-slate-900">
+      <div className="mx-auto flex w-full max-w-6xl flex-col px-4 py-6 lg:px-6">
+        {/* Top bar */}
+        <header className="flex items-center justify-between rounded-full bg-white/85 px-4 py-3 shadow-sm ring-1 ring-red-100/70 backdrop-blur">
           <div className="flex items-center gap-3">
-            {/* Header logo: đổi sang dạng badge nhỏ, không bị lọt */}
-            <div className="flex h-10 w-14 items-center justify-center overflow-hidden rounded-2xl bg-white ring-1 ring-red-100">
+            <div className="flex h-9 w-14 items-center justify-center overflow-hidden rounded-2xl bg-white ring-1 ring-red-100">
               <img
                 src={logoRex}
                 alt="Rex"
@@ -40,116 +69,131 @@ function LoginPage() {
             </div>
           </div>
 
-          <button className="rounded-full border border-red-200/70 bg-white px-3 py-1 text-xs font-semibold text-red-600">
-            VI
-          </button>
+          {/* icons on mobile, text buttons on desktop */}
+          <div className="flex items-center gap-2">
+            <button
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-700 ring-1 ring-red-100 transition hover:bg-red-50 lg:h-auto lg:w-auto lg:rounded-full lg:px-4 lg:py-2 lg:text-xs lg:font-semibold"
+              type="button"
+              aria-label="Hỗ trợ"
+            >
+              <span className="lg:hidden">⋯</span>
+              <span className="hidden lg:inline">Hỗ trợ</span>
+            </button>
+
+            <button
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-700 ring-1 ring-red-100 transition hover:bg-red-50 lg:h-auto lg:w-auto lg:rounded-full lg:bg-gradient-to-r lg:from-red-600 lg:via-rose-600 lg:to-red-600 lg:px-4 lg:py-2 lg:text-xs lg:font-semibold lg:text-white"
+              type="button"
+              aria-label="Thoát"
+            >
+              <span className="lg:hidden">⏻</span>
+              <span className="hidden lg:inline">Demo</span>
+            </button>
+          </div>
         </header>
 
-        {/* Main */}
-        <div className="grid overflow-hidden rounded-[32px] bg-white shadow-xl ring-1 ring-red-100/60 lg:grid-cols-[1.1fr_1fr]">
-          {/* LEFT PANEL – desktop only */}
-          <div className="hidden lg:flex flex-col gap-6 bg-gradient-to-br from-red-700 via-rose-600 to-red-500 px-10 py-12 text-white">
-            <div className="space-y-2">
-              <Text.Title size="xLarge">Đăng nhập Rex</Text.Title>
-              <Text className="text-sm text-white/85">
-                Phụ huynh &amp; học viên dùng chung tài khoản để chọn hồ sơ sau
-                khi đăng nhập. Giáo viên vào thẳng trang giáo viên.
-              </Text>
-            </div>
+        {/* Content */}
+        <div className="mt-6 grid gap-6 lg:mt-8 lg:grid-cols-2 lg:items-stretch">
+          {/* LEFT HERO: hidden on phone, show on desktop */}
+          <div className="relative hidden overflow-hidden rounded-3xl bg-white/70 p-8 shadow-sm ring-1 ring-red-100/70 backdrop-blur lg:block">
+            <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-red-200/50 blur-3xl" />
+            <div className="absolute -bottom-20 -left-20 h-56 w-56 rounded-full bg-rose-200/50 blur-3xl" />
 
-            <div className="space-y-4">
-              {[
-                {
-                  title: "Theo dõi tiến độ",
-                  description: "Cập nhật lịch học và kết quả theo thời gian thực",
-                },
-                {
-                  title: "Quản lý nhiều hồ sơ",
-                  description: "Một tài khoản có thể quản lý nhiều học viên",
-                },
-                {
-                  title: "Kết nối giáo viên",
-                  description: "Trao đổi nhanh, nắm tình hình học tập",
-                },
-              ].map((item) => (
-                <div
-                  key={item.title}
-                  className="rounded-2xl bg-white/10 px-4 py-3"
-                >
-                  <p className="text-sm font-semibold">{item.title}</p>
-                  <p className="text-xs text-white/75">{item.description}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-auto grid grid-cols-2 gap-3 text-xs text-white/70">
-              <div className="space-y-1">
-                <p>Trang chủ</p>
-                <p>Khoá học</p>
-                <p>Liên hệ</p>
+            <div className="relative space-y-4">
+              <div className="inline-flex items-center gap-2 rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 ring-1 ring-red-100">
+                <span className="h-2 w-2 rounded-full bg-red-500" />
+                Nền tảng học tập Rex
               </div>
-              <div className="space-y-1">
-                <p>Chính sách</p>
-                <p>Câu hỏi thường gặp</p>
+
+              <Text.Title>Chào mừng bạn quay lại</Text.Title>
+
+              <Text className="text-sm text-slate-600">
+                Đăng nhập để tiếp tục theo dõi tiến độ học tập, lịch học, thông
+                báo lớp và bài tập.
+              </Text>
+
+              <div className="grid gap-3 pt-2 sm:grid-cols-2">
+                <div className="rounded-2xl bg-white px-4 py-3 ring-1 ring-red-100/80">
+                  <p className="text-xs font-semibold text-slate-800">
+                    Theo dõi tiến độ
+                  </p>
+                  <p className="mt-1 text-xs text-slate-600">
+                    Báo cáo buổi học & nhận xét chi tiết.
+                  </p>
+                </div>
+                <div className="rounded-2xl bg-white px-4 py-3 ring-1 ring-red-100/80">
+                  <p className="text-xs font-semibold text-slate-800">
+                    Lịch học rõ ràng
+                  </p>
+                  <p className="mt-1 text-xs text-slate-600">
+                    Nhắc lịch, đổi lịch (khi được phép).
+                  </p>
+                </div>
+                <div className="rounded-2xl bg-white px-4 py-3 ring-1 ring-red-100/80">
+                  <p className="text-xs font-semibold text-slate-800">
+                    Thông báo tức thì
+                  </p>
+                  <p className="mt-1 text-xs text-slate-600">
+                    Tin nhắn từ trung tâm & giáo viên.
+                  </p>
+                </div>
+                <div className="rounded-2xl bg-white px-4 py-3 ring-1 ring-red-100/80">
+                  <p className="text-xs font-semibold text-slate-800">
+                    Trải nghiệm mượt
+                  </p>
+                  <p className="mt-1 text-xs text-slate-600">
+                    Tối ưu cho mobile, thao tác nhanh.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* RIGHT PANEL */}
-          <div className="relative flex flex-col gap-6 px-6 pb-12 pt-10 sm:px-8 lg:justify-center lg:py-12">
-            {/* Red glow */}
-            <div className="pointer-events-none absolute inset-0">
-              <div className="absolute -top-10 left-10 h-40 w-40 rounded-full bg-red-200/40 blur-3xl" />
-              <div className="absolute bottom-10 right-8 h-48 w-48 rounded-full bg-rose-200/40 blur-3xl" />
-            </div>
+          {/* RIGHT: on phone -> only this card is visible */}
+          <div className="flex w-full items-start justify-center lg:justify-end">
+            <div className="w-full max-w-md overflow-hidden rounded-3xl bg-white/90 shadow-sm ring-1 ring-red-100/70 backdrop-blur">
+              {/* top accent line like screenshot */}
+              <div className="h-1 w-full bg-gradient-to-r from-red-600 via-rose-600 to-red-600" />
 
-            {/* Push down a bit on mobile */}
-            <div className="relative mx-auto w-full max-w-sm pt-8">
-              {/* Logo dạng banner cho đẹp, không bị nhỏ */}
-              <div className="mb-6 text-center">
-                <div className="mx-auto mb-4 w-44 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-red-100">
-                  <img
-                    src={logoRex}
-                    alt="Rex"
-                    className="h-18 w-full object-cover"
-                  />
+              <div className="p-6">
+                {/* Logo + title (mobile look like screenshot) */}
+                <div className="flex flex-col items-center gap-3 pb-4">
+                  <div className="flex h-24 w-44 items-center justify-center overflow-hidden rounded-2xl bg-black/95 ring-1 ring-red-100">
+                    <img
+                      src={logoRex}
+                      alt="Rex"
+                      className="h-full w-full object-contain"
+                    />
+                  </div>
+                  <Text.Title>Rex</Text.Title>
+                  <Text className="text-sm text-slate-500">
+                    Đăng nhập để tiếp tục
+                  </Text>
                 </div>
 
-                <Text.Title size="large">Anh Ngữ Rex</Text.Title>
-                <Text className="text-sm text-slate-500">
-                  Đăng nhập để tiếp tục
-                </Text>
-              </div>
-
-              {/* Card */}
-              <div className="overflow-hidden rounded-[28px] border border-red-100/80 bg-white shadow-sm">
-                {/* Accent bar */}
-                <div className="h-1.5 w-full bg-gradient-to-r from-red-600 via-rose-500 to-red-600" />
-
-                <div className="space-y-4 p-6">
-                  <label className="block">
-                    <span className="mb-2 block text-sm font-semibold text-slate-800">
+                <div className="space-y-4">
+                  <label className="block space-y-2">
+                    <Text className="text-sm font-semibold text-slate-700">
                       Email
-                    </span>
+                    </Text>
                     <input
-                      type="email"
-                      placeholder="Nhập email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      type="email"
+                      placeholder="Nhập email"
                       autoComplete="email"
                       className="w-full rounded-2xl border border-red-100 bg-white px-4 py-3 text-sm outline-none transition focus:border-red-400 focus:ring-4 focus:ring-red-100"
                     />
                   </label>
 
-                  <label className="block">
-                    <span className="mb-2 block text-sm font-semibold text-slate-800">
+                  <label className="block space-y-2">
+                    <Text className="text-sm font-semibold text-slate-700">
                       Mật khẩu
-                    </span>
+                    </Text>
                     <input
-                      type="password"
-                      placeholder="Nhập mật khẩu"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      type="password"
+                      placeholder="Nhập mật khẩu"
                       autoComplete="current-password"
                       className="w-full rounded-2xl border border-red-100 bg-white px-4 py-3 text-sm outline-none transition focus:border-red-400 focus:ring-4 focus:ring-red-100"
                     />
@@ -160,7 +204,7 @@ function LoginPage() {
                       <input type="checkbox" className="h-4 w-4" />
                       Ghi nhớ đăng nhập
                     </label>
-                    <button className="font-semibold text-red-600">
+                    <button className="font-semibold text-red-600" type="button">
                       Quên mật khẩu?
                     </button>
                   </div>
@@ -174,6 +218,13 @@ function LoginPage() {
                     Đăng nhập
                   </Button>
 
+                  {errorMessage ? (
+                    <Text className="rounded-2xl bg-red-50 px-3 py-2 text-center text-xs font-semibold text-red-600">
+                      {errorMessage}
+                    </Text>
+                  ) : null}
+
+                  {/* helper note like screenshot */}
                   <Text className="pt-2 text-center text-xs text-slate-500">
                     Phụ huynh &amp; học viên sẽ chọn hồ sơ sau khi đăng nhập.
                     <span className="font-semibold text-red-600">
@@ -187,7 +238,10 @@ function LoginPage() {
           </div>
         </div>
 
-        <div className="h-2" />
+        {/* footer hidden on phone to keep “only login” feel */}
+        <footer className="mt-6 hidden pb-2 text-center text-xs text-slate-500 lg:block">
+          © {new Date().getFullYear()} Rex. All rights reserved.
+        </footer>
       </div>
     </Page>
   );
