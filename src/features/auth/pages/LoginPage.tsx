@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Page, Text } from "zmp-ui";
 
-import logoRex from "@/static/Logo-Tea-Rex.png";
+import logoRex from "@/app/assets/images/Logo-Tea-Rex.png";
 
 const mockAccounts = {
   shared: {

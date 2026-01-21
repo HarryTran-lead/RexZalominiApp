@@ -1,20 +1,14 @@
 import { getSystemInfo } from "zmp-sdk";
-import {
-  AnimationRoutes,
-  App,
-  Route,
-  SnackbarProvider,
-  ZMPRouter,
-} from "zmp-ui";
-import { AppProps } from "zmp-ui/app";
+import { AnimationRoutes, App, Route, SnackbarProvider, ZMPRouter } from "zmp-ui";
+import type { AppProps } from "zmp-ui/app";
 
-import AccountChooserPage from "@/pages/account-chooser";
-import LoginPage from "@/pages/index";
-import ParentPage from "@/pages/parent";
-import StudentPage from "@/pages/student";
-import TeacherPage from "@/pages/teacher";
+import AccountChooserPage from "@/features/auth/pages/AccountChooserPage";
+import LoginPage from "@/features/auth/pages/LoginPage";
+import ParentPage from "@/features/roles/parent/pages/ParentPage";
+import StudentPage from "@/features/roles/student/pages/StudentPage";
+import TeacherPage from "@/features/roles/teacher/pages/TeacherPage";
 
-const Layout = () => {
+const AppLayout = () => {
   return (
     <App theme={getSystemInfo().zaloTheme as AppProps["theme"]}>
       <SnackbarProvider>
@@ -32,4 +26,4 @@ const Layout = () => {
   );
 };
 
-export default Layout;
+export default AppLayout;
