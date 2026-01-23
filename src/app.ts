@@ -10,10 +10,11 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 
 // Mount the app
-import AppLayout from "@/app/layouts/AppLayout";
+
 
 // Expose app configuration
 import appConfig from "../app-config.json";
+import AppLayout from "./layouts/AppLayout";
 
 if (!window.APP_CONFIG) {
   window.APP_CONFIG = appConfig as any;
