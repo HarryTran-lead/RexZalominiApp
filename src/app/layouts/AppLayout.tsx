@@ -1,5 +1,6 @@
 import { getSystemInfo } from "zmp-sdk";
-import { AnimationRoutes, App, Route, SnackbarProvider, ZMPRouter } from "zmp-ui";
+import { AnimationRoutes, App, Route, ZMPRouter } from "zmp-ui";
+import SnackbarProvider from "zmp-ui/snackbar-provider";
 import type { AppProps } from "zmp-ui/app";
 
 import AccountChooserPage from "@/features/auth/pages/AccountChooserPage";
