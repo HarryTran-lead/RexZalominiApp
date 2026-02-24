@@ -1,6 +1,10 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Box } from "zmp-ui";
+import houseIcon from "@/assets/icons/house.png";
+import qaIcon from "@/assets/icons/qa.png";
+import blogIcon from "@/assets/icons/blog.png";
+import contactIcon from "@/assets/icons/contact.png";
 
 const BottomNavigation: React.FC = () => {
   const navigate = useNavigate();
@@ -9,22 +13,22 @@ const BottomNavigation: React.FC = () => {
   const navItems = [
     {
       path: "/",
-      icon: "🏠",
+      icon: houseIcon,
       label: "Trang chủ",
     },
     {
       path: "/faq",
-      icon: "❓",
+      icon: qaIcon,
       label: "FAQ",
     },
     {
       path: "/blogs",
-      icon: "📰",
+      icon: blogIcon,
       label: "Bản tin",
     },
     {
       path: "/contact",
-      icon: "📞",
+      icon: contactIcon,
       label: "Liên hệ",
     },
   ];
@@ -49,13 +53,13 @@ const BottomNavigation: React.FC = () => {
                 active ? "text-blue-600" : "text-gray-500"
               }`}
             >
-              <span
-                className={`text-2xl mb-1 transition-transform ${
-                  active ? "scale-110" : "scale-100"
+              <img
+                src={item.icon}
+                alt={item.label}
+                className={`w-6 h-6 mb-1 transition-transform ${
+                  active ? "scale-110 brightness-110" : "scale-100 opacity-60"
                 }`}
-              >
-                {item.icon}
-              </span>
+              />
               <span className={`text-xs font-medium ${active ? "font-bold" : ""}`}>
                 {item.label}
               </span>
