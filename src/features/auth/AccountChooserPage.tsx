@@ -69,13 +69,55 @@ function AccountChooserPage() {
 
   return (
     <Page className="relative min-h-screen overflow-hidden bg-gradient-to-br from-purple-400 via-purple-500 to-purple-600 text-slate-900">
-      {/* soft blobs */}
-      <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-purple-300/50 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-purple-400/60 blur-3xl" />
+      {/* soft blobs with animation */}
+      <div 
+        className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-purple-300/50 blur-3xl"
+        style={{
+          animation: "float 6s ease-in-out infinite"
+        }}
+      />
+      <div 
+        className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-purple-400/60 blur-3xl"
+        style={{
+          animation: "float 8s ease-in-out infinite reverse"
+        }}
+      />
+
+      <style>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px) translateX(0px); }
+          50% { transform: translateY(-20px) translateX(10px); }
+        }
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes scaleIn {
+          from {
+            opacity: 0;
+            transform: scale(0.8);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+      `}</style>
 
       <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
         {/* Title */}
-        <div className="mb-10 text-center">
+        <div 
+          className="mb-10 text-center"
+          style={{
+            animation: "fadeInUp 0.6s ease-out"
+          }}
+        >
           <h1 className="text-4xl font-bold text-white">Select user</h1>
           <p className="mt-2 text-sm text-purple-100">Chọn hồ sơ để tiếp tục</p>
         </div>
@@ -91,20 +133,23 @@ function AccountChooserPage() {
           </div>
         ) : (
           <div className="flex gap-8">
-            {profiles.map((profile) => (
+            {profiles.map((profile, index) => (
               <button
                 key={profile.id}
                 className="group flex flex-col items-center gap-3 transition"
                 onClick={() => handleSelectProfile(profile)}
                 type="button"
+                style={{
+                  animation: `scaleIn 0.5s ease-out ${index * 0.15}s both`
+                }}
               >
                 {/* Avatar with icon badge */}
                 <div className="relative">
                   <div
-                    className={`flex h-32 w-32 items-center justify-center overflow-hidden rounded-full transition group-hover:scale-105 ${
+                    className={`flex h-32 w-32 items-center justify-center overflow-hidden rounded-full transition-all duration-300 group-hover:scale-110 group-active:scale-95 ${
                       profile.profileType === "Parent"
-                        ? "border-4 border-yellow-400 ring-4 ring-yellow-300/50"
-                        : "border-4 border-cyan-400 ring-4 ring-cyan-300/50"
+                        ? "border-4 border-yellow-400 ring-4 ring-yellow-300/50 shadow-lg shadow-yellow-400/50"
+                        : "border-4 border-cyan-400 ring-4 ring-cyan-300/50 shadow-lg shadow-cyan-400/50"
                     }`}
                   >
                     {profile.avatarUrl ? (
@@ -172,8 +217,11 @@ function AccountChooserPage() {
 
         {/* Logout */}
         <button
-          className="mt-10 flex items-center gap-2 rounded-xl bg-white/20 px-5 py-2.5 text-sm font-medium text-white backdrop-blur transition hover:bg-white/30"
+          className="mt-10 flex items-center gap-2 rounded-xl bg-white/20 px-5 py-2.5 text-sm font-medium text-white backdrop-blur transition-all hover:bg-white/30 active:scale-95"
           onClick={handleLogout}
+          style={{
+            animation: "fadeInUp 0.8s ease-out 0.5s both"
+          }}
         >
           <svg
             className="h-4 w-4"

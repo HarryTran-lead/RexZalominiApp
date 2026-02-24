@@ -11,19 +11,24 @@ import StudentPage from "@/screens/roles/student/pages/StudentPage";
 import TeacherPage from "@/screens/roles/teacher/pages/TeacherPage";
 import ParentPage from "@/screens/roles/parent/pages/ParentPage";
 
+// Public pages
+import HomePage from "@/screens/public/HomePage";
+import FAQPage from "@/screens/public/FAQPage";
+import BlogsPage from "@/screens/public/BlogsPage";
+import ContactPage from "@/screens/public/ContactPage";
+
 
 const MainRoutes: React.FC = () => {
   return (
     <AnimationRoutes>
-      {/* Auth Routes - không cần đăng nhập */}
-      <Route
-        path="/"
-        element={
-          <AuthLayout>
-            <LoginPage />
-          </AuthLayout>
-        }
-      />
+      {/* Public Routes - không cần đăng nhập */}
+      <Route path="/" element={<HomePage />} />
+      <Route path="/home" element={<HomePage />} />
+      <Route path="/faq" element={<FAQPage />} />
+      <Route path="/blogs" element={<BlogsPage />} />
+      <Route path="/contact" element={<ContactPage />} />
+
+      {/* Auth Routes */}
       <Route
         path="/login"
         element={
