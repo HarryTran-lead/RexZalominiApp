@@ -1,14 +1,14 @@
 {
   "app": {
-    "title": "Rex-MiniApp",
-    "textColor": {
-      "light": "black",
-      "dark": "white"
-    },
-    "statusBar": "transparent",
-    "actionBarHidden": true,
-    "hideIOSSafeAreaBottom": true,
-    "hideAndroidBottomNavigationBar": false
+    "title": "Rex",
+    "headerTitle": "Rex",
+    "headerColor": "#1843EF",
+    "textColor": "white",
+    "leftButton": "back",
+    "statusBar": "normal",
+    "actionBarHidden": false,
+    "hideAndroidBottomNavigationBar": false,
+    "hideIOSSafeAreaBottom": false
   },
   "listCSS": [],
   "listSyncJS": [],

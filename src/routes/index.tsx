@@ -5,24 +5,30 @@ import StudentLayout from "../layouts/StudentLayout";
 import TeacherLayout from "../layouts/TeacherLayout";
 import ParentLayout from "../layouts/ParentLayout";
 
-import LoginPage from "../features/auth/pages/LoginPage";
-import AccountChooserPage from "../features/auth/pages/AccountChooserPage";
-import StudentPage from "../features/roles/student/pages/StudentPage";
-import TeacherPage from "../features/roles/teacher/pages/TeacherPage";
-import ParentPage from "../features/roles/parent/pages/ParentPage";
+import LoginPage from "../features/auth/LoginPage";
+import AccountChooserPage from "../features/auth/AccountChooserPage";
+import StudentPage from "@/screens/roles/student/pages/StudentPage";
+import TeacherPage from "@/screens/roles/teacher/pages/TeacherPage";
+import ParentPage from "@/screens/roles/parent/pages/ParentPage";
+
+// Public pages
+import HomePage from "@/screens/public/HomePage";
+import FAQPage from "@/screens/public/FAQPage";
+import BlogsPage from "@/screens/public/BlogsPage";
+import ContactPage from "@/screens/public/ContactPage";
+
 
 const MainRoutes: React.FC = () => {
   return (
     <AnimationRoutes>
-      {/* Auth Routes - không cần đăng nhập */}
-      <Route
-        path="/"
-        element={
-          <AuthLayout>
-            <LoginPage />
-          </AuthLayout>
-        }
-      />
+      {/* Public Routes - không cần đăng nhập */}
+      <Route path="/" element={<HomePage />} />
+      <Route path="/home" element={<HomePage />} />
+      <Route path="/faq" element={<FAQPage />} />
+      <Route path="/blogs" element={<BlogsPage />} />
+      <Route path="/contact" element={<ContactPage />} />
+
+      {/* Auth Routes */}
       <Route
         path="/login"
         element={
