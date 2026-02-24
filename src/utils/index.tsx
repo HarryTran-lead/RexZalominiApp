@@ -1,1 +1,1 @@
-//
+export { storage } from "./storage";

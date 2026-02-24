@@ -1,11 +1,12 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import zaloMiniApp from "zmp-vite-plugin";
 import react from "@vitejs/plugin-react";
 
 // https://vitejs.dev/config/
-export default () => {
+export default ({ mode }: { mode: string }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  
   return defineConfig({
-    root: "./src",
     base: "",
     plugins: [zaloMiniApp(), react()],
     build: {
@@ -14,6 +15,16 @@ export default () => {
     resolve: {
       alias: {
         "@": "/src",
+      },
+    },
+    server: {
+      port: 3000,
+      proxy: {
+        '/api': {
+          target: env.VITE_BACKEND_URL,
+          changeOrigin: true,
+          secure: false,
+        },
       },
     },
   });

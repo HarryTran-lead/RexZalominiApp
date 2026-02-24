@@ -1,50 +1,93 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, Page, Text } from "zmp-ui";
-import logoRex from "../../../assets/images/LogoRex.png";
-
-const mockAccounts = {
-  shared: {
-    label: "Phụ huynh / Học viên",
-    email: "family@rex.edu",
-    password: "rex123",
-    destination: "/account-chooser",
-  },
-  teacher: {
-    label: "Giáo viên",
-    email: "teacher@rex.edu",
-    password: "rex123",
-    destination: "/teacher",
-  },
-};
+import { Button, Page, Text, useSnackbar } from "zmp-ui";
+import logoRex from "../../assets/images/LogoRex.png";
+import { authService } from "../../services/authService";
+import { storage } from "../../utils/storage";
 
 function LoginPage() {
   const navigate = useNavigate();
+  const { openSnackbar } = useSnackbar();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = () => {
-    const normalizedEmail = email.trim().toLowerCase();
-    const normalizedPassword = password.trim();
+  const handleSubmit = async () => {
+    if (isLoading) return;
 
-    const accounts = Object.values(mockAccounts);
-    const matchedAccount = accounts.find(
-      (account) =>
-        account.email.toLowerCase() === normalizedEmail &&
-        account.password === normalizedPassword
-    );
+    setIsLoading(true);
+    setErrorMessage("");
 
-    if (matchedAccount) {
-      setErrorMessage("");
-      navigate(matchedAccount.destination);
-      return;
+    try {
+      // Call login API
+      const response = await authService.login({
+        email: email.trim(),
+        password: password.trim(),
+      });
+
+      // Check response success
+      if (response.success || response.isSuccess) {
+        const { accessToken, refreshToken, role, userId } = response.data;
+
+        // Store tokens first
+        await storage.setMultiple({
+          "@access_token": accessToken,
+          "@refresh_token": refreshToken,
+        });
+
+        openSnackbar({
+          text: "Đăng nhập thành công!",
+          type: "success",
+        });
+
+        // Get profiles after login
+        try {
+          const profilesResponse = await authService.getProfiles();
+          
+          if (profilesResponse.success || profilesResponse.isSuccess) {
+            const profiles = profilesResponse.data;
+            
+            if (profiles && profiles.length > 0) {
+              // Has profiles -> go to account chooser
+              navigate("/account-chooser");
+              return;
+            }
+          }
+        } catch (profileError) {
+          console.error("Error fetching profiles:", profileError);
+        }
+
+        // No profiles - navigate based on role
+        if (role === 3) { // Teacher role
+          navigate("/teacher");
+        } else {
+          navigate("/");
+        }
+      } else {
+        setErrorMessage(response.message || "Đăng nhập thất bại!");
+      }
+    } catch (error: any) {
+      console.error("Login error:", error);
+      
+      // Handle error response
+      const errorMsg =
+        error.response?.data?.message ||
+        error.message ||
+        "Sai tài khoản hoặc mật khẩu. Vui lòng thử lại.";
+      
+      setErrorMessage(errorMsg);
+      
+      openSnackbar({
+        text: errorMsg,
+        type: "error",
+      });
+    } finally {
+      setIsLoading(false);
     }
-
-    setErrorMessage("Sai tài khoản hoặc mật khẩu. Vui lòng thử lại.");
   };
 
-  const canSubmit = email.trim().length > 0 && password.trim().length > 0;
+  const canSubmit = email.trim().length > 0 && password.trim().length > 0 && !isLoading;
 
   return (
     <Page className="min-h-screen bg-gradient-to-b from-rose-100 via-white to-rose-200 text-slate-900">
@@ -68,84 +111,12 @@ function LoginPage() {
             </div>
           </div>
 
-          {/* icons on mobile, text buttons on desktop */}
-          <div className="flex items-center gap-2">
-            <button
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-700 ring-1 ring-red-100 transition hover:bg-red-50 lg:h-auto lg:w-auto lg:rounded-full lg:px-4 lg:py-2 lg:text-xs lg:font-semibold"
-              type="button"
-              aria-label="Hỗ trợ"
-            >
-              <span className="lg:hidden">⋯</span>
-              <span className="hidden lg:inline">Hỗ trợ</span>
-            </button>
-
-            <button
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-700 ring-1 ring-red-100 transition hover:bg-red-50 lg:h-auto lg:w-auto lg:rounded-full lg:bg-gradient-to-r lg:from-red-600 lg:via-rose-600 lg:to-red-600 lg:px-4 lg:py-2 lg:text-xs lg:font-semibold lg:text-white"
-              type="button"
-              aria-label="Thoát"
-            >
-              <span className="lg:hidden">⏻</span>
-              <span className="hidden lg:inline">Demo</span>
-            </button>
-          </div>
         </header>
 
         {/* Content */}
         <div className="mt-6 grid gap-6 lg:mt-8 lg:grid-cols-2 lg:items-stretch">
           {/* LEFT HERO: hidden on phone, show on desktop */}
-          <div className="relative hidden overflow-hidden rounded-3xl bg-white/70 p-8 shadow-sm ring-1 ring-red-100/70 backdrop-blur lg:block">
-            <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-red-200/50 blur-3xl" />
-            <div className="absolute -bottom-20 -left-20 h-56 w-56 rounded-full bg-rose-200/50 blur-3xl" />
-
-            <div className="relative space-y-4">
-              <div className="inline-flex items-center gap-2 rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 ring-1 ring-red-100">
-                <span className="h-2 w-2 rounded-full bg-red-500" />
-                Nền tảng học tập Rex
-              </div>
-
-              <Text.Title>Chào mừng bạn quay lại</Text.Title>
-
-              <Text className="text-sm text-slate-600">
-                Đăng nhập để tiếp tục theo dõi tiến độ học tập, lịch học, thông
-                báo lớp và bài tập.
-              </Text>
-
-              <div className="grid gap-3 pt-2 sm:grid-cols-2">
-                <div className="rounded-2xl bg-white px-4 py-3 ring-1 ring-red-100/80">
-                  <p className="text-xs font-semibold text-slate-800">
-                    Theo dõi tiến độ
-                  </p>
-                  <p className="mt-1 text-xs text-slate-600">
-                    Báo cáo buổi học & nhận xét chi tiết.
-                  </p>
-                </div>
-                <div className="rounded-2xl bg-white px-4 py-3 ring-1 ring-red-100/80">
-                  <p className="text-xs font-semibold text-slate-800">
-                    Lịch học rõ ràng
-                  </p>
-                  <p className="mt-1 text-xs text-slate-600">
-                    Nhắc lịch, đổi lịch (khi được phép).
-                  </p>
-                </div>
-                <div className="rounded-2xl bg-white px-4 py-3 ring-1 ring-red-100/80">
-                  <p className="text-xs font-semibold text-slate-800">
-                    Thông báo tức thì
-                  </p>
-                  <p className="mt-1 text-xs text-slate-600">
-                    Tin nhắn từ trung tâm & giáo viên.
-                  </p>
-                </div>
-                <div className="rounded-2xl bg-white px-4 py-3 ring-1 ring-red-100/80">
-                  <p className="text-xs font-semibold text-slate-800">
-                    Trải nghiệm mượt
-                  </p>
-                  <p className="mt-1 text-xs text-slate-600">
-                    Tối ưu cho mobile, thao tác nhanh.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+         
 
           {/* RIGHT: on phone -> only this card is visible */}
           <div className="flex w-full items-start justify-center lg:justify-end">
@@ -212,9 +183,10 @@ function LoginPage() {
                     fullWidth
                     onClick={handleSubmit}
                     disabled={!canSubmit}
+                    loading={isLoading}
                     className="rounded-2xl bg-gradient-to-r from-red-600 via-rose-600 to-red-600 text-white disabled:opacity-50"
                   >
-                    Đăng nhập
+                    {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
                   </Button>
 
                   {errorMessage ? (
