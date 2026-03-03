@@ -10,7 +10,7 @@ import HomeTestimonials from "@/components/home/Testimonials";
 import HomeGallery from "@/components/home/Gallery";
 import HomeTeacher from "@/components/home/Teacher";
 import HomeBlog from "@/components/home/Blog";
-import BottomNavigation from "@/components/navigation/BottomNavigation";
+import BottomNavigation from "@/navigation/BottomNavigation";
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();

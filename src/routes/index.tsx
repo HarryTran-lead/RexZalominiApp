@@ -11,6 +11,11 @@ import StudentPage from "@/screens/roles/student/pages/StudentPage";
 import TeacherPage from "@/screens/roles/teacher/pages/TeacherPage";
 import ParentPage from "@/screens/roles/parent/pages/ParentPage";
 
+// Timetable pages
+import StudentTimetablePage from "@/screens/roles/student/pages/StudentTimetablePage";
+import TeacherTimetablePage from "@/screens/roles/teacher/pages/TeacherTimetablePage";
+import ParentTimetablePage from "@/screens/roles/parent/pages/ParentTimetablePage";
+
 // Public pages
 import HomePage from "@/screens/public/HomePage";
 import FAQPage from "@/screens/public/FAQPage";
@@ -63,6 +68,14 @@ const MainRoutes: React.FC = () => {
           </StudentLayout>
         }
       />
+      <Route
+        path="/student/timetable"
+        element={
+          <StudentLayout>
+            <StudentTimetablePage />
+          </StudentLayout>
+        }
+      />
 
       {/* Teacher Routes - cần đăng nhập với role Teacher */}
       <Route
@@ -81,6 +94,14 @@ const MainRoutes: React.FC = () => {
           </TeacherLayout>
         }
       />
+      <Route
+        path="/teacher/timetable"
+        element={
+          <TeacherLayout>
+            <TeacherTimetablePage />
+          </TeacherLayout>
+        }
+      />
 
       {/* Parent Routes - cần đăng nhập với role Parent */}
       <Route
@@ -96,6 +117,14 @@ const MainRoutes: React.FC = () => {
         element={
           <ParentLayout>
             <ParentPage />
+          </ParentLayout>
+        }
+      />
+      <Route
+        path="/parent/timetable"
+        element={
+          <ParentLayout>
+            <ParentTimetablePage />
           </ParentLayout>
         }
       />

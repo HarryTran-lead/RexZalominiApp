@@ -2,7 +2,7 @@ import React from "react";
 import { Page } from "zmp-ui";
 import FAQBanner from "@/components/faq/Banner";
 import FAQList from "@/components/faq/FAQList";
-import BottomNavigation from "@/components/navigation/BottomNavigation";
+import BottomNavigation from "@/navigation/BottomNavigation";
 
 const FAQPage: React.FC = () => {
   return (
