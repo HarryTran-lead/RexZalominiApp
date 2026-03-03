@@ -18,7 +18,30 @@ export const AUTH_ENDPOINTS = {
   REQUEST_PIN_RESET: "/auth/profiles/request-pin-reset",
 };
 
+// Student Endpoints
+export const STUDENT_ENDPOINTS = {
+  TIMETABLE: "/students/timetable",
+  CLASSES: "/students/classes",
+  HOMEWORK_MY: "/students/homework/my",
+};
+
+// Teacher Endpoints
+export const TEACHER_ENDPOINTS = {
+  TIMETABLE: "/teacher/timetable",
+  CLASSES: "/teacher/classes",
+};
+
+// Parent Endpoints
+export const PARENT_ENDPOINTS = {
+  TIMETABLE: "/parent/timetable",
+  OVERVIEW: "/parent/overview",
+  ATTENDANCE: "/parent/attendance",
+};
+
 // All API Endpoints
 export const API_ENDPOINTS = {
   AUTH: AUTH_ENDPOINTS,
+  STUDENT: STUDENT_ENDPOINTS,
+  TEACHER: TEACHER_ENDPOINTS,
+  PARENT: PARENT_ENDPOINTS,
 };

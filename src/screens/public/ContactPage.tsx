@@ -2,7 +2,7 @@ import React from "react";
 import { Page } from "zmp-ui";
 import ContactBanner from "@/components/contact/Banner";
 import ContactForm from "@/components/contact/ContactForm";
-import BottomNavigation from "@/components/navigation/BottomNavigation";
+import BottomNavigation from "@/navigation/BottomNavigation";
 
 const ContactPage: React.FC = () => {
   return (

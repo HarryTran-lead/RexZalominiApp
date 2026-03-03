@@ -1,0 +1,92 @@
+import React, { useCallback, useEffect, useState } from "react";
+import { Page } from "zmp-ui";
+import WeeklyTimetable from "@/components/timetable/WeeklyTimetable";
+import { TimetableSession } from "@/types/timetable";
+import { timetableService } from "@/services/timetableService";
+import { getWeekRange } from "@/utils/timetableHelper";
+
+const ParentTimetablePage: React.FC = () => {
+  const [sessions, setSessions] = useState<TimetableSession[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [weekStart, setWeekStart] = useState<Date>(() => {
+    const now = new Date();
+    const day = now.getDay();
+    const diffToMonday = day === 0 ? -6 : 1 - day;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() + diffToMonday);
+    monday.setHours(0, 0, 0, 0);
+    return monday;
+  });
+
+  const fetchTimetable = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { from, to } = getWeekRange(weekStart);
+      const response = await timetableService.getParentTimetable(from, to);
+      if (response.isSuccess || response.success) {
+        const data = response.data;
+        setSessions(Array.isArray(data) ? data : []);
+      } else {
+        setError(response.message || "Không thể tải thời khóa biểu");
+      }
+    } catch (err: any) {
+      setError(err?.message || "Đã xảy ra lỗi khi tải thời khóa biểu");
+    } finally {
+      setLoading(false);
+    }
+  }, [weekStart]);
+
+  useEffect(() => {
+    fetchTimetable();
+  }, [fetchTimetable]);
+
+  const handlePrevWeek = () => {
+    setWeekStart((prev) => {
+      const d = new Date(prev);
+      d.setDate(d.getDate() - 7);
+      return d;
+    });
+  };
+
+  const handleNextWeek = () => {
+    setWeekStart((prev) => {
+      const d = new Date(prev);
+      d.setDate(d.getDate() + 7);
+      return d;
+    });
+  };
+
+  const handleToday = () => {
+    const now = new Date();
+    const day = now.getDay();
+    const diffToMonday = day === 0 ? -6 : 1 - day;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() + diffToMonday);
+    monday.setHours(0, 0, 0, 0);
+    setWeekStart(monday);
+  };
+
+  return (
+    <Page className="flex flex-col h-screen bg-slate-50">
+      <div className="bg-orange-600 text-white px-4 py-3">
+        <h1 className="text-lg font-bold">Thời khóa biểu con</h1>
+      </div>
+      <div className="flex-1 overflow-hidden">
+        <WeeklyTimetable
+          sessions={sessions}
+          loading={loading}
+          error={error}
+          weekStart={weekStart}
+          onPrevWeek={handlePrevWeek}
+          onNextWeek={handleNextWeek}
+          onToday={handleToday}
+          role="parent"
+        />
+      </div>
+    </Page>
+  );
+};
+
+export default ParentTimetablePage;

@@ -2,7 +2,7 @@ import React from "react";
 import { Page } from "zmp-ui";
 import BlogBanner from "@/components/blog/Banner";
 import BlogList from "@/components/blog/BlogList";
-import BottomNavigation from "@/components/navigation/BottomNavigation";
+import BottomNavigation from "@/navigation/BottomNavigation";
 
 const BlogsPage: React.FC = () => {
   return (
