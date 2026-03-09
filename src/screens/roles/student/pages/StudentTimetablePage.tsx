@@ -26,8 +26,7 @@ const StudentTimetablePage: React.FC = () => {
       const { from, to } = getWeekRange(weekStart);
       const response = await timetableService.getStudentTimetable(from, to);
       if (response.isSuccess || response.success) {
-        const data = response.data;
-        setSessions(Array.isArray(data) ? data : []);
+        setSessions(response.data?.sessions ?? []);
       } else {
         setError(response.message || "Không thể tải thời khóa biểu");
       }
@@ -70,8 +69,8 @@ const StudentTimetablePage: React.FC = () => {
 
   return (
     <Page className="flex flex-col h-screen bg-slate-50">
-      <div className="bg-blue-600 text-white px-4 py-3">
-        <h1 className="text-lg font-bold">Thời khóa biểu</h1>
+      <div className="bg-red-600 text-white px-4 py-3">
+        <h1 className="text-lg font-bold text-center">Thời khóa biểu</h1>
       </div>
       <div className="flex-1 overflow-hidden">
         <WeeklyTimetable

@@ -1,5 +1,13 @@
 import { TimetableSession } from "@/types/timetable";
 
+/** Returns a YYYY-MM-DD key based on the **local** date (avoids UTC offset shift). */
+export function toLocalDateKey(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 export function getWeekRange(date: Date): { from: string; to: string } {
   const d = new Date(date);
   const day = d.getDay(); // 0=Sun, 1=Mon, ...
@@ -27,7 +35,7 @@ export function groupSessionsByDay(
 
   sessions.forEach((session) => {
     const date = new Date(session.plannedDatetime);
-    const key = date.toISOString().split("T")[0]; // YYYY-MM-DD
+    const key = toLocalDateKey(date);
     if (!groups[key]) {
       groups[key] = [];
     }

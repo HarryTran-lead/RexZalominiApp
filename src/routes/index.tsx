@@ -7,6 +7,7 @@ import ParentLayout from "../layouts/ParentLayout";
 
 import LoginPage from "../features/auth/LoginPage";
 import AccountChooserPage from "../features/auth/AccountChooserPage";
+import ParentChildSelectorPage from "../features/auth/ParentChildSelectorPage";
 import StudentPage from "@/screens/roles/student/pages/StudentPage";
 import TeacherPage from "@/screens/roles/teacher/pages/TeacherPage";
 import ParentPage from "@/screens/roles/parent/pages/ParentPage";
@@ -16,23 +17,11 @@ import StudentTimetablePage from "@/screens/roles/student/pages/StudentTimetable
 import TeacherTimetablePage from "@/screens/roles/teacher/pages/TeacherTimetablePage";
 import ParentTimetablePage from "@/screens/roles/parent/pages/ParentTimetablePage";
 
-// Public pages
-import HomePage from "@/screens/public/HomePage";
-import FAQPage from "@/screens/public/FAQPage";
-import BlogsPage from "@/screens/public/BlogsPage";
-import ContactPage from "@/screens/public/ContactPage";
 
 
 const MainRoutes: React.FC = () => {
   return (
     <AnimationRoutes>
-      {/* Public Routes - không cần đăng nhập */}
-      <Route path="/" element={<HomePage />} />
-      <Route path="/home" element={<HomePage />} />
-      <Route path="/faq" element={<FAQPage />} />
-      <Route path="/blogs" element={<BlogsPage />} />
-      <Route path="/contact" element={<ContactPage />} />
-
       {/* Auth Routes */}
       <Route
         path="/login"
@@ -47,6 +36,14 @@ const MainRoutes: React.FC = () => {
         element={
           <AuthLayout>
             <AccountChooserPage />
+          </AuthLayout>
+        }
+      />
+      <Route
+        path="/parent/select-child"
+        element={
+          <AuthLayout>
+            <ParentChildSelectorPage />
           </AuthLayout>
         }
       />

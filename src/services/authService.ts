@@ -10,7 +10,9 @@ import {
   ForgetPasswordRequest,
   ResetPasswordRequest,
   VerifyParentPinRequest,
+  VerifyParentPinResponse,
   SelectStudentRequest,
+  SelectStudentResponse,
   ChangePinRequest,
   RequestPinResetRequest,
   UserProfile,
@@ -75,8 +77,8 @@ export const authService = {
   // Verify Parent PIN
   verifyParentPin: async (
     data: VerifyParentPinRequest
-  ): Promise<ApiResponse<void>> => {
-    return await api.post<ApiResponse<void>>(
+  ): Promise<ApiResponse<VerifyParentPinResponse>> => {
+    return await api.post<ApiResponse<VerifyParentPinResponse>>(
       AUTH_ENDPOINTS.VERIFY_PARENT_PIN,
       data
     );
@@ -85,8 +87,8 @@ export const authService = {
   // Select Student
   selectStudent: async (
     data: SelectStudentRequest
-  ): Promise<ApiResponse<void>> => {
-    return await api.post<ApiResponse<void>>(
+  ): Promise<ApiResponse<SelectStudentResponse>> => {
+    return await api.post<ApiResponse<SelectStudentResponse>>(
       AUTH_ENDPOINTS.SELECT_STUDENT,
       data
     );

@@ -7,13 +7,17 @@ import {
 } from "../constants/apiURL";
 import { TimetableSession } from "../types/timetable";
 
+export interface TimetableData {
+  sessions: TimetableSession[];
+}
+
 export const timetableService = {
   // Student timetable
   getStudentTimetable: async (
     from: string,
     to: string
-  ): Promise<ApiResponse<TimetableSession[]>> => {
-    return await api.get<ApiResponse<TimetableSession[]>>(
+  ): Promise<ApiResponse<TimetableData>> => {
+    return await api.get<ApiResponse<TimetableData>>(
       STUDENT_ENDPOINTS.TIMETABLE,
       { params: { from, to } }
     );
@@ -23,8 +27,8 @@ export const timetableService = {
   getTeacherTimetable: async (
     from: string,
     to: string
-  ): Promise<ApiResponse<TimetableSession[]>> => {
-    return await api.get<ApiResponse<TimetableSession[]>>(
+  ): Promise<ApiResponse<TimetableData>> => {
+    return await api.get<ApiResponse<TimetableData>>(
       TEACHER_ENDPOINTS.TIMETABLE,
       { params: { from, to } }
     );
@@ -34,8 +38,8 @@ export const timetableService = {
   getParentTimetable: async (
     from: string,
     to: string
-  ): Promise<ApiResponse<TimetableSession[]>> => {
-    return await api.get<ApiResponse<TimetableSession[]>>(
+  ): Promise<ApiResponse<TimetableData>> => {
+    return await api.get<ApiResponse<TimetableData>>(
       PARENT_ENDPOINTS.TIMETABLE,
       { params: { from, to } }
     );

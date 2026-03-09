@@ -1,14 +1,30 @@
+@import "./variables";
 .page {
-  padding: 16px 16px 96px 16px;
+  padding: $space-md;
+  background: $bg-main;
 }
 
 .section-container {
-  padding: 16px;
-  background: #ffffff;
-  border-radius: 8px;
-  margin-bottom: 24px;
+  padding: $space-md;
+  background: $bg-card;
+  border-radius: $radius-md;
+  border: 1px solid $border-default;
+  box-shadow: $shadow-sm;
+  margin-bottom: $space-lg;
 }
 
+.btn-primary {
+  background: $primary-500;
+  color: white;
+  padding: 10px 16px;
+  border-radius: $radius-md;
+  transition: $transition-fast;
+}
+
+.btn-primary:hover {
+  background: $primary-600;
+}
 .zaui-list-item {
   cursor: pointer;
 }
+
