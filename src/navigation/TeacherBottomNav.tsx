@@ -70,7 +70,7 @@ const TeacherBottomNav: React.FC = () => {
               key={item.path}
               onClick={() => navigate(item.path)}
               className={`flex flex-col items-center justify-center flex-1 h-full transition-all relative ${
-                active ? "text-emerald-600" : "text-gray-400"
+                active ? "text-red-600" : "text-gray-400"
               }`}
             >
               <div className={`transition-transform ${active ? "scale-110" : "scale-100"}`}>
@@ -80,7 +80,7 @@ const TeacherBottomNav: React.FC = () => {
                 {item.label}
               </span>
               {active && (
-                <div className="absolute bottom-0 w-10 h-0.5 bg-emerald-600 rounded-t-full" />
+                <div className="absolute bottom-0 w-10 h-0.5 bg-red-600 rounded-t-full" />
               )}
             </button>
           );

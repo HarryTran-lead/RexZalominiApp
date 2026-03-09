@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Page, useSnackbar } from "zmp-ui";
 import { authService } from "@/services/authService";
+import { storage } from "@/utils/storage";
 import { UserProfile } from "@/types/auth";
 
 function AccountChooserPage() {
@@ -9,6 +10,13 @@ function AccountChooserPage() {
   const { openSnackbar } = useSnackbar();
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Parent PIN modal state
+  const [pinModalOpen, setPinModalOpen] = useState(false);
+  const [pendingParentProfile, setPendingParentProfile] = useState<UserProfile | null>(null);
+  const [pin, setPin] = useState("");
+  const [pinLoading, setPinLoading] = useState(false);
+  const pinInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchProfiles();
@@ -39,24 +47,52 @@ function AccountChooserPage() {
   };
 
   const handleSelectProfile = async (profile: UserProfile) => {
-    try {
-      // If selecting a student profile, call the API
-      if (profile.profileType === "Student") {
-        await authService.selectStudent({ profileId: profile.id });
-      }
+    if (profile.profileType === "Parent") {
+      // Open PIN modal for parent verification
+      setPendingParentProfile(profile);
+      setPin("");
+      setPinModalOpen(true);
+      setTimeout(() => pinInputRef.current?.focus(), 100);
+      return;
+    }
 
-      // Navigate based on profile type
-      if (profile.profileType === "Parent") {
-        navigate("/parent");
-      } else {
-        navigate("/student");
+    // Student flow
+    try {
+      const response = await authService.selectStudent({ profileId: profile.id });
+      // Store the new access token returned by the backend (contains student context)
+      if (response?.data?.accessToken) {
+        await storage.setAccessToken(response.data.accessToken);
       }
+      navigate("/student");
     } catch (error) {
-      console.error("Error selecting profile:", error);
+      console.error("Error selecting student profile:", error);
       openSnackbar({
-        text: "Không thể chọn profile này",
+        text: "Không thể chọn profile học sinh",
         type: "error",
       });
+    }
+  };
+
+  const handleVerifyParentPin = async () => {
+    if (!pendingParentProfile || pin.length === 0) return;
+    try {
+      setPinLoading(true);
+      const response = await authService.verifyParentPin({
+        profileId: pendingParentProfile.id,
+        pin,
+      });
+      if (response?.data?.success === false) {
+        openSnackbar({ text: response.data.message ?? "PIN không hợp lệ", type: "error" });
+        return;
+      }
+      setPinModalOpen(false);
+      navigate("/parent");
+    } catch (error: any) {
+      const msg =
+        error?.response?.data?.message ?? "PIN không đúng, vui lòng thử lại";
+      openSnackbar({ text: msg, type: "error" });
+    } finally {
+      setPinLoading(false);
     }
   };
 
@@ -132,14 +168,18 @@ function AccountChooserPage() {
             <p>Không tìm thấy profile nào</p>
           </div>
         ) : (
-          <div className="flex gap-8">
+          <div
+            className="flex gap-8 overflow-x-auto w-full px-4 pb-4"
+            style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch", msOverflowStyle: "none", scrollbarWidth: "none" }}
+          >
             {profiles.map((profile, index) => (
               <button
                 key={profile.id}
-                className="group flex flex-col items-center gap-3 transition"
+                className="group flex flex-col items-center gap-3 transition shrink-0 pt-1"
                 onClick={() => handleSelectProfile(profile)}
                 type="button"
                 style={{
+                  scrollSnapAlign: "center",
                   animation: `scaleIn 0.5s ease-out ${index * 0.15}s both`
                 }}
               >
@@ -239,6 +279,51 @@ function AccountChooserPage() {
           Log out
         </button>
       </div>
+
+      {/* Parent PIN Modal */}
+      {pinModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
+            <h2 className="mb-1 text-center text-xl font-bold text-gray-800">
+              Xác thực phụ huynh
+            </h2>
+            <p className="mb-5 text-center text-sm text-gray-500">
+              Nhập PIN để đăng nhập với hồ sơ{" "}
+              <span className="font-semibold text-yellow-600">
+                {pendingParentProfile?.displayName}
+              </span>
+            </p>
+
+            <input
+              ref={pinInputRef}
+              type="password"
+              inputMode="numeric"
+              maxLength={4}
+              placeholder="Nhập PIN"
+              value={pin}
+              onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
+              onKeyDown={(e) => e.key === "Enter" && handleVerifyParentPin()}
+              className="mb-4 w-full rounded-xl border-2 border-gray-200 px-4 py-3 text-center text-2xl tracking-[0.5em] text-gray-800 outline-none transition focus:border-yellow-400"
+            />
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setPinModalOpen(false); setPin(""); }}
+                className="flex-1 rounded-xl border-2 border-gray-200 py-3 text-sm font-semibold text-gray-600 transition hover:bg-gray-50 active:scale-95"
+              >
+                Huỷ
+              </button>
+              <button
+                onClick={handleVerifyParentPin}
+                disabled={pin.length === 0 || pinLoading}
+                className="flex-1 rounded-xl bg-yellow-500 py-3 text-sm font-semibold text-white shadow-md shadow-yellow-300/50 transition hover:bg-yellow-600 active:scale-95 disabled:opacity-50"
+              >
+                {pinLoading ? "Đang xác thực..." : "Xác nhận"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Page>
   );
 }

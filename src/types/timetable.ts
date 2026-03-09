@@ -1,23 +1,37 @@
-// Timetable types - shared across student, teacher, parent
+// Timetable types - matches actual BE API response
 
 export interface TimetableSession {
-  sessionId: string;
+  id: string;
   classId: string;
-  className: string;
   classCode: string;
-  programName: string;
+  classTitle: string;
   plannedDatetime: string;
+  actualDatetime?: string | null;
   durationMinutes: number;
-  status: "Scheduled" | "Completed" | "Cancelled";
-  roomName: string | null;
-  teacherName: string | null;
-  assistantTeacherName: string | null;
-  // Parent-specific: may include student info
+  participationType?: number;
+  // 0 = Scheduled, 1 = Completed, 2 = Cancelled
+  status: number;
+  plannedRoomId?: string | null;
+  plannedRoomName?: string | null;
+  actualRoomId?: string | null;
+  actualRoomName?: string | null;
+  plannedTeacherId?: string | null;
+  plannedTeacherName?: string | null;
+  actualTeacherId?: string | null;
+  actualTeacherName?: string | null;
+  plannedAssistantId?: string | null;
+  plannedAssistantName?: string | null;
+  lessonPlanId?: string | null;
+  lessonPlanLink?: string | null;
+  // Optional extended fields
+  slotNumber?: number | null;
+  sessionNo?: number | null;
+  meetUrl?: string | null;
+  // Parent-specific
   studentName?: string;
   studentProfileId?: string;
 }
 
 export interface TimetableResponse {
-  items: TimetableSession[];
-  totalCount?: number;
+  sessions: TimetableSession[];
 }

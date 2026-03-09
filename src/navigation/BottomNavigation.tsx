@@ -50,7 +50,7 @@ const BottomNavigation: React.FC = () => {
               key={item.path}
               onClick={() => navigate(item.path)}
               className={`flex flex-col items-center justify-center flex-1 h-full transition-all ${
-                active ? "text-blue-600" : "text-gray-500"
+                active ? "text-red-600" : "text-gray-500"
               }`}
             >
               <img
@@ -64,7 +64,7 @@ const BottomNavigation: React.FC = () => {
                 {item.label}
               </span>
               {active && (
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-blue-600 rounded-t-full" />
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-red-600 rounded-t-full" />
               )}
             </button>
           );

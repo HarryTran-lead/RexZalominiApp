@@ -34,7 +34,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     }
 
     if (!hasPermission()) {
-      navigate("/"); // Redirect về trang chủ nếu không có quyền
+      navigate("/login"); // Redirect về trang chủ nếu không có quyền
       return;
     }
   }, [navigate]);
