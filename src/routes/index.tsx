@@ -1,5 +1,6 @@
 import React from "react";
 import { AnimationRoutes, Route } from "zmp-ui";
+import { Navigate } from "react-router-dom";
 import AuthLayout from "../layouts/AuthLayout";
 import StudentLayout from "../layouts/StudentLayout";
 import TeacherLayout from "../layouts/TeacherLayout";
@@ -12,17 +13,15 @@ import StudentPage from "@/screens/roles/student/pages/StudentPage";
 import TeacherPage from "@/screens/roles/teacher/pages/TeacherPage";
 import ParentPage from "@/screens/roles/parent/pages/ParentPage";
 
-// Timetable pages
 import StudentTimetablePage from "@/screens/roles/student/pages/StudentTimetablePage";
 import TeacherTimetablePage from "@/screens/roles/teacher/pages/TeacherTimetablePage";
 import ParentTimetablePage from "@/screens/roles/parent/pages/ParentTimetablePage";
 
-
-
 const MainRoutes: React.FC = () => {
   return (
     <AnimationRoutes>
-      {/* Auth Routes */}
+      <Route path="/" element={<Navigate to="/login" replace />} />
+
       <Route
         path="/login"
         element={
@@ -48,7 +47,6 @@ const MainRoutes: React.FC = () => {
         }
       />
 
-      {/* Student Routes - cần đăng nhập với role Student */}
       <Route
         path="/student"
         element={
@@ -74,7 +72,6 @@ const MainRoutes: React.FC = () => {
         }
       />
 
-      {/* Teacher Routes - cần đăng nhập với role Teacher */}
       <Route
         path="/teacher"
         element={
@@ -100,7 +97,6 @@ const MainRoutes: React.FC = () => {
         }
       />
 
-      {/* Parent Routes - cần đăng nhập với role Parent */}
       <Route
         path="/parent"
         element={
