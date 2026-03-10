@@ -17,6 +17,26 @@ import StudentTimetablePage from "@/screens/roles/student/pages/StudentTimetable
 import TeacherTimetablePage from "@/screens/roles/teacher/pages/TeacherTimetablePage";
 import ParentTimetablePage from "@/screens/roles/parent/pages/ParentTimetablePage";
 
+// Student pages
+import StudentHomeworkPage from "@/screens/roles/student/pages/StudentHomeworkPage";
+import StudentGamificationPage from "@/screens/roles/student/pages/StudentGamificationPage";
+import StudentApplicationPage from "@/screens/roles/student/pages/StudentApplicationPage";
+import StudentRewardsPage from "@/screens/roles/student/pages/StudentRewardsPage";
+import StudentDocumentsPage from "@/screens/roles/student/pages/StudentDocumentsPage";
+import StudentExamsPage from "@/screens/roles/student/pages/StudentExamsPage";
+
+// Parent pages
+import ParentHomeworkPage from "@/screens/roles/parent/pages/ParentHomeworkPage";
+import ParentExamsPage from "@/screens/roles/parent/pages/ParentExamsPage";
+import ParentNotificationsPage from "@/screens/roles/parent/pages/ParentNotificationsPage";
+import ParentLeaveRequestPage from "@/screens/roles/parent/pages/ParentLeaveRequestPage";
+
+// Teacher pages
+import TeacherMyClassesPage from "@/screens/roles/teacher/pages/TeacherMyClassesPage";
+import TeacherSubjectsPage from "@/screens/roles/teacher/pages/TeacherSubjectsPage";
+import TeacherAssignmentsPage from "@/screens/roles/teacher/pages/TeacherAssignmentsPage";
+import TeacherAttendancePage from "@/screens/roles/teacher/pages/TeacherAttendancePage";
+import TeacherReportsPage from "@/screens/roles/teacher/pages/TeacherReportsPage";
 
 
 const MainRoutes: React.FC = () => {
@@ -48,7 +68,7 @@ const MainRoutes: React.FC = () => {
         }
       />
 
-      {/* Student Routes - cần đăng nhập với role Student */}
+      {/* Student Routes */}
       <Route
         path="/student"
         element={
@@ -73,8 +93,56 @@ const MainRoutes: React.FC = () => {
           </StudentLayout>
         }
       />
+      <Route
+        path="/student/homework"
+        element={
+          <StudentLayout>
+            <StudentHomeworkPage />
+          </StudentLayout>
+        }
+      />
+      <Route
+        path="/student/gamification"
+        element={
+          <StudentLayout>
+            <StudentGamificationPage />
+          </StudentLayout>
+        }
+      />
+      <Route
+        path="/student/application"
+        element={
+          <StudentLayout>
+            <StudentApplicationPage />
+          </StudentLayout>
+        }
+      />
+      <Route
+        path="/student/rewards"
+        element={
+          <StudentLayout>
+            <StudentRewardsPage />
+          </StudentLayout>
+        }
+      />
+      <Route
+        path="/student/documents"
+        element={
+          <StudentLayout>
+            <StudentDocumentsPage />
+          </StudentLayout>
+        }
+      />
+      <Route
+        path="/student/exams"
+        element={
+          <StudentLayout>
+            <StudentExamsPage />
+          </StudentLayout>
+        }
+      />
 
-      {/* Teacher Routes - cần đăng nhập với role Teacher */}
+      {/* Teacher Routes */}
       <Route
         path="/teacher"
         element={
@@ -99,8 +167,48 @@ const MainRoutes: React.FC = () => {
           </TeacherLayout>
         }
       />
+      <Route
+        path="/teacher/my-classes"
+        element={
+          <TeacherLayout>
+            <TeacherMyClassesPage />
+          </TeacherLayout>
+        }
+      />
+      <Route
+        path="/teacher/subjects"
+        element={
+          <TeacherLayout>
+            <TeacherSubjectsPage />
+          </TeacherLayout>
+        }
+      />
+      <Route
+        path="/teacher/assignments"
+        element={
+          <TeacherLayout>
+            <TeacherAssignmentsPage />
+          </TeacherLayout>
+        }
+      />
+      <Route
+        path="/teacher/attendance/:sessionId"
+        element={
+          <TeacherLayout>
+            <TeacherAttendancePage />
+          </TeacherLayout>
+        }
+      />
+      <Route
+        path="/teacher/reports"
+        element={
+          <TeacherLayout>
+            <TeacherReportsPage />
+          </TeacherLayout>
+        }
+      />
 
-      {/* Parent Routes - cần đăng nhập với role Parent */}
+      {/* Parent Routes */}
       <Route
         path="/parent"
         element={
@@ -122,6 +230,38 @@ const MainRoutes: React.FC = () => {
         element={
           <ParentLayout>
             <ParentTimetablePage />
+          </ParentLayout>
+        }
+      />
+      <Route
+        path="/parent/homework"
+        element={
+          <ParentLayout>
+            <ParentHomeworkPage />
+          </ParentLayout>
+        }
+      />
+      <Route
+        path="/parent/exams"
+        element={
+          <ParentLayout>
+            <ParentExamsPage />
+          </ParentLayout>
+        }
+      />
+      <Route
+        path="/parent/notifications"
+        element={
+          <ParentLayout>
+            <ParentNotificationsPage />
+          </ParentLayout>
+        }
+      />
+      <Route
+        path="/parent/leave-request"
+        element={
+          <ParentLayout>
+            <ParentLeaveRequestPage />
           </ParentLayout>
         }
       />
