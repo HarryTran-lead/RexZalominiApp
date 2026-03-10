@@ -1,5 +1,6 @@
 import React from "react";
 import { AnimationRoutes, Route } from "zmp-ui";
+import { Navigate } from "react-router-dom";
 import AuthLayout from "../layouts/AuthLayout";
 import StudentLayout from "../layouts/StudentLayout";
 import TeacherLayout from "../layouts/TeacherLayout";
@@ -12,7 +13,6 @@ import StudentPage from "@/screens/roles/student/pages/StudentPage";
 import TeacherPage from "@/screens/roles/teacher/pages/TeacherPage";
 import ParentPage from "@/screens/roles/parent/pages/ParentPage";
 
-// Timetable pages
 import StudentTimetablePage from "@/screens/roles/student/pages/StudentTimetablePage";
 import TeacherTimetablePage from "@/screens/roles/teacher/pages/TeacherTimetablePage";
 import ParentTimetablePage from "@/screens/roles/parent/pages/ParentTimetablePage";
@@ -42,7 +42,8 @@ import TeacherReportsPage from "@/screens/roles/teacher/pages/TeacherReportsPage
 const MainRoutes: React.FC = () => {
   return (
     <AnimationRoutes>
-      {/* Auth Routes */}
+      <Route path="/" element={<Navigate to="/login" replace />} />
+
       <Route
         path="/login"
         element={
