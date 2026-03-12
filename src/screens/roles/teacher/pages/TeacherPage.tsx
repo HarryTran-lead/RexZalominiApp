@@ -105,7 +105,7 @@ function TeacherPage() {
   return (
     <Page className="min-h-screen bg-gray-100 pb-20">
       {/* Red Header Banner */}
-      <div className="bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center justify-center">
+      <div className="sticky top-0 z-10 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center justify-center">
         <div className="bg-white rounded-xl px-5 py-2 shadow-sm">
           <img src={img} alt="Rex Education" className="h-10 object-contain" />
         </div>
@@ -116,7 +116,7 @@ function TeacherPage() {
         <div key={sIdx} className="px-4 pt-6">
           <div className="flex flex-col items-center mb-4">
             <h2 className="text-red-600 font-bold text-base">{section.title}</h2>
-            <div className="w-8 h-1 bg-blue-700 rounded-full mt-1" />
+            <div className="w-8 h-1 bg-red-600 rounded-full mt-1" />
           </div>
           {renderGrid(section.items)}
         </div>

@@ -47,6 +47,18 @@ interface WeeklyTimetableProps {
   onNextWeek: () => void;
   onToday: () => void;
   role: "student" | "teacher" | "parent";
+  /** Teacher only: called when pressing the attendance button on a today session */
+  onSessionAttendance?: (session: TimetableSession) => void;
+}
+
+function isTodaySession(isoString: string): boolean {
+  const d = new Date(isoString);
+  const now = new Date();
+  return (
+    d.getFullYear() === now.getFullYear() &&
+    d.getMonth() === now.getMonth() &&
+    d.getDate() === now.getDate()
+  );
 }
 
 const WeeklyTimetable: React.FC<WeeklyTimetableProps> = ({
@@ -58,6 +70,7 @@ const WeeklyTimetable: React.FC<WeeklyTimetableProps> = ({
   onNextWeek,
   onToday,
   role,
+  onSessionAttendance,
 }) => {
   const weekDays = useMemo(() => {
     const days: Date[] = [];
@@ -261,13 +274,19 @@ const WeeklyTimetable: React.FC<WeeklyTimetableProps> = ({
                               <button className="text-[10px] px-2 py-1 rounded-md bg-amber-400 text-white font-semibold whitespace-nowrap active:opacity-70">
                                 Materials
                               </button>
-                              <button
+                              {/* <button
                                 className="text-[10px] px-2 py-1 rounded-md bg-green-500 text-white font-semibold whitespace-nowrap active:opacity-70"
                                 onClick={() => session.meetUrl && window.open(session.meetUrl, "_blank")}
                               >
                                 Meet URL
-                              </button>
-                            </div>
+                              </button> */}                              {role === "teacher" && isTodaySession(session.plannedDatetime) && onSessionAttendance && (
+                                <button
+                                  className="text-[10px] px-2 py-1 rounded-md bg-red-600 text-white font-semibold whitespace-nowrap active:opacity-70"
+                                  onClick={() => onSessionAttendance(session)}
+                                >
+                                  Điểm danh
+                                </button>
+                              )}                            </div>
                           </div>
                         </div>
 
