@@ -23,6 +23,11 @@ export const STUDENT_ENDPOINTS = {
   TIMETABLE: "/students/timetable",
   CLASSES: "/students/classes",
   HOMEWORK_MY: "/students/homework/my",
+  HOMEWORK_SUBMITTED: "/students/homework/submitted",
+  HOMEWORK_DETAIL: (homeworkStudentId: string) => `/students/homework/${homeworkStudentId}`,
+  HOMEWORK_SUBMIT: "/students/homework/submit",
+  HOMEWORK_MULTIPLE_CHOICE_SUBMIT: "/students/homework/multiple-choice/submit",
+  HOMEWORK_FEEDBACK_MY: "/students/homework/feedback/my",
 };
 
 // Teacher Endpoints
@@ -79,6 +84,36 @@ export const HOMEWORK_ENDPOINTS = {
   SUBMISSIONS: "/homework/submissions",
 };
 
+// Gamification Endpoints
+export const GAMIFICATION_ENDPOINTS = {
+  STARS_BALANCE_ME: "/gamification/stars/balance/me",
+  LEVEL_ME: "/gamification/level/me",
+  ATTENDANCE_STREAK_ME: "/gamification/attendance-streak/me",
+  ATTENDANCE_CHECKIN: "/gamification/attendance-streak/check-in",
+  REWARD_STORE_ITEMS: "/gamification/reward-store/items/active",
+  AVAILABLE_REWARDS: "/gamification/rewards/available",
+  REWARD_REDEMPTIONS: "/gamification/reward-redemptions",
+  REWARD_REDEMPTIONS_ME: "/gamification/reward-redemptions/me",
+  REWARD_REDEMPTION_APPROVE: (id: string) => `/gamification/reward-redemptions/${id}/approve`,
+  REWARD_REDEMPTION_CANCEL: (id: string) => `/gamification/reward-redemptions/${id}/cancel`,
+  REWARD_REDEMPTION_CONFIRM: (id: string) => `/gamification/reward-redemptions/${id}/confirm-received`,
+  REDEEM_REWARD: (rewardId: string) => `/gamification/rewards/${rewardId}/redeem`,
+  STARS_TRANSACTIONS: "/gamification/stars/transactions",
+};
+
+// Exam Endpoints
+export const EXAM_ENDPOINTS = {
+  STUDENTS: "/exams/students",
+  LIST: "/exams",
+  DETAIL: (examId: string) => `/exams/${examId}`,
+  START_SUBMISSION: (examId: string) => `/exams/${examId}/submissions/start`,
+  SAVE_ANSWERS: (examId: string, submissionId: string) => `/exams/${examId}/submissions/${submissionId}/answers`,
+  SUBMIT: (examId: string, submissionId: string) => `/exams/${examId}/submissions/${submissionId}/submit`,
+  SUBMISSIONS: (examId: string) => `/exams/${examId}/submissions`,
+  RESULTS: "/exams/results",
+  RESULT_DETAIL: (id: string) => `/exams/results/${id}`,
+};
+
 // Session Reports Endpoints
 export const SESSION_REPORTS_ENDPOINTS = {
   LIST: "/session-reports",
@@ -92,4 +127,7 @@ export const API_ENDPOINTS = {
   TEACHER: TEACHER_ENDPOINTS,
   PARENT: PARENT_ENDPOINTS,
   LEAVE_REQUEST: LEAVE_REQUEST_ENDPOINTS,
+  GAMIFICATION: GAMIFICATION_ENDPOINTS,
+  EXAM: EXAM_ENDPOINTS,
+  HOMEWORK: HOMEWORK_ENDPOINTS,
 };

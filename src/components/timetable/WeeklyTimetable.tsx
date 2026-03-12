@@ -91,7 +91,7 @@ const WeeklyTimetable: React.FC<WeeklyTimetableProps> = ({
   weekEnd.setDate(weekStart.getDate() + 6);
 
   return (
-    <div className="flex flex-col bg-white">
+    <div className="flex flex-col h-full bg-white">
       {/* Sticky header: current week label + month nav + calendar */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200">
         {/* Current week label */}

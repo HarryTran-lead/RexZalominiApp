@@ -3,6 +3,8 @@ export { authService } from "./authService";
 export { teacherService } from "./teacherService";
 export { homeworkService } from "./homeworkService";
 export { reportService } from "./reportService";
+export { parentService } from "./parentService";
+export { studentService, gamificationService, examService } from "./studentService";
 export type { TeacherClass, ClassStudent } from "@/types/teacher";
 export type { Homework, HomeworkSubmission } from "@/types/teacher";
 export type {
@@ -10,3 +12,38 @@ export type {
   MonthlySessionReport,
   MonthlyReport,
 } from "@/types/teacher";
+export type {
+  ParentHomeworkItem,
+  ParentExamResult,
+  ParentNotification,
+  ParentLeaveRequest,
+  CreateLeaveRequestPayload,
+  ParentOverviewResponse,
+  ParentOverviewStatistics,
+  ParentStudentProfile,
+  ParentClassInfo,
+} from "@/types/parent";
+export type {
+  StudentClass,
+  StudentTimetableSession,
+  HomeworkStudent,
+  SubmitHomeworkRequest,
+  SubmitMultipleChoiceHomeworkRequest,
+  HomeworkFeedback,
+  StarBalance,
+  StudentLevel,
+  AttendanceStreak,
+  RewardStoreItem,
+  RewardRedemption,
+  RequestRewardRedemptionRequest,
+  StarTransaction,
+  Exam,
+  ExamSubmission,
+  StartExamSubmissionRequest,
+  SaveExamAnswerRequest,
+  PaginatedResponse,
+  BaseQueryParams,
+  HomeworkQueryParams,
+  TimetableQueryParams,
+  RewardRedemptionQueryParams,
+} from "@/types/student";

@@ -38,7 +38,12 @@ function ParentPage() {
         const students = response.data.filter((p) => p.profileType === "Student");
         setChildren(students);
         if (students.length > 0) {
-          await selectChild(students[0], true);
+          // Try to restore previously selected profile from storage
+          const savedProfileId = await storage.getItem("selectedProfileId");
+          const profileToSelect = savedProfileId
+            ? students.find((s) => s.id === savedProfileId) || students[0]
+            : students[0];
+          await selectChild(profileToSelect, true);
         }
       }
     } catch (err) {
