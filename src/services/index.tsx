@@ -1,4 +1,4 @@
-import { homeworkService } from "./homeworkService";
+
 export { authService } from "./authService";
 export { teacherService } from "./teacherService";
 export { homeworkService } from "./homeworkService";
@@ -17,7 +17,6 @@ export type {
   ParentExamResult,
   ParentNotification,
   ParentLeaveRequest,
-  CreateLeaveRequestPayload,
   ParentOverviewResponse,
   ParentOverviewStatistics,
   ParentStudentProfile,
@@ -25,7 +24,6 @@ export type {
 } from "@/types/parent";
 export type {
   StudentClass,
-  StudentTimetableSession,
   HomeworkStudent,
   SubmitHomeworkRequest,
   SubmitMultipleChoiceHomeworkRequest,

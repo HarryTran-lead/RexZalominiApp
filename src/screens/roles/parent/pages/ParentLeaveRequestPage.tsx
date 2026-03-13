@@ -7,6 +7,9 @@ import { authService } from "@/services/authService";
 import { api } from "@/api/api";
 import { ParentLeaveRequest, ParentLeaveRequestsResponse } from "@/types/parent";
 import { UserProfile } from "@/types/auth";
+import { StudentClass } from "@/services";
+import { API_ENDPOINTS } from "@/constants/apiURL";
+import { storage } from "@/utils/storage";
 
 type ViewMode = "list" | "create";
 
@@ -66,30 +69,41 @@ function ParentLeaveRequestPage() {
 
   // Fetch classes for selected student
   const fetchStudentClasses = useCallback(async (studentProfileId: string) => {
-    try {
-      setLoadingClasses(true);
-      const res = await api.get<any>("/students/classes");
-      let classList: StudentClass[] = [];
-      
-      // Handle different response formats
-      if (Array.isArray(res.data)) {
-        classList = res.data;
-      } else if (res.data?.data && Array.isArray(res.data.data)) {
-        classList = res.data.data;
-      } else if (res.data?.items && Array.isArray(res.data.items)) {
-        classList = res.data.items;
-      }
-      setClasses(classList);
-      // Pre-select first class if available
-      if (classList.length > 0 && !form.classId) {
-        setForm((prev) => ({ ...prev, classId: classList[0].id }));
-      }
-    } catch (err: any) {
-      console.error("Error fetching classes:", err);
-    } finally {
-      setLoadingClasses(false);
+  try {
+    setLoadingClasses(true);
+    setClasses([]);
+
+    // Lấy parent token hiện tại để restore sau
+    const parentToken = await storage.getAccessToken();
+
+    // Select student → lấy token tạm thời (KHÔNG lưu vào storage)
+    const selectRes = await authService.selectStudent({ profileId: studentProfileId });
+    const studentToken = selectRes?.data?.accessToken;
+    if (!studentToken) throw new Error("Không lấy được student token");
+
+    // Restore lại parent token ngay
+    await storage.setAccessToken(parentToken || "");
+
+    // Gọi API với student token qua header override
+    const res = await api.get(API_ENDPOINTS.STUDENT.CLASSES, {
+      headers: { Authorization: `Bearer ${studentToken}` },
+    });
+
+    const classList: StudentClass[] =
+      res.data?.data?.classes?.items ?? [];
+
+    setClasses(classList);
+
+    if (classList.length > 0) {
+      setForm((prev) => ({ ...prev, classId: classList[0].id }));
     }
-  }, [form.classId]);
+  } catch (err: any) {
+    console.error("Error fetching classes:", err);
+    openSnackbar({ text: "Không thể tải danh sách lớp", type: "error" });
+  } finally {
+    setLoadingClasses(false);
+  }
+}, [openSnackbar]);
 
   useEffect(() => {
     fetchRequests();
@@ -238,7 +252,7 @@ function ParentLeaveRequestPage() {
                       {form.classId
                         ? (() => {
                             const selectedClass = classes.find((c) => c.id === form.classId);
-                            return selectedClass?.title || selectedClass?.className || selectedClass?.classCode || "-- Chọn lớp --";
+                            return selectedClass?.title || "-- Chọn lớp --";
                           })()
                         : "-- Chọn lớp --"}
                     </span>
@@ -265,7 +279,7 @@ function ParentLeaveRequestPage() {
                         >
                           {({ selected }) => (
                             <span className={`block truncate ${selected ? "font-semibold" : "font-normal"}`}>
-                              {cls.title || cls.className || cls.classCode}
+                              {cls.title}
                             </span>
                           )}
                         </Listbox.Option>

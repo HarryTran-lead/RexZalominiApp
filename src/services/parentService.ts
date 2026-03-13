@@ -1,6 +1,6 @@
 import { api } from "@/api/api";
 import { ApiResponse } from "@/types/apiResponse";
-import { PARENT_ENDPOINTS, LEAVE_REQUEST_ENDPOINTS } from "@/constants/apiURL";
+import { PARENT_ENDPOINTS, LEAVE_REQUEST_ENDPOINTS, STUDENT_ENDPOINTS } from "@/constants/apiURL";
 import {
   ParentOverviewResponse,
   ParentHomeworkItem,
@@ -19,13 +19,19 @@ import {
  */
 function extractItems<T>(res: any): T[] {
   if (Array.isArray(res)) return res;
-  // { isSuccess, data: ... } wrapper
+
   if (res?.data !== undefined) {
     const inner = res.data;
     if (Array.isArray(inner)) return inner;
     if (inner?.items && Array.isArray(inner.items)) return inner.items;
+    
+    for (const key of Object.keys(inner)) {
+      if (inner[key]?.items && Array.isArray(inner[key].items)) {
+        return inner[key].items;
+      }
+    }
   }
-  // Direct { items: [...] } without wrapper  
+
   if (res?.items && Array.isArray(res.items)) return res.items;
   return [];
 }
@@ -45,23 +51,13 @@ export const parentService = {
 
   /** GET /api/parent/overview — extract homework items from overview */
   getHomework: async (params?: {
-    classId?: string;
-    fromDate?: string;
-    toDate?: string;
-  }): Promise<ParentHomeworkItem[]> => {
-    const res = await api.get<any>(PARENT_ENDPOINTS.OVERVIEW, { params });
-    const data = res?.data ?? res;
-    // Homework may be nested in data.homeworkAssignments or data.homeworks
-    if (data?.homeworkAssignments) {
-      return Array.isArray(data.homeworkAssignments)
-        ? data.homeworkAssignments
-        : data.homeworkAssignments.items ?? [];
-    }
-    if (data?.homeworks) {
-      return Array.isArray(data.homeworks) ? data.homeworks : data.homeworks.items ?? [];
-    }
-    return [];
-  },
+  classId?: string;
+  fromDate?: string;
+  toDate?: string;
+}): Promise<ParentHomeworkItem[]> => {
+  const res = await api.get<any>(STUDENT_ENDPOINTS.HOMEWORK_MY, { params });
+  return extractItems<ParentHomeworkItem>(res);
+},
 
   /** GET /api/parent/exam-results */
   getExamResults: async (params?: {
