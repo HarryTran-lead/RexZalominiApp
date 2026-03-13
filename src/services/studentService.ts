@@ -3,7 +3,6 @@ import { api } from "../api/api";
 import { API_ENDPOINTS } from "../constants/apiURL";
 import {
   StudentClass,
-  HomeworkStudent,
   SubmitHomeworkRequest,
   SubmitMultipleChoiceHomeworkRequest,
   HomeworkFeedback,
@@ -24,6 +23,7 @@ import {
   HomeworkQueryParams,
   TimetableQueryParams,
   RewardRedemptionQueryParams,
+  HomeworkAssignment,
 } from "../types/student";
 
 export const studentService = {
@@ -40,8 +40,8 @@ export const studentService = {
   // Homework - My homework assignments
   getMyHomework: async (
     params?: HomeworkQueryParams
-  ): Promise<ApiResponse<PaginatedResponse<HomeworkStudent>>> => {
-    return await api.get<ApiResponse<PaginatedResponse<HomeworkStudent>>>(
+  ): Promise<ApiResponse<PaginatedResponse<HomeworkAssignment>>> => {
+    return await api.get<ApiResponse<PaginatedResponse<HomeworkAssignment>>>(
       API_ENDPOINTS.STUDENT.HOMEWORK_MY,
       { params }
     );
@@ -50,8 +50,8 @@ export const studentService = {
   // Homework - Submitted homework
   getSubmittedHomework: async (
     params?: BaseQueryParams
-  ): Promise<ApiResponse<PaginatedResponse<HomeworkStudent>>> => {
-    return await api.get<ApiResponse<PaginatedResponse<HomeworkStudent>>>(
+  ): Promise<ApiResponse<PaginatedResponse<HomeworkAssignment>>> => {
+    return await api.get<ApiResponse<PaginatedResponse<HomeworkAssignment>>>(
       API_ENDPOINTS.STUDENT.HOMEWORK_SUBMITTED,
       { params }
     );
@@ -60,8 +60,8 @@ export const studentService = {
   // Homework - Get homework detail
   getHomeworkDetail: async (
     homeworkStudentId: string
-  ): Promise<ApiResponse<HomeworkStudent>> => {
-    return await api.get<ApiResponse<HomeworkStudent>>(
+  ): Promise<ApiResponse<HomeworkAssignment>> => {
+    return await api.get<ApiResponse<HomeworkAssignment>>(
       API_ENDPOINTS.STUDENT.HOMEWORK_DETAIL(homeworkStudentId)
     );
   },

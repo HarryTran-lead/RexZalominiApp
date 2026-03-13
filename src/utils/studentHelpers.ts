@@ -1,4 +1,4 @@
-import { HomeworkStudent, RewardRedemption, Exam } from "@/types/student";
+import { HomeworkAssignment, RewardRedemption, Exam } from "@/types/student";
 
 // Date formatting helpers
 export const formatDate = (dateString?: string): string => {
@@ -81,12 +81,12 @@ export const getHomeworkStatusText = (status?: string): string => {
   }
 };
 
-export const isHomeworkOverdue = (homework: HomeworkStudent): boolean => {
-  if (!homework.homework.dueAt || homework.status === 'Submitted' || homework.status === 'Graded') {
+export const isHomeworkOverdue = (homework: HomeworkAssignment): boolean => {
+  if (!homework.dueAt || homework.status === 'Submitted' || homework.status === 'Graded') {
     return false;
   }
-  
-  return new Date() > new Date(homework.homework.dueAt);
+
+  return new Date() > new Date(homework.dueAt);
 };
 
 export const getHomeworkDaysUntilDue = (dueDate?: string): number | null => {

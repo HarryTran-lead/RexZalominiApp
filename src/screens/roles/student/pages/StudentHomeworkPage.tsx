@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Page, List } from "zmp-ui";
 import { studentService } from "@/services";
-import { HomeworkStudent, HomeworkQueryParams } from "@/types/student";
+import { HomeworkAssignment, HomeworkQueryParams } from "@/types/student";
 import { 
   formatDate, 
   formatDateTime,
@@ -15,10 +15,10 @@ import {
 
 function StudentHomeworkPage() {
   const navigate = useNavigate();
-  const [homework, setHomework] = useState<HomeworkStudent[]>([]);
+  const [homework, setHomework] = useState<HomeworkAssignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'submitted' | 'graded'>('all');
+  const [activeTab, setActiveTab] = useState<'All' | 'Submitted' | 'Assigned' | 'Missing' | 'Graded'>('All');
 
   const fetchHomework = async (status?: string) => {
     setLoading(true);
@@ -30,16 +30,24 @@ function StudentHomeworkPage() {
         pageNumber: 1,
       };
       
-      if (status && status !== 'all') {
+      if (status && status !== 'All') {
         params.status = status;
       }
       
       const response = await studentService.getMyHomework(params);
-      
+
       if (response.isSuccess && response.data) {
-        setHomework(response.data.items || []);
+        const data = response.data as any;
+        const items = Array.isArray(data?.items)
+          ? data.items
+          : Array.isArray(data?.homeworks?.items)
+            ? data.homeworks.items
+            : Array.isArray(data)
+              ? data
+              : [];
+        setHomework(items);
       } else {
-        setError('Không thể tải danh sách bài tập');
+        setError("Không thể tải danh sách bài tập");
       }
     } catch (err) {
       console.error('Error fetching homework:', err);
@@ -50,18 +58,18 @@ function StudentHomeworkPage() {
   };
 
   useEffect(() => {
-    fetchHomework(activeTab === 'all' ? undefined : activeTab);
+    fetchHomework(activeTab === 'All' ? undefined : activeTab);
   }, [activeTab]);
 
-  const handleHomeworkClick = (homeworkStudent: HomeworkStudent) => {
+  const handleHomeworkClick = (homeworkAssignment: HomeworkAssignment) => {
     // Navigate to homework detail page
-    navigate(`/student/homework/${homeworkStudent.id}`);
+    navigate(`/student/homework/${homeworkAssignment.id}`);
   };
 
-  const getDueDateInfo = (homework: HomeworkStudent) => {
-    if (!homework.homework.dueAt) return { text: '', color: '' };
+  const getDueDateInfo = (homework: HomeworkAssignment) => {
+    if (!homework.dueAt) return { text: '', color: '' };
     
-    const daysUntilDue = getHomeworkDaysUntilDue(homework.homework.dueAt);
+    const daysUntilDue = getHomeworkDaysUntilDue(homework.dueAt);
     const isOverdue = isHomeworkOverdue(homework);
     
     if (isOverdue) {
@@ -76,81 +84,75 @@ function StudentHomeworkPage() {
     } else if ((daysUntilDue || 0) <= 3) {
       return { text: `Còn ${daysUntilDue} ngày`, color: 'text-yellow-600' };
     } else {
-      return { text: formatDate(homework.homework.dueAt), color: 'text-gray-500' };
+      return { text: formatDate(homework.dueAt), color: 'text-gray-500' };
     }
   };
 
-  const getTabCount = (status: string) => {
-    if (status === 'all') return homework.length;
-    return homework.filter(item => item.status.toLowerCase() === status).length;
-  };
+  // Sửa getTabCount - thêm optional chaining
+const getTabCount = (status: string) => {
+  if (status === 'All') return homework.length;
+  return homework.filter(item => item.status?.toLowerCase() === status.toLowerCase()).length;
+};
 
-  const renderHomeworkItem = (item: HomeworkStudent) => {
-    const dueDateInfo = getDueDateInfo(item);
-    const isOverdueItem = isHomeworkOverdue(item);
-    
-    return (
-      <div
-        key={item.id}
-        onClick={() => handleHomeworkClick(item)}
-        className={`mb-2 rounded-lg border ${isOverdueItem ? 'border-red-200 bg-red-50' : 'border-gray-200 bg-white'} shadow-sm p-4 cursor-pointer hover:shadow-md transition-shadow`}
-      >
-        <div className="space-y-2">
-          <div className="flex items-start justify-between">
-            <h3 className="font-medium text-gray-900 flex-1 mr-2">
-              {truncateText(item.homework.title, 60)}
-            </h3>
-            <span className={`text-xs px-2 py-1 rounded-full ${getHomeworkStatusColor(item.status)} bg-gray-100`}>
-              {getHomeworkStatusText(item.status)}
-            </span>
-          </div>
-          
-          {item.homework.description && (
-            <p className="text-sm text-gray-600">
-              {truncateText(item.homework.description, 100)}
-            </p>
-          )}
-          
-          <div className="flex items-center justify-between text-xs text-gray-500">
-            <div className="space-y-1">
-              {item.homework.className && (
-                <div>Lớp: {item.homework.className}</div>
-              )}
-              {item.homework.book && (
-                <div>Sách: {item.homework.book} {item.homework.pages && `(trang ${item.homework.pages})`}</div>
-              )}
-            </div>
-            
-            <div className="text-right space-y-1">
-              {dueDateInfo.text && (
-                <div className={dueDateInfo.color}>
-                  {dueDateInfo.text}
-                </div>
-              )}
-              {item.homework.rewardStars && item.homework.rewardStars > 0 && (
-                <div className="text-yellow-600">
-                  ⭐ {item.homework.rewardStars}
-                </div>
-              )}
-            </div>
-          </div>
-          
-          {item.score !== undefined && item.score !== null && (
-            <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-              <span className="text-sm text-gray-600">Điểm số:</span>
-              <span className="font-medium text-green-600">{item.score}/{item.homework.maxScore}</span>
-            </div>
-          )}
-          
-          {item.submittedAt && (
-            <div className="text-xs text-gray-500">
-              Nộp lúc: {formatDateTime(item.submittedAt)}
-            </div>
-          )}
+// Sửa renderHomeworkItem - dùng isOverdue trực tiếp từ API thay vì gọi function
+const renderHomeworkItem = (item: HomeworkAssignment) => {
+  const dueDateInfo = getDueDateInfo(item);
+  const isOverdueItem = item.isOverdue ?? isHomeworkOverdue(item); // ← API đã có field này
+
+  return (
+    <div
+      key={item.id}
+      onClick={() => handleHomeworkClick(item)}
+      className={`mb-2 rounded-lg border ${isOverdueItem ? 'border-red-200 bg-red-50' : 'border-gray-200 bg-white'} shadow-sm p-4 cursor-pointer hover:shadow-md transition-shadow`}
+    >
+      <div className="space-y-2">
+        <div className="flex items-start justify-between">
+          <h3 className="font-medium text-gray-900 flex-1 mr-2">
+            {truncateText(item.assignmentTitle ?? '', 60)}  {/* ← đúng field name */}
+          </h3>
+          <span className={`text-xs px-2 py-1 rounded-full ${getHomeworkStatusColor(item.status ?? '')} bg-gray-100`}>
+            {getHomeworkStatusText(item.status ?? '')}
+          </span>
         </div>
+
+        {item.assignmentDescription && (
+          <p className="text-sm text-gray-600">
+            {truncateText(item.assignmentDescription, 100)}
+          </p>
+        )}
+
+        <div className="flex items-center justify-between text-xs text-gray-500">
+          <div className="space-y-1">
+            {item.classTitle && (
+              <div>Lớp: {item.classCode ? `${item.classCode} - ` : ''}{item.classTitle}</div>
+            )}
+            {item.book && (
+              <div>Sách: {item.book} {item.pages && `(trang ${item.pages})`}</div>
+            )}
+          </div>
+          <div className="text-right space-y-1">
+            {dueDateInfo.text && (
+              <div className={dueDateInfo.color}>{dueDateInfo.text}</div>
+            )}
+          </div>
+        </div>
+
+        {item.score != null && (
+          <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+            <span className="text-sm text-gray-600">Điểm số:</span>
+            <span className="font-medium text-green-600">{item.score}/{item.maxScore}</span>
+          </div>
+        )}
+
+        {item.submittedAt && (
+          <div className="text-xs text-gray-500">
+            Nộp lúc: {formatDateTime(item.submittedAt)}
+          </div>
+        )}
       </div>
-    );
-  };
+    </div>
+  );
+};
 
   return (
     <Page className="min-h-screen bg-gray-100 pb-20">
@@ -168,10 +170,10 @@ function StudentHomeworkPage() {
       <div className="bg-white border-b border-gray-200">
         <div className="flex space-x-0">
           {[
-            { key: 'all', label: 'Tất cả' },
-            { key: 'pending', label: 'Chưa nộp' },
-            { key: 'submitted', label: 'Đã nộp' },
-            { key: 'graded', label: 'Đã chấm' },
+            { key: 'All', label: 'Tất cả' },
+            { key: 'Missing', label: 'Chưa nộp' },
+            { key: 'Submitted', label: 'Đã nộp' },
+            { key: 'Graded', label: 'Đã chấm' },
           ].map((tab) => (
             <button
               key={tab.key}
@@ -210,7 +212,7 @@ function StudentHomeworkPage() {
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
             <div className="text-red-600 text-sm">{error}</div>
             <button 
-              onClick={() => fetchHomework(activeTab === 'all' ? undefined : activeTab)}
+              onClick={() => fetchHomework(activeTab === 'All' ? undefined : activeTab)}
               className="mt-2 px-4 py-2 bg-red-600 text-white text-sm rounded-lg"
             >
               Thử lại
@@ -235,6 +237,7 @@ function StudentHomeworkPage() {
             )}
           </>
         )}
+        
       </div>
     </Page>
   );

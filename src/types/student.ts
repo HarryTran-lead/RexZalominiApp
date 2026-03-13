@@ -44,22 +44,6 @@ export interface HomeworkAssignment {
     isOverdue: boolean;
 }
 
-
-export interface HomeworkStudent {
-  id: string;
-  homeworkId: string;
-  studentProfileId: string;
-  status: "Pending" | "Submitted" | "Graded" | "Late" | "Missing";
-  submittedAt?: string;
-  textAnswer?: string;
-  attachmentUrls?: string[];
-  linkUrl?: string;
-  score?: number;
-  teacherFeedback?: string;
-  gradedAt?: string;
-  homework: HomeworkAssignment;
-}
-
 export interface SubmitHomeworkRequest {
   homeworkStudentId: string;
   textAnswer?: string;
