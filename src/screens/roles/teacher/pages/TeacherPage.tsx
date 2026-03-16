@@ -1,25 +1,15 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Page } from "zmp-ui";
+import RoleDashboardScaffold, { RoleDashboardSection } from "@/components/role/RoleDashboardScaffold";
 import img from "../../../../assets/images/LogoRex.png";
-
-interface MenuItem {
-  icon: React.ReactNode;
-  label: string;
-  path: string;
-}
-
-interface MenuSection {
-  title: string;
-  items: MenuItem[];
-}
 
 function TeacherPage() {
   const navigate = useNavigate();
 
-  const sections: MenuSection[] = [
+  const sections: RoleDashboardSection[] = [
     {
       title: "Giảng dạy",
+      description: "Những công cụ chính cho buổi dạy hiệu quả",
       items: [
         {
           icon: (
@@ -29,6 +19,7 @@ function TeacherPage() {
           ),
           label: "Lớp học của tôi",
           path: "/teacher/my-classes",
+          helper: "Danh sách lớp đang phụ trách",
         },
         {
           icon: (
@@ -38,6 +29,7 @@ function TeacherPage() {
           ),
           label: "Lịch giảng dạy",
           path: "/teacher/timetable",
+          helper: "Theo dõi lịch theo tuần",
         },
         {
           icon: (
@@ -47,11 +39,13 @@ function TeacherPage() {
           ),
           label: "Môn học & tài liệu",
           path: "/teacher/subjects",
+          helper: "Nội dung và tài nguyên lớp học",
         },
       ],
     },
     {
       title: "Quản lý",
+      description: "Theo dõi tiến độ và chăm sóc học viên",
       items: [
         {
           icon: (
@@ -61,6 +55,7 @@ function TeacherPage() {
           ),
           label: "Bài tập & nộp bài",
           path: "/teacher/assignments",
+          helper: "Danh sách bài tập và hạn nộp",
         },
         {
           icon: (
@@ -70,6 +65,7 @@ function TeacherPage() {
           ),
           label: "Điểm danh",
           path: "/teacher/timetable",
+          helper: "Điểm danh theo buổi học",
         },
         {
           icon: (
@@ -79,49 +75,25 @@ function TeacherPage() {
           ),
           label: "Báo cáo & feedback",
           path: "/teacher/reports",
+          helper: "Đánh giá sau mỗi buổi học",
         },
       ],
     },
   ];
 
-  const renderGrid = (items: MenuItem[]) => (
-    <div className="grid grid-cols-2 gap-4">
-      {items.map((item, idx) => {
-        const isOdd = items.length % 2 !== 0 && idx === items.length - 1;
-        return (
-          <button
-            key={idx}
-            onClick={() => navigate(item.path)}
-            className={`bg-white rounded-2xl shadow-sm p-5 flex flex-col items-center justify-center gap-3 active:scale-95 transition-transform ${isOdd ? "col-span-2 max-w-[50%] mx-auto w-full" : ""}`}
-          >
-            <span className="text-red-500">{item.icon}</span>
-            <span className="text-red-500 font-semibold text-sm text-center">{item.label}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-
   return (
-    <Page className="min-h-screen bg-gray-100 pb-20">
-      {/* Red Header Banner */}
-      <div className="sticky top-0 z-10 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center justify-center">
-        <div className="bg-white rounded-xl px-5 py-2 shadow-sm">
-          <img src={img} alt="Rex Education" className="h-10 object-contain" />
-        </div>
-      </div>
-
-      {/* Sections */}
-      {sections.map((section, sIdx) => (
-        <div key={sIdx} className="px-4 pt-6">
-          <div className="flex flex-col items-center mb-4">
-            <h2 className="text-red-600 font-bold text-base">{section.title}</h2>
-            <div className="w-8 h-1 bg-red-600 rounded-full mt-1" />
-          </div>
-          {renderGrid(section.items)}
-        </div>
-      ))}
-    </Page>
+    <RoleDashboardScaffold
+      logoSrc={img}
+      title="Giáo viên"
+      subtitle="Lớp học rõ ràng, quản lý nhanh chóng"
+      stats={[
+        { label: "Vai trò", value: "Teacher" },
+        { label: "Trọng tâm", value: "Giảng dạy" },
+        { label: "Mục tiêu", value: "Tiến bộ từng buổi" },
+      ]}
+      sections={sections}
+      onNavigate={(path) => navigate(path)}
+    />
   );
 }
 

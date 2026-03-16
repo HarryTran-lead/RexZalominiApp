@@ -1,25 +1,15 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Page } from "zmp-ui";
+import RoleDashboardScaffold, { RoleDashboardSection } from "@/components/role/RoleDashboardScaffold";
 import img from "../../../../assets/images/LogoRex.png";
-
-interface MenuItem {
-  icon: React.ReactNode;
-  label: string;
-  path: string;
-}
-
-interface MenuSection {
-  title: string;
-  items: MenuItem[];
-}
 
 function StudentPage() {
   const navigate = useNavigate();
 
-  const sections: MenuSection[] = [
+  const sections: RoleDashboardSection[] = [
     {
       title: "Học tập",
+      description: "Mọi nội dung học trong một chạm",
       items: [
         {
           icon: (
@@ -29,6 +19,7 @@ function StudentPage() {
           ),
           label: "Lịch học",
           path: "/student/timetable",
+          helper: "Xem lịch tuần và buổi tới",
         },
         {
           icon: (
@@ -38,6 +29,7 @@ function StudentPage() {
           ),
           label: "Bài tập",
           path: "/student/homework",
+          helper: "Theo dõi deadline dễ hơn",
         },
         {
           icon: (
@@ -47,6 +39,7 @@ function StudentPage() {
           ),
           label: "Kiểm tra",
           path: "/student/exams",
+          helper: "Bài kiểm tra và kết quả",
         },
         {
           icon: (
@@ -56,11 +49,13 @@ function StudentPage() {
           ),
           label: "Tài liệu",
           path: "/student/documents",
+          helper: "Tài nguyên học tập",
         },
       ],
     },
     {
       title: "Hoạt động",
+      description: "Tăng động lực học mỗi ngày",
       items: [
         {
           icon: (
@@ -70,6 +65,7 @@ function StudentPage() {
           ),
           label: "Gamification",
           path: "/student/gamification",
+          helper: "Theo dõi sao và thành tích",
         },
         {
           icon: (
@@ -79,6 +75,7 @@ function StudentPage() {
           ),
           label: "Application",
           path: "/student/application",
+          helper: "Nộp yêu cầu nhanh",
         },
         {
           icon: (
@@ -88,49 +85,25 @@ function StudentPage() {
           ),
           label: "Đổi thưởng",
           path: "/student/rewards",
+          helper: "Đổi sao lấy quà",
         },
       ],
     },
   ];
 
-  const renderGrid = (items: MenuItem[]) => (
-    <div className="grid grid-cols-2 gap-4">
-      {items.map((item, idx) => {
-        const isOdd = items.length % 2 !== 0 && idx === items.length - 1;
-        return (
-          <button
-            key={idx}
-            onClick={() => navigate(item.path)}
-            className={`bg-white rounded-2xl shadow-sm p-5 flex flex-col items-center justify-center gap-3 active:scale-95 transition-transform ${isOdd ? "col-span-2 max-w-[50%] mx-auto w-full" : ""}`}
-          >
-            <span className="text-red-500">{item.icon}</span>
-            <span className="text-red-500 font-semibold text-sm text-center">{item.label}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-
   return (
-    <Page className="min-h-screen bg-gray-100 pb-20">
-      {/* Red Header Banner */}
-      <div className="bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center justify-center">
-        <div className="bg-white rounded-xl px-5 py-2 shadow-sm">
-          <img src={img} alt="Rex Education" className="h-10 object-contain" />
-        </div>
-      </div>
-
-      {/* Sections */}
-      {sections.map((section, sIdx) => (
-        <div key={sIdx} className="px-4 pt-6">
-          <div className="flex flex-col items-center mb-4">
-            <h2 className="text-red-600 font-bold text-base">{section.title}</h2>
-            <div className="w-8 h-1 bg-blue-700 rounded-full mt-1" />
-          </div>
-          {renderGrid(section.items)}
-        </div>
-      ))}
-    </Page>
+    <RoleDashboardScaffold
+      logoSrc={img}
+      title="Học viên"
+      subtitle="Học vui, tiến bộ đều mỗi ngày"
+      stats={[
+        { label: "Mục tiêu", value: "Tự tin Anh ngữ" },
+        { label: "Độ tuổi", value: "6-14" },
+        { label: "Vai trò", value: "Student" },
+      ]}
+      sections={sections}
+      onNavigate={(path) => navigate(path)}
+    />
   );
 }
 

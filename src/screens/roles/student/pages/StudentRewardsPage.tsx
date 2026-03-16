@@ -196,8 +196,8 @@ function StudentRewardsPage() {
 
   if (loading) {
     return (
-      <Page className="min-h-screen bg-gray-100 pb-20">
-        <div className="bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
+      <Page className="flex h-full min-h-0 flex-col bg-gray-100">
+        <div className="shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
           <button onClick={() => navigate(-1)} className="text-white mr-3">
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -205,7 +205,7 @@ function StudentRewardsPage() {
           </button>
           <h1 className="text-white font-bold text-lg">Đổi thưởng</h1>
         </div>
-        <div className="px-4 py-4 space-y-4">
+        <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 pb-24 space-y-4">
           {[1, 2, 3].map((i) => (
             <div key={i} className="bg-white rounded-lg p-4 shadow-sm animate-pulse">
               <div className="h-6 bg-gray-200 rounded w-2/3 mb-2"></div>
@@ -220,8 +220,8 @@ function StudentRewardsPage() {
 
   if (error) {
     return (
-      <Page className="min-h-screen bg-gray-100 pb-20">
-        <div className="bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
+      <Page className="flex h-full min-h-0 flex-col bg-gray-100">
+        <div className="shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
           <button onClick={() => navigate(-1)} className="text-white mr-3">
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -229,7 +229,7 @@ function StudentRewardsPage() {
           </button>
           <h1 className="text-white font-bold text-lg">Đổi thưởng</h1>
         </div>
-        <div className="px-4 pt-8 flex flex-col items-center text-gray-400">
+        <div className="flex-1 min-h-0 overflow-y-auto px-4 pt-8 pb-24 flex flex-col items-center text-gray-400">
           <svg className="w-16 h-16 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
@@ -246,8 +246,8 @@ function StudentRewardsPage() {
   }
 
   return (
-    <Page className="min-h-screen bg-gray-100 pb-20">
-      <div className="bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
+    <Page className="flex h-full min-h-0 flex-col bg-gray-100">
+      <div className="shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
         <button onClick={() => navigate(-1)} className="text-white mr-3">
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -296,7 +296,7 @@ function StudentRewardsPage() {
       </div>
 
       {/* Content */}
-      <div className="px-4 py-4">
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 pb-24">
         {activeTab === 'rewards' ? (
           <>
             {rewards.length === 0 ? (

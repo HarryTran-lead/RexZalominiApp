@@ -81,11 +81,11 @@ const TeacherTimetablePage: React.FC = () => {
   };
 
   return (
-    <Page className="flex flex-col h-screen bg-slate-50">
-      <div className="sticky top-0 z-20 bg-red-600 text-white px-4 py-3">
+    <Page className="flex h-full min-h-0 flex-col bg-slate-50">
+      <div className="shrink-0 bg-red-600 text-white px-4 py-3">
         <h1 className="text-lg font-bold text-center">Lịch dạy</h1>
       </div>
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 min-h-0 overflow-y-auto">
         <WeeklyTimetable
           sessions={sessions}
           loading={loading}

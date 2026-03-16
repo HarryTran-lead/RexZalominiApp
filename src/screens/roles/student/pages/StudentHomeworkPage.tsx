@@ -155,9 +155,9 @@ const renderHomeworkItem = (item: HomeworkAssignment) => {
 };
 
   return (
-    <Page className="min-h-screen bg-gray-100 pb-20">
+    <Page className="flex h-full min-h-0 flex-col bg-gray-100">
       {/* Header */}
-      <div className="bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
+      <div className="shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
         <button onClick={() => navigate(-1)} className="text-white mr-3">
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -167,7 +167,7 @@ const renderHomeworkItem = (item: HomeworkAssignment) => {
       </div>
 
       {/* Filter Tabs */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="shrink-0 bg-white border-b border-gray-200">
         <div className="flex space-x-0">
           {[
             { key: 'All', label: 'Tất cả' },
@@ -193,7 +193,7 @@ const renderHomeworkItem = (item: HomeworkAssignment) => {
         </div>
       </div>
 
-      <div className="px-4 py-4">
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 pb-24">
         {/* Loading State */}
         {loading && (
           <div className="space-y-3">

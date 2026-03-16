@@ -136,9 +136,9 @@ function TeacherAttendancePage() {
   const totalNotMarked = students.length - totalPresent - totalAbsent - totalMakeup;
 
   return (
-    <Page className="min-h-screen bg-gray-100 pb-24">
-      {/* Sticky header + summary */}
-      <div className="sticky top-0 z-10">
+    <Page className="flex h-full min-h-0 flex-col bg-gray-100">
+      {/* Fixed header + summary */}
+      <div className="shrink-0 z-10">
         {/* Header */}
         <div className="bg-gradient-to-r from-red-600 to-red-700 px-4 py-4">
         <div className="flex items-center gap-3 mb-2">
@@ -189,84 +189,86 @@ function TeacherAttendancePage() {
             </div>
           </div>
         )}
-      </div> {/* end sticky wrapper */}
+      </div> {/* end fixed wrapper */}
 
-      {/* Content */}
-      {loading && (
-        <div className="flex flex-col items-center justify-center py-16 gap-3">
-          <Spinner />
-          <p className="text-sm text-gray-400">Đang tải danh sách...</p>
-        </div>
-      )}
+      <div className="flex-1 min-h-0 overflow-y-auto pb-24">
+        {/* Content */}
+        {loading && (
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
+            <Spinner />
+            <p className="text-sm text-gray-400">Đang tải danh sách...</p>
+          </div>
+        )}
 
-      {error && !loading && (
-        <div className="mx-4 mt-6 bg-red-50 rounded-2xl p-5 text-center">
-          <svg className="w-10 h-10 text-red-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          <p className="text-sm text-red-600">{error}</p>
-          <button
-            onClick={loadAttendance}
-            className="mt-3 text-sm text-red-600 font-semibold underline"
-          >
-            Thử lại
-          </button>
-        </div>
-      )}
+        {error && !loading && (
+          <div className="mx-4 mt-6 bg-red-50 rounded-2xl p-5 text-center">
+            <svg className="w-10 h-10 text-red-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <p className="text-sm text-red-600">{error}</p>
+            <button
+              onClick={loadAttendance}
+              className="mt-3 text-sm text-red-600 font-semibold underline"
+            >
+              Thử lại
+            </button>
+          </div>
+        )}
 
-      {!loading && !error && students.length === 0 && (
-        <div className="mx-4 mt-8 flex flex-col items-center text-gray-400">
-          <svg className="w-14 h-14 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-          <p className="text-sm">Không có học sinh trong buổi học này</p>
-        </div>
-      )}
+        {!loading && !error && students.length === 0 && (
+          <div className="mx-4 mt-8 flex flex-col items-center text-gray-400">
+            <svg className="w-14 h-14 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <p className="text-sm">Không có học sinh trong buổi học này</p>
+          </div>
+        )}
 
-      {!loading && !error && students.length > 0 && (
-        <div className="px-4 pt-4 flex flex-col gap-3">
-          {students.map((student, idx) => {
-            const currentStatus = statusMap[student.studentProfileId] ?? "NotMarked";
-            const isSaving = savingId === student.studentProfileId;
+        {!loading && !error && students.length > 0 && (
+          <div className="px-4 pt-4 flex flex-col gap-3">
+            {students.map((student, idx) => {
+              const currentStatus = statusMap[student.studentProfileId] ?? "NotMarked";
+              const isSaving = savingId === student.studentProfileId;
 
-            return (
-              <div
-                key={student.studentProfileId}
-                className="bg-white rounded-2xl shadow-sm px-4 py-3"
-              >
-                {/* Student info row */}
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
-                    {idx + 1}
+              return (
+                <div
+                  key={student.studentProfileId}
+                  className="bg-white rounded-2xl shadow-sm px-4 py-3"
+                >
+                  {/* Student info row */}
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                      {idx + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-800 text-sm leading-tight truncate">
+                        {student.studentName}
+                      </p>
+                    </div>
+                    {isSaving && <Spinner />}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-800 text-sm leading-tight truncate">
-                      {student.studentName}
-                    </p>
-                  </div>
-                  {isSaving && <Spinner />}
-                </div>
 
-                {/* Status buttons */}
-                <div className="grid grid-cols-3 gap-2">
-                  {STATUS_CONFIG.map((cfg) => (
-                    <button
-                      key={cfg.value}
-                      disabled={isSaving}
-                      onClick={() => handleStatusChange(student, cfg.value)}
-                      className={`py-1.5 rounded-lg border text-xs font-semibold transition-all active:scale-95 ${
-                        currentStatus === cfg.value ? cfg.activeClass : cfg.inactiveClass
-                      } ${isSaving ? "opacity-50 cursor-not-allowed" : ""}`}
-                    >
-                      {cfg.shortLabel}
-                    </button>
-                  ))}
+                  {/* Status buttons */}
+                  <div className="grid grid-cols-3 gap-2">
+                    {STATUS_CONFIG.map((cfg) => (
+                      <button
+                        key={cfg.value}
+                        disabled={isSaving}
+                        onClick={() => handleStatusChange(student, cfg.value)}
+                        className={`py-1.5 rounded-lg border text-xs font-semibold transition-all active:scale-95 ${
+                          currentStatus === cfg.value ? cfg.activeClass : cfg.inactiveClass
+                        } ${isSaving ? "opacity-50 cursor-not-allowed" : ""}`}
+                      >
+                        {cfg.shortLabel}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        )}
+      </div>
     </Page>
   );
 }

@@ -59,7 +59,6 @@ function ParentLeaveRequestPage() {
         // Pre-select first student if available
         if (studentsList.length > 0 && !form.studentProfileId) {
           setForm((prev) => ({ ...prev, studentProfileId: studentsList[0].id }));
-          await fetchStudentClasses(studentsList[0].id);
         }
       }
     } catch (err: any) {
@@ -90,12 +89,16 @@ function ParentLeaveRequestPage() {
     });
 
     const classList: StudentClass[] =
-      res.data?.data?.classes?.items ?? [];
+      res?.data?.classes?.items ??
+      res?.data?.items ??
+      [];
 
     setClasses(classList);
 
     if (classList.length > 0) {
       setForm((prev) => ({ ...prev, classId: classList[0].id }));
+    } else {
+      setForm((prev) => ({ ...prev, classId: "" }));
     }
   } catch (err: any) {
     console.error("Error fetching classes:", err);
@@ -115,7 +118,13 @@ function ParentLeaveRequestPage() {
     if (form.studentProfileId) {
       fetchStudentClasses(form.studentProfileId);
     }
-  }, [form.studentProfileId]);
+  }, [form.studentProfileId, fetchStudentClasses]);
+
+  useEffect(() => {
+    if (viewMode === "create" && !form.studentProfileId && students.length > 0) {
+      setForm((prev) => ({ ...prev, studentProfileId: students[0].id }));
+    }
+  }, [viewMode, form.studentProfileId, students]);
 
   const handleSubmit = async () => {
     if (!form.sessionDate || !form.reason?.trim()) {
@@ -158,9 +167,9 @@ function ParentLeaveRequestPage() {
   };
 
   return (
-    <Page className="min-h-screen bg-gray-100 pb-20">
+    <Page className="flex h-full min-h-0 flex-col bg-gray-100">
       {/* Header */}
-      <div className="bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
+      <div className="shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
         <button
           onClick={() => (viewMode === "create" ? setViewMode("list") : navigate(-1))}
           className="text-white mr-3"
@@ -182,6 +191,7 @@ function ParentLeaveRequestPage() {
         )}
       </div>
 
+      <div className="flex-1 min-h-0 overflow-y-auto pb-24">
       {viewMode === "create" ? (
         /* Create Form */
         <div className="px-4 pt-4 space-y-4">
@@ -244,7 +254,7 @@ function ParentLeaveRequestPage() {
               <Listbox
                 value={form.classId}
                 onChange={(value) => setForm({ ...form, classId: value })}
-                disabled={!form.studentProfileId || classes.length === 0}
+                disabled={loadingClasses}
               >
                 <div className="relative">
                   <Listbox.Button className="w-full bg-white rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-left focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent flex items-center justify-between disabled:opacity-50 disabled:cursor-not-allowed">
@@ -402,6 +412,7 @@ function ParentLeaveRequestPage() {
           )}
         </div>
       )}
+      </div>
     </Page>
   );
 }

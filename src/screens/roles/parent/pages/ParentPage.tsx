@@ -1,21 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Page, Spinner, useSnackbar } from "zmp-ui";
+import { Spinner, useSnackbar } from "zmp-ui";
+import RoleDashboardScaffold, {
+  RoleDashboardSection,
+} from "@/components/role/RoleDashboardScaffold";
 import { authService } from "@/services/authService";
 import { storage } from "@/utils/storage";
 import { UserProfile } from "@/types/auth";
 import img from "../../../../assets/images/LogoRex.png";
-
-interface MenuItem {
-  icon: React.ReactNode;
-  label: string;
-  path: string;
-}
-
-interface MenuSection {
-  title: string;
-  items: MenuItem[];
-}
 
 function ParentPage() {
   const navigate = useNavigate();
@@ -74,9 +66,10 @@ function ParentPage() {
     }
   };
 
-  const sections: MenuSection[] = [
+  const sections: RoleDashboardSection[] = [
     {
       title: "Theo dõi học tập",
+      description: "Nắm nhanh tiến độ của con theo từng ngày",
       items: [
         {
           icon: (
@@ -86,6 +79,7 @@ function ParentPage() {
           ),
           label: "Lịch học",
           path: "/parent/timetable",
+          helper: "Xem buổi học tuần này",
         },
         {
           icon: (
@@ -95,6 +89,7 @@ function ParentPage() {
           ),
           label: "Bài tập",
           path: "/parent/homework",
+          helper: "Theo dõi hạn nộp và điểm",
         },
         {
           icon: (
@@ -104,11 +99,13 @@ function ParentPage() {
           ),
           label: "Kiểm tra",
           path: "/parent/exams",
+          helper: "Kết quả kiểm tra gần đây",
         },
       ],
     },
     {
       title: "Khác",
+      description: "Các tiện ích hỗ trợ phụ huynh",
       items: [
         {
           icon: (
@@ -118,6 +115,7 @@ function ParentPage() {
           ),
           label: "Thông báo",
           path: "/parent/notifications",
+          helper: "Tin nhắn mới từ trung tâm",
         },
         {
           icon: (
@@ -127,120 +125,92 @@ function ParentPage() {
           ),
           label: "Đơn xin nghỉ",
           path: "/parent/leave-request",
+          helper: "Gửi và theo dõi trạng thái",
         },
       ],
     },
   ];
 
-  const renderGrid = (items: MenuItem[]) => (
-    <div className="grid grid-cols-2 gap-4">
-      {items.map((item, idx) => {
-        const isOdd = items.length % 2 !== 0 && idx === items.length - 1;
-        return (
-          <button
-            key={idx}
-            onClick={() => navigate(item.path)}
-            className={`bg-white rounded-2xl shadow-sm p-5 flex flex-col items-center justify-center gap-3 active:scale-95 transition-transform ${isOdd ? "col-span-2 max-w-[50%] mx-auto w-full" : ""}`}
+  const childSelector = (
+    <div className="rounded-2xl border border-red-100 bg-white shadow-sm overflow-hidden">
+      <button
+        className="w-full flex items-center gap-3 px-4 py-3 active:bg-gray-50"
+        onClick={() => setSelectorOpen((v) => !v)}
+        disabled={switching}
+      >
+        <div className="w-11 h-11 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white font-bold text-base shrink-0">
+          {selectedChild ? selectedChild.displayName.charAt(0).toUpperCase() : "?"}
+        </div>
+        <div className="flex-1 text-left">
+          <p className="font-bold text-gray-800 text-sm leading-tight">{selectedChild?.displayName ?? "Chọn con"}</p>
+          <span className="inline-block mt-0.5 text-[11px] font-semibold text-red-600 bg-red-50 border border-red-200 rounded-full px-2 py-0.5">
+            Hồ sơ đang theo dõi
+          </span>
+        </div>
+        {switching ? (
+          <Spinner />
+        ) : (
+          <svg
+            className={`w-5 h-5 text-gray-400 transition-transform ${selectorOpen ? "rotate-180" : ""}`}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
-            <span className="text-red-500">{item.icon}</span>
-            <span className="text-red-500 font-semibold text-sm text-center">{item.label}</span>
-          </button>
-        );
-      })}
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        )}
+      </button>
+
+      {selectorOpen && (
+        <div className="border-t border-gray-100 bg-red-50/40">
+          {children.map((child) => (
+            <button
+              key={child.id}
+              onClick={() => selectChild(child)}
+              className={`w-full flex items-center gap-3 px-4 py-3 active:bg-red-50 transition ${
+                selectedChild?.id === child.id ? "bg-red-50" : ""
+              }`}
+            >
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white font-bold shrink-0">
+                {child.displayName.charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1 text-left">
+                <p className="font-semibold text-gray-800 text-sm">{child.displayName}</p>
+              </div>
+              {selectedChild?.id === child.id && (
+                <svg className="w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 
-  return (
-    <Page className="min-h-screen bg-gray-100 pb-20">
-      {/* Red Header Banner */}
-      <div className="bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center justify-center">
-        <div className="bg-white rounded-xl px-5 py-2 shadow-sm">
-          <img src={img} alt="Rex Education" className="h-10 object-contain" />
-        </div>
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-red-50/40 pb-20">
+        <Spinner />
       </div>
+    );
+  }
 
-      {loading ? (
-        <div className="flex items-center justify-center py-16">
-          <Spinner />
-        </div>
-      ) : (
-        <>
-          {/* Child Selector */}
-          <div className="px-4 pt-4">
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-2">
-              <button
-                className="w-full flex items-center gap-3 px-4 py-3 active:bg-gray-50"
-                onClick={() => setSelectorOpen((v) => !v)}
-                disabled={switching}
-              >
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white font-bold text-lg shrink-0">
-                  {selectedChild
-                    ? selectedChild.displayName.charAt(0).toUpperCase()
-                    : "?"}
-                </div>
-                <div className="flex-1 text-left">
-                  <p className="font-bold text-gray-800 text-base leading-tight">
-                    {selectedChild?.displayName ?? "Chọn con"}
-                  </p>
-                  <span className="inline-block mt-0.5 text-[11px] font-semibold text-red-600 bg-red-50 border border-red-200 rounded-full px-2 py-0.5">
-                    Học viên
-                  </span>
-                </div>
-                {switching ? (
-                  <Spinner />
-                ) : (
-                  <svg
-                    className={`w-5 h-5 text-gray-400 transition-transform ${selectorOpen ? "rotate-180" : ""}`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                )}
-              </button>
-
-              {selectorOpen && (
-                <div className="border-t border-gray-100 bg-red-50/40">
-                  {children.map((child) => (
-                    <button
-                      key={child.id}
-                      onClick={() => selectChild(child)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 active:bg-red-50 transition ${
-                        selectedChild?.id === child.id ? "bg-red-50" : ""
-                      }`}
-                    >
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white font-bold shrink-0">
-                        {child.displayName.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="flex-1 text-left">
-                        <p className="font-semibold text-gray-800 text-sm">{child.displayName}</p>
-                      </div>
-                      {selectedChild?.id === child.id && (
-                        <svg className="w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Sections */}
-          {sections.map((section, sIdx) => (
-            <div key={sIdx} className="px-4 pt-5">
-              <div className="flex flex-col items-center mb-4">
-                <h2 className="text-red-600 font-bold text-base">{section.title}</h2>
-                <div className="w-8 h-1 bg-blue-700 rounded-full mt-1" />
-              </div>
-              {renderGrid(section.items)}
-            </div>
-          ))}
-        </>
-      )}
-    </Page>
+  return (
+    <RoleDashboardScaffold
+      logoSrc={img}
+      title="Phụ huynh"
+      subtitle="Đồng hành cùng con trên hành trình học tiếng Anh"
+      stats={[
+        { label: "Hồ sơ", value: `${children.length} con` },
+        { label: "Vai trò", value: "Parent" },
+        { label: "Ưu tiên", value: "Tiến độ học" },
+      ]}
+      sections={sections}
+      onNavigate={(path) => navigate(path)}
+      topSlot={childSelector}
+    />
   );
 }
 
