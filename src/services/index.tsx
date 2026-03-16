@@ -24,7 +24,7 @@ export type {
 } from "@/types/parent";
 export type {
   StudentClass,
-  HomeworkStudent,
+  HomeworkAssignment,
   SubmitHomeworkRequest,
   SubmitMultipleChoiceHomeworkRequest,
   HomeworkFeedback,
