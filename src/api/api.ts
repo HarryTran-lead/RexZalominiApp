@@ -34,10 +34,14 @@ apiClient.interceptors.request.use(
         keys: [STORAGE_KEYS.ACCESS_TOKEN],
       });
       const token = result[STORAGE_KEYS.ACCESS_TOKEN];
-      if (token) {
-        config.headers = config.headers || new AxiosHeaders();
-        config.headers.Authorization = `Bearer ${token}`;
+      const headers = AxiosHeaders.from(config.headers);
+      const hasAuthorizationHeader = Boolean(headers.get("Authorization"));
+
+      // Keep explicit Authorization from caller (e.g. profile-scoped token requests).
+      if (token && !hasAuthorizationHeader) {
+        headers.set("Authorization", `Bearer ${token}`);
       }
+      config.headers = headers;
     } catch (error) {
       // Storage error, continue without token
     }
@@ -88,8 +92,9 @@ apiClient.interceptors.response.use(
             });
           }
 
-          originalRequest.headers = originalRequest.headers || new AxiosHeaders();
-          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          const retryHeaders = AxiosHeaders.from(originalRequest.headers);
+          retryHeaders.set("Authorization", `Bearer ${accessToken}`);
+          originalRequest.headers = retryHeaders;
 
           return apiClient(originalRequest);
         }

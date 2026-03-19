@@ -1,5 +1,6 @@
 import { ApiResponse } from "@/types/apiResponse";
 import { api } from "../api/api";
+import { AxiosRequestConfig } from "axios";
 import { API_ENDPOINTS } from "../constants/apiURL";
 import {
   StudentClass,
@@ -29,11 +30,15 @@ import {
 export const studentService = {
   // Student Classes
   getClasses: async (
-    params?: BaseQueryParams
+    params?: BaseQueryParams,
+    config?: AxiosRequestConfig
   ): Promise<ApiResponse<PaginatedResponse<StudentClass>>> => {
     return await api.get<ApiResponse<PaginatedResponse<StudentClass>>>(
       API_ENDPOINTS.STUDENT.CLASSES,
-      { params }
+      {
+        ...config,
+        params,
+      }
     );
   },
 
