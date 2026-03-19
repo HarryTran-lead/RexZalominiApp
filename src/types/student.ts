@@ -160,10 +160,10 @@ export interface Exam {
   title: string;
   subject?: string;
   examType:
-    | "QuarterlyExam"
-    | "MidtermExam"
-    | "FinalExam"
-    | "PopQuiz"
+    | "Progress"
+    | "Midterm"
+    | "Final"
+    | "Speaking"
     | "PlacementTest";
   date: string;
   startTime: string;

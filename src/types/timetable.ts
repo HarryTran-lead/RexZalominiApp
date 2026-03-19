@@ -29,6 +29,8 @@ export interface TimetableSession {
   // Parent-specific
   studentName?: string;
   studentProfileId?: string;
+  attendanceMarkedAt?: string | null;
+  attendanceStatus?: "Present" | "Absent" | "Late" | "Excused" | "Unmarked";
 }
 
 export interface TimetableResponse {

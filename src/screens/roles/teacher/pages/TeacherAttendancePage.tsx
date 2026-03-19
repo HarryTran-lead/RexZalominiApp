@@ -1,10 +1,15 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Page, Spinner, useSnackbar } from "zmp-ui";
+import ConfirmModal from "@/components/common/ConfirmModal";
 import { attendanceService } from "@/services/attendanceService";
-import { AttendanceStudent, AttendanceRequest } from "@/types/attendance";
+import {
+  AttendanceListPayload,
+  AttendanceMarkStatus,
+  AttendanceStudent,
+} from "@/types/attendance";
 
-type AttendanceStatusValue = AttendanceRequest["attendanceStatus"];
+type AttendanceStatusValue = AttendanceMarkStatus;
 
 const STATUS_CONFIG: {
   value: AttendanceStatusValue;
@@ -64,6 +69,24 @@ function formatDate(isoString?: string): string {
   });
 }
 
+function extractAttendanceList(payload: AttendanceListPayload | undefined): AttendanceStudent[] {
+  if (!payload) return [];
+  if (Array.isArray(payload)) return payload;
+  if ("attendances" in payload && Array.isArray(payload.attendances)) {
+    return payload.attendances;
+  }
+  if ("items" in payload && Array.isArray(payload.items)) {
+    return payload.items;
+  }
+  return [];
+}
+
+function isSubmitStatus(
+  value: AttendanceStudent["attendanceStatus"]
+): value is AttendanceMarkStatus {
+  return value !== "NotMarked";
+}
+
 function TeacherAttendancePage() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
@@ -72,11 +95,15 @@ function TeacherAttendancePage() {
 
   const sessionInfo = (location.state ?? {}) as SessionInfo;
 
-  // Map: studentProfileId → status
-  const [statusMap, setStatusMap] = useState<Record<string, string>>({});
+  // Map: studentProfileId -> local selected status
+  const [statusMap, setStatusMap] = useState<Record<string, AttendanceStudent["attendanceStatus"]>>({});
+  const [initialStatusMap, setInitialStatusMap] = useState<
+    Record<string, AttendanceStudent["attendanceStatus"]>
+  >({});
   const [students, setStudents] = useState<AttendanceStudent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [savingId, setSavingId] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadAttendance = useCallback(async () => {
@@ -84,20 +111,19 @@ function TeacherAttendancePage() {
     setLoading(true);
     setError(null);
     try {
-      // GET /attendance/{sessionId} returns data as AttendanceStudent[]
       const res = await attendanceService.getAttendance(sessionId);
-      const list: AttendanceStudent[] = Array.isArray(res?.data)
-        ? res.data
-        : (res?.data as any)?.items ?? [];
+      const list = extractAttendanceList(res?.data);
 
       setStudents(list);
-      const map: Record<string, string> = {};
+      const map: Record<string, AttendanceStudent["attendanceStatus"]> = {};
       list.forEach((s) => {
         map[s.studentProfileId] = s.attendanceStatus ?? "NotMarked";
       });
       setStatusMap(map);
-    } catch (err: any) {
-      setError(err?.message ?? "Không thể tải danh sách điểm danh");
+      setInitialStatusMap(map);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Không thể tải danh sách điểm danh";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -107,26 +133,63 @@ function TeacherAttendancePage() {
     loadAttendance();
   }, [loadAttendance]);
 
-  const handleStatusChange = async (student: AttendanceStudent, newStatus: AttendanceStatusValue) => {
-    if (!sessionId) return;
-    // Optimistic update
+  const handleStatusChange = (student: AttendanceStudent, newStatus: AttendanceStatusValue) => {
     setStatusMap((prev) => ({ ...prev, [student.studentProfileId]: newStatus }));
-    setSavingId(student.studentProfileId);
+  };
+
+  const changedCount = students.filter((student) => {
+    const current = statusMap[student.studentProfileId] ?? "NotMarked";
+    const initial = initialStatusMap[student.studentProfileId] ?? "NotMarked";
+    return current !== initial;
+  }).length;
+
+  const hasUnmarked = students.some(
+    (student) => (statusMap[student.studentProfileId] ?? "NotMarked") === "NotMarked"
+  );
+
+  const handleOpenConfirm = () => {
+    if (students.length === 0) return;
+    if (changedCount === 0) {
+      openSnackbar({ text: "Bạn chưa thay đổi dữ liệu điểm danh", type: "warning" });
+      return;
+    }
+    if (hasUnmarked) {
+      openSnackbar({ text: "Vui lòng điểm danh đầy đủ cho tất cả học sinh", type: "warning" });
+      return;
+    }
+    setConfirmOpen(true);
+  };
+
+  const handleSubmitAttendance = async () => {
+    if (!sessionId || submitting) return;
+
+    const attendances = students
+      .map((student) => {
+        const currentStatus = statusMap[student.studentProfileId] ?? "NotMarked";
+        if (!isSubmitStatus(currentStatus)) return null;
+        return {
+          studentProfileId: student.studentProfileId,
+          attendanceStatus: currentStatus,
+        };
+      })
+      .filter((item): item is { studentProfileId: string; attendanceStatus: AttendanceMarkStatus } => Boolean(item));
+
+    if (attendances.length !== students.length) {
+      openSnackbar({ text: "Vui lòng điểm danh đầy đủ cho tất cả học sinh", type: "warning" });
+      return;
+    }
+
+    setSubmitting(true);
     try {
-      await attendanceService.updateStudentAttendance(
-        sessionId,
-        student.studentProfileId,
-        newStatus
-      );
-    } catch (err: any) {
-      // Revert on error
-      setStatusMap((prev) => ({
-        ...prev,
-        [student.studentProfileId]: statusMap[student.studentProfileId] ?? "NotMarked",
-      }));
-      openSnackbar({ text: "Lưu thất bại, vui lòng thử lại", type: "error" });
+      await attendanceService.submitAttendanceList(sessionId, attendances);
+      setConfirmOpen(false);
+      openSnackbar({ text: "Đã gửi điểm danh thành công", type: "success" });
+      await loadAttendance();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Gửi điểm danh thất bại";
+      openSnackbar({ text: message, type: "error" });
     } finally {
-      setSavingId(null);
+      setSubmitting(false);
     }
   };
 
@@ -137,8 +200,8 @@ function TeacherAttendancePage() {
 
   return (
     <Page className="flex h-full min-h-0 flex-col bg-gray-100">
-      {/* Fixed header + summary */}
-      <div className="shrink-0 z-10">
+      {/* Sticky header + summary */}
+      <div className="sticky top-0 shrink-0 z-20">
         {/* Header */}
         <div className="bg-gradient-to-r from-red-600 to-red-700 px-4 py-4">
         <div className="flex items-center gap-3 mb-2">
@@ -191,7 +254,7 @@ function TeacherAttendancePage() {
         )}
       </div> {/* end fixed wrapper */}
 
-      <div className="flex-1 min-h-0 overflow-y-auto pb-24">
+      <div className="flex-1 min-h-0 overflow-y-auto pb-6">
         {/* Content */}
         {loading && (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
@@ -228,7 +291,6 @@ function TeacherAttendancePage() {
           <div className="px-4 pt-4 flex flex-col gap-3">
             {students.map((student, idx) => {
               const currentStatus = statusMap[student.studentProfileId] ?? "NotMarked";
-              const isSaving = savingId === student.studentProfileId;
 
               return (
                 <div
@@ -245,7 +307,6 @@ function TeacherAttendancePage() {
                         {student.studentName}
                       </p>
                     </div>
-                    {isSaving && <Spinner />}
                   </div>
 
                   {/* Status buttons */}
@@ -253,11 +314,11 @@ function TeacherAttendancePage() {
                     {STATUS_CONFIG.map((cfg) => (
                       <button
                         key={cfg.value}
-                        disabled={isSaving}
+                        disabled={submitting}
                         onClick={() => handleStatusChange(student, cfg.value)}
                         className={`py-1.5 rounded-lg border text-xs font-semibold transition-all active:scale-95 ${
                           currentStatus === cfg.value ? cfg.activeClass : cfg.inactiveClass
-                        } ${isSaving ? "opacity-50 cursor-not-allowed" : ""}`}
+                        } ${submitting ? "opacity-50 cursor-not-allowed" : ""}`}
                       >
                         {cfg.shortLabel}
                       </button>
@@ -269,6 +330,40 @@ function TeacherAttendancePage() {
           </div>
         )}
       </div>
+
+      {!loading && !error && students.length > 0 && (
+        <div className="shrink-0 border-t border-gray-200 bg-white px-4 py-3">
+          <p className="mb-2 text-center text-xs text-gray-500">
+            Đã thay đổi {changedCount}/{students.length} học sinh
+          </p>
+          <button
+            type="button"
+            onClick={handleOpenConfirm}
+            disabled={submitting || changedCount === 0}
+            className="w-full rounded-xl bg-red-600 py-3 text-sm font-semibold text-white transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {submitting ? "Đang gửi điểm danh..." : "Xác nhận gửi điểm danh"}
+          </button>
+        </div>
+      )}
+
+      <ConfirmModal
+        isOpen={confirmOpen}
+        title="Xác nhận gửi điểm danh"
+        message="Bạn có chắc chắn muốn gửi điểm danh cho cả lớp không?"
+        confirmText="Gửi điểm danh"
+        isLoading={submitting}
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={handleSubmitAttendance}
+      >
+        <div className="rounded-xl bg-gray-50 px-3 py-2 text-xs text-gray-600">
+          <p>Tổng học sinh: {students.length}</p>
+          <p>Có mặt: {totalPresent}</p>
+          <p>Vắng: {totalAbsent}</p>
+          <p>Học bù: {totalMakeup}</p>
+          <p>Chưa điểm danh: {totalNotMarked}</p>
+        </div>
+      </ConfirmModal>
     </Page>
   );
 }

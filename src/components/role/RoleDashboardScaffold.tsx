@@ -52,7 +52,7 @@ const RoleDashboardScaffold: React.FC<RoleDashboardScaffoldProps> = ({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-24">
+      <div className="hide-scrollbar flex-1 overflow-y-auto px-4 pb-24">
         <div className="space-y-5 pt-1">
           {topSlot}
 

@@ -8,18 +8,53 @@ export interface AttendanceStudent {
     note: string | null;
 }
 
+export type AttendanceMarkStatus = "Present" | "Absent" | "Makeup";
+
+export interface AttendanceSessionSummary {
+    totalStudents: number;
+    presentCount: number;
+    absentCount: number;
+    makeupCount: number;
+    notMarkedCount: number;
+}
+
+export interface AttendanceSessionData {
+    sessionId: string;
+    sessionName?: string;
+    date?: string;
+    startTime?: string;
+    endTime?: string;
+    attendances: AttendanceStudent[];
+    summary?: AttendanceSessionSummary;
+}
+
+export type AttendanceListPayload =
+    | AttendanceStudent[]
+    | { items: AttendanceStudent[] }
+    | AttendanceSessionData;
+
 export interface AttendanceRequest {
     sessionId: string;
     studentProfileId: string;
-    attendanceStatus: "Present" | "Absent" | "Makeup";
+    attendanceStatus: AttendanceMarkStatus;
     comment?: string;
+}
+
+export interface AttendanceSubmitItem {
+    studentProfileId: string;
+    attendanceStatus: AttendanceMarkStatus;
+    note?: string;
+}
+
+export interface AttendanceBatchRequest {
+    attendances: AttendanceSubmitItem[];
 }
 
 export interface AttendanceResponse {
     id: string;
     sessionId: string;
     studentProfileId: string;
-    attendanceStatus: "Present" | "Absent" | "Makeup";
+    attendanceStatus: AttendanceMarkStatus;
     absenceType?: string | null;
     markedAt: string;
     note: string | null;

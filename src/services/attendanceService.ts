@@ -1,12 +1,20 @@
 import { ApiResponse } from "@/types/apiResponse";
 import { api } from "../api/api";
 import { ATTENDANCE_ENDPOINTS } from "../constants/apiURL";
-import { AttendanceRequest, AttendanceResponse, AttendanceStudent } from "@/types/attendance";
+import {
+  AttendanceBatchRequest,
+  AttendanceListPayload,
+  AttendanceMarkStatus,
+  AttendanceRequest,
+  AttendanceResponse,
+  AttendanceSubmitItem,
+  AttendanceStudent,
+} from "@/types/attendance";
 
 export const attendanceService = {
-  /** Get current attendance state — returns array of students with their statuses */
-  getAttendance: async (sessionId: string): Promise<ApiResponse<AttendanceStudent[]>> => {
-    return await api.get<ApiResponse<AttendanceStudent[]>>(
+  /** Get current attendance state */
+  getAttendance: async (sessionId: string): Promise<ApiResponse<AttendanceListPayload>> => {
+    return await api.get<ApiResponse<AttendanceListPayload>>(
       ATTENDANCE_ENDPOINTS.GET(sessionId)
     );
   },
@@ -23,11 +31,23 @@ export const attendanceService = {
   updateStudentAttendance: async (
     sessionId: string,
     studentProfileId: string,
-    attendanceStatus: AttendanceRequest["attendanceStatus"],
+    attendanceStatus: AttendanceMarkStatus,
     comment?: string
   ): Promise<ApiResponse<AttendanceResponse>> => {
     const body: AttendanceRequest = { sessionId, studentProfileId, attendanceStatus, ...(comment ? { comment } : {}) };
     return await api.post<ApiResponse<AttendanceResponse>>(
+      ATTENDANCE_ENDPOINTS.INIT(sessionId),
+      body
+    );
+  },
+
+  /** Submit attendance in one request for all students in a session */
+  submitAttendanceList: async (
+    sessionId: string,
+    attendances: AttendanceSubmitItem[]
+  ): Promise<ApiResponse<AttendanceResponse[]>> => {
+    const body: AttendanceBatchRequest = { attendances };
+    return await api.post<ApiResponse<AttendanceResponse[]>>(
       ATTENDANCE_ENDPOINTS.INIT(sessionId),
       body
     );

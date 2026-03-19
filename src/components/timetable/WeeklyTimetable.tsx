@@ -15,6 +15,17 @@ const STATUS_BADGE: Record<number | string, { label: string; cls: string }> = {
   Cancelled: { label: "cancelled", cls: "bg-red-500 text-white" },
 };
 
+const ATTENDANCE_STATUS_BADGE: Record<
+  NonNullable<TimetableSession["attendanceStatus"]>,
+  { label: string; cls: string }
+> = {
+  Present: { label: "Present", cls: "bg-emerald-600 text-white" },
+  Absent: { label: "Absent", cls: "bg-red-600 text-white" },
+  Late: { label: "Late", cls: "bg-amber-500 text-white" },
+  Excused: { label: "Excused", cls: "bg-blue-600 text-white" },
+  Unmarked: { label: "Unmarked", cls: "bg-slate-500 text-white" },
+};
+
 function formatTime(isoString: string): string {
   const d = new Date(isoString);
   return d.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", hour12: false });
@@ -234,6 +245,8 @@ const WeeklyTimetable: React.FC<WeeklyTimetableProps> = ({
                     const roomDisplay = session.plannedRoomName ?? null;
                     const teacherDisplay = session.plannedTeacherName ?? null;
                     const sessionKey = session.id ?? `${dateKey}-${idx}`;
+                    const attendanceBadge =
+                      ATTENDANCE_STATUS_BADGE[session.attendanceStatus ?? "Unmarked"];
 
                     return (
                       <div key={`${dateKey}-${sessionKey}`} className="flex min-h-[100px]">
@@ -269,11 +282,15 @@ const WeeklyTimetable: React.FC<WeeklyTimetableProps> = ({
                               {badge.label}
                             </span>
 
-                            {/* Action buttons */}
+                            {/* Action block */}
                             <div className="flex flex-col gap-1">
-                              <button className="text-[10px] px-2 py-1 rounded-md bg-amber-400 text-white font-semibold whitespace-nowrap active:opacity-70">
-                                Materials
-                              </button>
+                              {(role === "student" || role === "parent") && (
+                                <span
+                                  className={`text-[10px] px-2 py-1 rounded-md font-semibold whitespace-nowrap text-center ${attendanceBadge.cls}`}
+                                >
+                                  {attendanceBadge.label}
+                                </span>
+                              )}
                               {/* <button
                                 className="text-[10px] px-2 py-1 rounded-md bg-green-500 text-white font-semibold whitespace-nowrap active:opacity-70"
                                 onClick={() => session.meetUrl && window.open(session.meetUrl, "_blank")}
