@@ -1,5 +1,6 @@
 import { ApiResponse } from "@/types/apiResponse";
 import { api } from "../api/api";
+import { AxiosRequestConfig } from "axios";
 import {
   STUDENT_ENDPOINTS,
   TEACHER_ENDPOINTS,
@@ -15,11 +16,15 @@ export const timetableService = {
   // Student timetable
   getStudentTimetable: async (
     from: string,
-    to: string
+    to: string,
+    config?: AxiosRequestConfig
   ): Promise<ApiResponse<TimetableData>> => {
     return await api.get<ApiResponse<TimetableData>>(
       STUDENT_ENDPOINTS.TIMETABLE,
-      { params: { from, to } }
+      {
+        ...config,
+        params: { from, to },
+      }
     );
   },
 

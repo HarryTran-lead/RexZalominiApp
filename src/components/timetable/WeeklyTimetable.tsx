@@ -15,6 +15,17 @@ const STATUS_BADGE: Record<number | string, { label: string; cls: string }> = {
   Cancelled: { label: "cancelled", cls: "bg-red-500 text-white" },
 };
 
+const ATTENDANCE_STATUS_BADGE: Record<
+  NonNullable<TimetableSession["attendanceStatus"]>,
+  { label: string; cls: string }
+> = {
+  Present: { label: "Present", cls: "bg-emerald-600 text-white" },
+  Absent: { label: "Absent", cls: "bg-red-600 text-white" },
+  Late: { label: "Late", cls: "bg-amber-500 text-white" },
+  Excused: { label: "Excused", cls: "bg-blue-600 text-white" },
+  Unmarked: { label: "Unmarked", cls: "bg-slate-500 text-white" },
+};
+
 function formatTime(isoString: string): string {
   const d = new Date(isoString);
   return d.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", hour12: false });
@@ -47,6 +58,18 @@ interface WeeklyTimetableProps {
   onNextWeek: () => void;
   onToday: () => void;
   role: "student" | "teacher" | "parent";
+  /** Teacher only: called when pressing the attendance button on a today session */
+  onSessionAttendance?: (session: TimetableSession) => void;
+}
+
+function isTodaySession(isoString: string): boolean {
+  const d = new Date(isoString);
+  const now = new Date();
+  return (
+    d.getFullYear() === now.getFullYear() &&
+    d.getMonth() === now.getMonth() &&
+    d.getDate() === now.getDate()
+  );
 }
 
 const WeeklyTimetable: React.FC<WeeklyTimetableProps> = ({
@@ -58,6 +81,7 @@ const WeeklyTimetable: React.FC<WeeklyTimetableProps> = ({
   onNextWeek,
   onToday,
   role,
+  onSessionAttendance,
 }) => {
   const weekDays = useMemo(() => {
     const days: Date[] = [];
@@ -78,7 +102,7 @@ const WeeklyTimetable: React.FC<WeeklyTimetableProps> = ({
   weekEnd.setDate(weekStart.getDate() + 6);
 
   return (
-    <div className="flex flex-col bg-white">
+    <div className="flex flex-col h-full bg-white">
       {/* Sticky header: current week label + month nav + calendar */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200">
         {/* Current week label */}
@@ -221,6 +245,8 @@ const WeeklyTimetable: React.FC<WeeklyTimetableProps> = ({
                     const roomDisplay = session.plannedRoomName ?? null;
                     const teacherDisplay = session.plannedTeacherName ?? null;
                     const sessionKey = session.id ?? `${dateKey}-${idx}`;
+                    const attendanceBadge =
+                      ATTENDANCE_STATUS_BADGE[session.attendanceStatus ?? "Unmarked"];
 
                     return (
                       <div key={`${dateKey}-${sessionKey}`} className="flex min-h-[100px]">
@@ -256,18 +282,28 @@ const WeeklyTimetable: React.FC<WeeklyTimetableProps> = ({
                               {badge.label}
                             </span>
 
-                            {/* Action buttons */}
+                            {/* Action block */}
                             <div className="flex flex-col gap-1">
-                              <button className="text-[10px] px-2 py-1 rounded-md bg-amber-400 text-white font-semibold whitespace-nowrap active:opacity-70">
-                                Materials
-                              </button>
-                              <button
+                              {(role === "student" || role === "parent") && (
+                                <span
+                                  className={`text-[10px] px-2 py-1 rounded-md font-semibold whitespace-nowrap text-center ${attendanceBadge.cls}`}
+                                >
+                                  {attendanceBadge.label}
+                                </span>
+                              )}
+                              {/* <button
                                 className="text-[10px] px-2 py-1 rounded-md bg-green-500 text-white font-semibold whitespace-nowrap active:opacity-70"
                                 onClick={() => session.meetUrl && window.open(session.meetUrl, "_blank")}
                               >
                                 Meet URL
-                              </button>
-                            </div>
+                              </button> */}                              {role === "teacher" && isTodaySession(session.plannedDatetime) && onSessionAttendance && (
+                                <button
+                                  className="text-[10px] px-2 py-1 rounded-md bg-red-600 text-white font-semibold whitespace-nowrap active:opacity-70"
+                                  onClick={() => onSessionAttendance(session)}
+                                >
+                                  Điểm danh
+                                </button>
+                              )}                            </div>
                           </div>
                         </div>
 

@@ -8,9 +8,8 @@ export interface TimetableSession {
   plannedDatetime: string;
   actualDatetime?: string | null;
   durationMinutes: number;
-  participationType?: number;
-  // 0 = Scheduled, 1 = Completed, 2 = Cancelled
-  status: number;
+  participationType?: "Main" | "Makeup" | "ExtraPaid" | "Free" | "Trial";
+  status: "Scheduled" | "Completed" | "Cancelled";
   plannedRoomId?: string | null;
   plannedRoomName?: string | null;
   actualRoomId?: string | null;
@@ -30,6 +29,8 @@ export interface TimetableSession {
   // Parent-specific
   studentName?: string;
   studentProfileId?: string;
+  attendanceMarkedAt?: string | null;
+  attendanceStatus?: "Present" | "Absent" | "Late" | "Excused" | "Unmarked";
 }
 
 export interface TimetableResponse {

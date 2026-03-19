@@ -68,11 +68,11 @@ const ParentTimetablePage: React.FC = () => {
   };
 
   return (
-    <Page className="flex flex-col h-screen bg-slate-50">
-      <div className="bg-red-600 text-white px-4 py-3">
-        <h1 className="text-lg font-bold">Thời khóa biểu con</h1>
+    <Page className="flex h-full min-h-0 flex-col bg-slate-50">
+      <div className="shrink-0 bg-red-600 text-white px-4 py-3">
+        <h1 className="text-lg font-bold text-center">Thời khóa biểu con</h1>
       </div>
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-hidden">
         <WeeklyTimetable
           sessions={sessions}
           loading={loading}

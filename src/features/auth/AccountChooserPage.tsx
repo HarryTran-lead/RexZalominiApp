@@ -104,16 +104,16 @@ function AccountChooserPage() {
   };
 
   return (
-    <Page className="relative min-h-screen overflow-hidden bg-gradient-to-br from-purple-400 via-purple-500 to-purple-600 text-slate-900">
+    <Page className="relative min-h-screen overflow-hidden bg-gradient-to-br from-red-400 via-red-500 to-red-600 text-slate-900">
       {/* soft blobs with animation */}
       <div 
-        className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-purple-300/50 blur-3xl"
+        className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-red-300/50 blur-3xl"
         style={{
           animation: "float 6s ease-in-out infinite"
         }}
       />
       <div 
-        className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-purple-400/60 blur-3xl"
+        className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-red-400/60 blur-3xl"
         style={{
           animation: "float 8s ease-in-out infinite reverse"
         }}
@@ -289,7 +289,7 @@ function AccountChooserPage() {
             </h2>
             <p className="mb-5 text-center text-sm text-gray-500">
               Nhập PIN để đăng nhập với hồ sơ{" "}
-              <span className="font-semibold text-yellow-600">
+              <span className="font-semibold text-red-600">
                 {pendingParentProfile?.displayName}
               </span>
             </p>
@@ -303,7 +303,7 @@ function AccountChooserPage() {
               value={pin}
               onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
               onKeyDown={(e) => e.key === "Enter" && handleVerifyParentPin()}
-              className="mb-4 w-full rounded-xl border-2 border-gray-200 px-4 py-3 text-center text-2xl tracking-[0.5em] text-gray-800 outline-none transition focus:border-yellow-400"
+              className="mb-4 w-full rounded-xl border-2 border-gray-200 px-4 py-3 text-center text-2xl tracking-[0.5em] text-gray-800 outline-none transition focus:border-red-400"
             />
 
             <div className="flex gap-3">
@@ -316,7 +316,7 @@ function AccountChooserPage() {
               <button
                 onClick={handleVerifyParentPin}
                 disabled={pin.length === 0 || pinLoading}
-                className="flex-1 rounded-xl bg-yellow-500 py-3 text-sm font-semibold text-white shadow-md shadow-yellow-300/50 transition hover:bg-yellow-600 active:scale-95 disabled:opacity-50"
+                className="flex-1 rounded-xl bg-red-500 py-3 text-sm font-semibold text-white shadow-md shadow-red-300/50 transition hover:bg-red-600 active:scale-95 disabled:opacity-50"
               >
                 {pinLoading ? "Đang xác thực..." : "Xác nhận"}
               </button>

@@ -61,26 +61,33 @@ const StudentBottomNav: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
-      <div className="flex items-center justify-around h-16">
+    <div
+      className="fixed bottom-0 left-1/2 z-50 w-full max-w-[430px] -translate-x-1/2 px-3 pb-2"
+      style={{ paddingBottom: "max(env(safe-area-inset-bottom), 8px)" }}
+    >
+      <div className="flex h-16 items-center justify-around rounded-2xl border border-red-100 bg-white/95 shadow-lg backdrop-blur">
         {navItems.map((item) => {
           const active = isActive(item.path);
           return (
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
-              className={`flex flex-col items-center justify-center flex-1 h-full transition-all relative ${
+              className={`relative flex h-full flex-1 flex-col items-center justify-center transition-all ${
                 active ? "text-red-600" : "text-gray-400"
               }`}
             >
-              <div className={`transition-transform ${active ? "scale-110" : "scale-100"}`}>
+              <div
+                className={`rounded-xl p-1.5 transition-all ${
+                  active ? "bg-red-50 scale-105" : "scale-100"
+                }`}
+              >
                 {item.icon}
               </div>
-              <span className={`text-[10px] mt-0.5 font-medium ${active ? "font-bold" : ""}`}>
+              <span className={`mt-0.5 text-[10px] font-medium ${active ? "font-bold" : ""}`}>
                 {item.label}
               </span>
               {active && (
-                <div className="absolute bottom-0 w-10 h-0.5 bg-red-600 rounded-t-full" />
+                <div className="absolute bottom-1 h-1 w-8 rounded-full bg-red-600" />
               )}
             </button>
           );

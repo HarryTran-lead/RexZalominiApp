@@ -23,12 +23,41 @@ export const STUDENT_ENDPOINTS = {
   TIMETABLE: "/students/timetable",
   CLASSES: "/students/classes",
   HOMEWORK_MY: "/students/homework/my",
+  HOMEWORK_SUBMITTED: "/students/homework/submitted",
+  HOMEWORK_DETAIL: (homeworkStudentId: string) => `/students/homework/${homeworkStudentId}`,
+  HOMEWORK_SUBMIT: "/students/homework/submit",
+  HOMEWORK_MULTIPLE_CHOICE_SUBMIT: "/students/homework/multiple-choice/submit",
+  HOMEWORK_FEEDBACK_MY: "/students/homework/feedback/my",
 };
 
 // Teacher Endpoints
 export const TEACHER_ENDPOINTS = {
   TIMETABLE: "/teacher/timetable",
   CLASSES: "/teacher/classes",
+  TEACHER_CLASSES: "/teacher/classes",
+  TEACHER_CLASS_STUDENTS: (classId: string) =>
+    `/teacher/classes/${classId}/students`,
+  HOMEWORK_LIST: "/homework",
+  HOMEWORK_DETAIL: (id: string) => `/homework/${id}`,
+  HOMEWORK_SUBMISSIONS: "/homework/submissions",
+  HOMEWORK_SUBMISSION_DETAIL: (homeworkStudentId: string) =>
+    `/homework/submissions/${homeworkStudentId}`,
+  SESSION_REPORTS: "/session-reports",
+  SESSION_REPORT_DETAIL: (id: string) => `/session-reports/${id}`,
+  TEACHER_MONTHLY_SESSION_REPORT: (teacherUserId: string) =>
+    `/session-reports/teachers/${teacherUserId}/monthly`,
+  MONTHLY_REPORTS: "/monthly-reports",
+  MONTHLY_REPORT_DETAIL: (reportId: string) =>
+    `/monthly-reports/${reportId}`,
+};
+
+// Attendance Endpoints
+export const ATTENDANCE_ENDPOINTS = {
+  INIT: (sessionId: string) => `/attendance/${sessionId}`,
+  GET: (sessionId: string) => `/attendance/${sessionId}`,
+  GET_STUDENTS: "/attendance/students",
+  UPDATE_STUDENT: (sessionId: string, studentProfileId: string) =>
+    `/attendance/${sessionId}/students/${studentProfileId}`,
 };
 
 // Parent Endpoints
@@ -36,6 +65,59 @@ export const PARENT_ENDPOINTS = {
   TIMETABLE: "/parent/timetable",
   OVERVIEW: "/parent/overview",
   ATTENDANCE: "/parent/attendance",
+  EXAM_RESULTS: "/parent/exam-results",
+  NOTIFICATIONS: "/parent/notifications",
+  STUDENTS_MAKEUP_OR_LEAVE: "/parent/students-with-makeup-or-leave",
+  INVOICES: "/parent/invoices",
+  MEDIA: "/parent/media",
+};
+
+// Leave Request Endpoints
+export const LEAVE_REQUEST_ENDPOINTS = {
+  LIST: "/leave-requests",
+  DETAIL: (id: string) => `/leave-requests/${id}`,
+};
+
+// Homework Endpoints
+export const HOMEWORK_ENDPOINTS = {
+  LIST: "/homework",
+  SUBMISSIONS: "/homework/submissions",
+};
+
+// Gamification Endpoints
+export const GAMIFICATION_ENDPOINTS = {
+  STARS_BALANCE_ME: "/gamification/stars/balance/me",
+  LEVEL_ME: "/gamification/level/me",
+  ATTENDANCE_STREAK_ME: "/gamification/attendance-streak/me",
+  ATTENDANCE_CHECKIN: "/gamification/attendance-streak/check-in",
+  REWARD_STORE_ITEMS: "/gamification/reward-store/items/active",
+  AVAILABLE_REWARDS: "/gamification/rewards/available",
+  REWARD_REDEMPTIONS: "/gamification/reward-redemptions",
+  REWARD_REDEMPTIONS_ME: "/gamification/reward-redemptions/me",
+  REWARD_REDEMPTION_APPROVE: (id: string) => `/gamification/reward-redemptions/${id}/approve`,
+  REWARD_REDEMPTION_CANCEL: (id: string) => `/gamification/reward-redemptions/${id}/cancel`,
+  REWARD_REDEMPTION_CONFIRM: (id: string) => `/gamification/reward-redemptions/${id}/confirm-received`,
+  REDEEM_REWARD: (rewardId: string) => `/gamification/rewards/${rewardId}/redeem`,
+  STARS_TRANSACTIONS: "/gamification/stars/transactions",
+};
+
+// Exam Endpoints
+export const EXAM_ENDPOINTS = {
+  STUDENTS: "/exams/students",
+  LIST: "/exams",
+  DETAIL: (examId: string) => `/exams/${examId}`,
+  START_SUBMISSION: (examId: string) => `/exams/${examId}/submissions/start`,
+  SAVE_ANSWERS: (examId: string, submissionId: string) => `/exams/${examId}/submissions/${submissionId}/answers`,
+  SUBMIT: (examId: string, submissionId: string) => `/exams/${examId}/submissions/${submissionId}/submit`,
+  SUBMISSIONS: (examId: string) => `/exams/${examId}/submissions`,
+  RESULTS: "/exams/results",
+  RESULT_DETAIL: (id: string) => `/exams/results/${id}`,
+};
+
+// Session Reports Endpoints
+export const SESSION_REPORTS_ENDPOINTS = {
+  LIST: "/session-reports",
+  DETAIL: (id: string) => `/session-reports/${id}`,
 };
 
 // All API Endpoints
@@ -44,4 +126,8 @@ export const API_ENDPOINTS = {
   STUDENT: STUDENT_ENDPOINTS,
   TEACHER: TEACHER_ENDPOINTS,
   PARENT: PARENT_ENDPOINTS,
+  LEAVE_REQUEST: LEAVE_REQUEST_ENDPOINTS,
+  GAMIFICATION: GAMIFICATION_ENDPOINTS,
+  EXAM: EXAM_ENDPOINTS,
+  HOMEWORK: HOMEWORK_ENDPOINTS,
 };

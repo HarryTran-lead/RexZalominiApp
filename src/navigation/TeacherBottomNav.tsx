@@ -31,11 +31,11 @@ const TeacherBottomNav: React.FC = () => {
       ),
     },
     {
-      path: "/teacher/classes",
-      label: "Lớp học",
+      path: "/teacher/notifications",
+      label: "Thông báo",
       icon: (
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
         </svg>
       ),
     },
@@ -61,26 +61,33 @@ const TeacherBottomNav: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
-      <div className="flex items-center justify-around h-16">
+    <div
+      className="fixed bottom-0 left-1/2 z-50 w-full max-w-[430px] -translate-x-1/2 px-3 pb-2"
+      style={{ paddingBottom: "max(env(safe-area-inset-bottom), 8px)" }}
+    >
+      <div className="flex h-16 items-center justify-around rounded-2xl border border-red-100 bg-white/95 shadow-lg backdrop-blur">
         {navItems.map((item) => {
           const active = isActive(item.path);
           return (
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
-              className={`flex flex-col items-center justify-center flex-1 h-full transition-all relative ${
+              className={`relative flex h-full flex-1 flex-col items-center justify-center transition-all ${
                 active ? "text-red-600" : "text-gray-400"
               }`}
             >
-              <div className={`transition-transform ${active ? "scale-110" : "scale-100"}`}>
+              <div
+                className={`rounded-xl p-1.5 transition-all ${
+                  active ? "bg-red-50 scale-105" : "scale-100"
+                }`}
+              >
                 {item.icon}
               </div>
-              <span className={`text-[10px] mt-0.5 font-medium ${active ? "font-bold" : ""}`}>
+              <span className={`mt-0.5 text-[10px] font-medium ${active ? "font-bold" : ""}`}>
                 {item.label}
               </span>
               {active && (
-                <div className="absolute bottom-0 w-10 h-0.5 bg-red-600 rounded-t-full" />
+                <div className="absolute bottom-1 h-1 w-8 rounded-full bg-red-600" />
               )}
             </button>
           );
