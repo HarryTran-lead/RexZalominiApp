@@ -22,10 +22,172 @@ import {
   PaginatedResponse,
   BaseQueryParams,
   HomeworkQueryParams,
-  TimetableQueryParams,
   RewardRedemptionQueryParams,
   HomeworkAssignment,
+  Ticket,
+  CreateTicket,
 } from "../types/student";
+
+type TicketQueryParams = BaseQueryParams & {
+  mine?: boolean;
+  openedByProfileId?: string;
+};
+
+type StudentClassListPayload =
+  | PaginatedResponse<StudentClass>
+  | StudentClass[]
+  | {
+      classes?: PaginatedResponse<StudentClass>;
+      items?: StudentClass[];
+    };
+
+const normalizeClassList = (
+  payload: StudentClassListPayload | undefined
+): PaginatedResponse<StudentClass> => {
+  if (!payload) {
+    return {
+      items: [],
+      pageNumber: 1,
+      pageSize: 0,
+      totalCount: 0,
+      totalPages: 0,
+      hasNextPage: false,
+      hasPreviousPage: false,
+    };
+  }
+
+  if (Array.isArray(payload)) {
+    return {
+      items: payload,
+      pageNumber: 1,
+      pageSize: payload.length,
+      totalCount: payload.length,
+      totalPages: payload.length ? 1 : 0,
+      hasNextPage: false,
+      hasPreviousPage: false,
+    };
+  }
+
+  if (typeof payload === "object" && payload !== null && "items" in payload && Array.isArray(payload.items)) {
+    const data = payload as PaginatedResponse<StudentClass>;
+    return {
+      items: data.items,
+      pageNumber: data.pageNumber ?? 1,
+      pageSize: data.pageSize ?? data.items.length,
+      totalCount: data.totalCount ?? data.items.length,
+      totalPages: data.totalPages ?? (data.items.length ? 1 : 0),
+      hasNextPage: data.hasNextPage ?? false,
+      hasPreviousPage: data.hasPreviousPage ?? false,
+    };
+  }
+
+  if (typeof payload === "object" && payload !== null && "classes" in payload) {
+    const wrapped = payload as { classes?: PaginatedResponse<StudentClass> };
+    if (wrapped.classes && Array.isArray(wrapped.classes.items)) {
+      return wrapped.classes;
+    }
+  }
+
+  return {
+    items: [],
+    pageNumber: 1,
+    pageSize: 0,
+    totalCount: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  };
+};
+
+type StudentExamListPayload =
+  | Exam[]
+  | PaginatedResponse<Exam>
+  | {
+      examResults?: PaginatedResponse<Exam>;
+      items?: Exam[];
+    };
+
+type StudentHomeworkListPayload =
+  | HomeworkAssignment[]
+  | PaginatedResponse<HomeworkAssignment>
+  | {
+      homeworks?: PaginatedResponse<HomeworkAssignment>;
+      items?: HomeworkAssignment[];
+    };
+
+const normalizeHomeworkList = (
+  payload: StudentHomeworkListPayload | undefined
+): PaginatedResponse<HomeworkAssignment> => {
+  if (!payload) {
+    return {
+      items: [],
+      pageNumber: 1,
+      pageSize: 0,
+      totalCount: 0,
+      totalPages: 0,
+      hasNextPage: false,
+      hasPreviousPage: false,
+    };
+  }
+
+  if (Array.isArray(payload)) {
+    return {
+      items: payload,
+      pageNumber: 1,
+      pageSize: payload.length,
+      totalCount: payload.length,
+      totalPages: payload.length ? 1 : 0,
+      hasNextPage: false,
+      hasPreviousPage: false,
+    };
+  }
+
+  if (Array.isArray(payload.items)) {
+    const data = payload as PaginatedResponse<HomeworkAssignment>;
+    return {
+      items: data.items,
+      pageNumber: data.pageNumber ?? 1,
+      pageSize: data.pageSize ?? data.items.length,
+      totalCount: data.totalCount ?? data.items.length,
+      totalPages: data.totalPages ?? (data.items.length ? 1 : 0),
+      hasNextPage: data.hasNextPage ?? false,
+      hasPreviousPage: data.hasPreviousPage ?? false,
+    };
+  }
+
+  if (typeof payload === "object" && payload !== null && "homeworks" in payload) {
+    const wrapped = payload as { homeworks?: PaginatedResponse<HomeworkAssignment> };
+    if (wrapped.homeworks && Array.isArray(wrapped.homeworks.items)) {
+      const data = wrapped.homeworks;
+      return {
+        items: data.items,
+        pageNumber: data.pageNumber ?? 1,
+        pageSize: data.pageSize ?? data.items.length,
+        totalCount: data.totalCount ?? data.items.length,
+        totalPages: data.totalPages ?? (data.items.length ? 1 : 0),
+        hasNextPage: data.hasNextPage ?? false,
+        hasPreviousPage: data.hasPreviousPage ?? false,
+      };
+    }
+  }
+
+  return {
+    items: [],
+    pageNumber: 1,
+    pageSize: 0,
+    totalCount: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  };
+};
+
+const normalizeExamList = (payload: StudentExamListPayload | undefined): Exam[] => {
+  if (!payload) return [];
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload.items)) return payload.items;
+  return [];
+};
 
 export const studentService = {
   // Student Classes
@@ -33,23 +195,33 @@ export const studentService = {
     params?: BaseQueryParams,
     config?: AxiosRequestConfig
   ): Promise<ApiResponse<PaginatedResponse<StudentClass>>> => {
-    return await api.get<ApiResponse<PaginatedResponse<StudentClass>>>(
+    const response = await api.get<ApiResponse<StudentClassListPayload>>(
       API_ENDPOINTS.STUDENT.CLASSES,
       {
         ...config,
         params,
       }
     );
+
+    return {
+      ...response,
+      data: normalizeClassList(response.data),
+    };
   },
 
   // Homework - My homework assignments
   getMyHomework: async (
     params?: HomeworkQueryParams
   ): Promise<ApiResponse<PaginatedResponse<HomeworkAssignment>>> => {
-    return await api.get<ApiResponse<PaginatedResponse<HomeworkAssignment>>>(
+    const response = await api.get<ApiResponse<StudentHomeworkListPayload>>(
       API_ENDPOINTS.STUDENT.HOMEWORK_MY,
       { params }
     );
+
+    return {
+      ...response,
+      data: normalizeHomeworkList(response.data),
+    };
   },
 
   // Homework - Submitted homework
@@ -99,6 +271,43 @@ export const studentService = {
       API_ENDPOINTS.STUDENT.HOMEWORK_FEEDBACK_MY,
       { params }
     );
+  },
+
+  // Ticket - Get my support tickets
+  getMyTickets: async (
+    params?: TicketQueryParams
+  ): Promise<ApiResponse<Ticket[]>> => {
+    const response = await api.get<ApiResponse<unknown>>(
+      API_ENDPOINTS.TICKET.LIST,
+      { params }
+    );
+
+    const payload = response.data;
+    const items =
+      Array.isArray(payload)
+        ? payload
+        : payload && typeof payload === "object" && Array.isArray((payload as { items?: unknown[] }).items)
+          ? (payload as { items: unknown[] }).items
+          : payload && typeof payload === "object" && (payload as { tickets?: unknown }).tickets &&
+              typeof (payload as { tickets?: unknown }).tickets === "object" &&
+              Array.isArray(((payload as { tickets: { items?: unknown[] } }).tickets.items))
+            ? ((payload as { tickets: { items: unknown[] } }).tickets.items)
+            : [];
+
+    return {
+      ...response,
+      data: items as Ticket[],
+    };
+  },
+
+  // Ticket - Create support ticket
+  createTicket: async (payload: CreateTicket): Promise<ApiResponse<Ticket>> => {
+    return await api.post<ApiResponse<Ticket>>(API_ENDPOINTS.TICKET.CREATE, payload);
+  },
+
+  // Ticket - Get ticket detail
+  getTicketDetail: async (ticketId: string): Promise<ApiResponse<Ticket>> => {
+    return await api.get<ApiResponse<Ticket>>(API_ENDPOINTS.TICKET.DETAIL(ticketId));
   },
 };
 
@@ -210,10 +419,15 @@ export const examService = {
   getMyExams: async (
     params?: BaseQueryParams
   ): Promise<ApiResponse<Exam[]>> => {
-    return await api.get<ApiResponse<Exam[]>>(
+    const response = await api.get<ApiResponse<StudentExamListPayload>>(
       API_ENDPOINTS.EXAM.STUDENTS,
       { params }
     );
+
+    return {
+      ...response,
+      data: normalizeExamList(response.data),
+    };
   },
 
   // Get student exams

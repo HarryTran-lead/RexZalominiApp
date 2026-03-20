@@ -37,15 +37,7 @@ function StudentHomeworkPage() {
       const response = await studentService.getMyHomework(params);
 
       if (response.isSuccess && response.data) {
-        const data = response.data as any;
-        const items = Array.isArray(data?.items)
-          ? data.items
-          : Array.isArray(data?.homeworks?.items)
-            ? data.homeworks.items
-            : Array.isArray(data)
-              ? data
-              : [];
-        setHomework(items);
+        setHomework(response.data.items ?? []);
       } else {
         setError("Không thể tải danh sách bài tập");
       }
@@ -60,11 +52,6 @@ function StudentHomeworkPage() {
   useEffect(() => {
     fetchHomework(activeTab === 'All' ? undefined : activeTab);
   }, [activeTab]);
-
-  const handleHomeworkClick = (homeworkAssignment: HomeworkAssignment) => {
-    // Navigate to homework detail page
-    navigate(`/student/homework/${homeworkAssignment.id}`);
-  };
 
   const getDueDateInfo = (homework: HomeworkAssignment) => {
     if (!homework.dueAt) return { text: '', color: '' };
@@ -88,71 +75,86 @@ function StudentHomeworkPage() {
     }
   };
 
-  // Sửa getTabCount - thêm optional chaining
-const getTabCount = (status: string) => {
-  if (status === 'All') return homework.length;
-  return homework.filter(item => item.status?.toLowerCase() === status.toLowerCase()).length;
-};
+  const getTabCount = (status: string) => {
+    if (status === 'All') return homework.length;
+    return homework.filter(item => item.status?.toLowerCase() === status.toLowerCase()).length;
+  };
 
-// Sửa renderHomeworkItem - dùng isOverdue trực tiếp từ API thay vì gọi function
-const renderHomeworkItem = (item: HomeworkAssignment) => {
-  const dueDateInfo = getDueDateInfo(item);
-  const isOverdueItem = item.isOverdue ?? isHomeworkOverdue(item); // ← API đã có field này
+  const getScoreBadgeClass = (score?: number | null, maxScore?: number | null) => {
+    if (score == null || !maxScore) return 'bg-slate-100 text-slate-600';
+    const percentage = (score / maxScore) * 100;
+    if (percentage >= 85) return 'bg-emerald-100 text-emerald-700';
+    if (percentage >= 70) return 'bg-blue-100 text-blue-700';
+    if (percentage >= 50) return 'bg-amber-100 text-amber-700';
+    return 'bg-rose-100 text-rose-700';
+  };
 
-  return (
-    <div
-      key={item.id}
-      onClick={() => handleHomeworkClick(item)}
-      className={`mb-2 rounded-lg border ${isOverdueItem ? 'border-red-200 bg-red-50' : 'border-gray-200 bg-white'} shadow-sm p-4 cursor-pointer hover:shadow-md transition-shadow`}
-    >
-      <div className="space-y-2">
-        <div className="flex items-start justify-between">
-          <h3 className="font-medium text-gray-900 flex-1 mr-2">
-            {truncateText(item.assignmentTitle ?? '', 60)}  {/* ← đúng field name */}
-          </h3>
-          <span className={`text-xs px-2 py-1 rounded-full ${getHomeworkStatusColor(item.status ?? '')} bg-gray-100`}>
-            {getHomeworkStatusText(item.status ?? '')}
-          </span>
+  const renderHomeworkItem = (item: HomeworkAssignment) => {
+    const dueDateInfo = getDueDateInfo(item);
+    const isOverdueItem = item.isOverdue ?? isHomeworkOverdue(item);
+
+    return (
+      <div
+        key={item.id}
+        className={`mb-2 rounded-lg border ${isOverdueItem ? 'border-red-200 bg-red-50' : 'border-gray-200 bg-white'} shadow-sm p-4`}
+      >
+        <div className="space-y-2.5">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <h3 className="text-base font-bold text-gray-900 leading-tight">
+                {item.classCode || 'Lớp chưa xác định'}
+              </h3>
+              {item.classTitle && (
+                <p className="text-sm font-medium text-red-700 leading-tight mt-0.5">
+                  {item.classTitle}
+                </p>
+              )}
+            </div>
+            <span className={`shrink-0 text-xs px-2 py-1 rounded-full ${getHomeworkStatusColor(item.status ?? '')} bg-gray-100 font-medium`}>
+              {getHomeworkStatusText(item.status ?? '')}
+            </span>
+          </div>
+
+          <h4 className="text-sm font-medium text-gray-700">
+            {truncateText(item.assignmentTitle ?? '', 80)}
+          </h4>
+
+          {item.assignmentDescription && (
+            <p className="text-xs text-gray-500 leading-relaxed">
+              {truncateText(item.assignmentDescription, 120)}
+            </p>
+          )}
+
+          <div className="flex items-start justify-between text-xs text-gray-500 gap-2">
+            <div className="space-y-1">
+              {item.book && (
+                <div>Sách: {item.book} {item.pages && `(trang ${item.pages})`}</div>
+              )}
+            </div>
+            <div className="text-right space-y-1">
+              {dueDateInfo.text && (
+                <div className={`font-medium ${dueDateInfo.color}`}>{dueDateInfo.text}</div>
+              )}
+            </div>
+          </div>
+
+          {item.score != null && (
+            <div className="pt-2 border-t border-gray-100">
+              <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${getScoreBadgeClass(item.score, item.maxScore)}`}>
+                Điểm: {item.score}/{item.maxScore}
+              </span>
+            </div>
+          )}
+
+          {item.submittedAt && (
+            <div className="text-xs text-gray-500">
+              Nộp lúc: {formatDateTime(item.submittedAt)}
+            </div>
+          )}
         </div>
-
-        {item.assignmentDescription && (
-          <p className="text-sm text-gray-600">
-            {truncateText(item.assignmentDescription, 100)}
-          </p>
-        )}
-
-        <div className="flex items-center justify-between text-xs text-gray-500">
-          <div className="space-y-1">
-            {item.classTitle && (
-              <div>Lớp: {item.classCode ? `${item.classCode} - ` : ''}{item.classTitle}</div>
-            )}
-            {item.book && (
-              <div>Sách: {item.book} {item.pages && `(trang ${item.pages})`}</div>
-            )}
-          </div>
-          <div className="text-right space-y-1">
-            {dueDateInfo.text && (
-              <div className={dueDateInfo.color}>{dueDateInfo.text}</div>
-            )}
-          </div>
-        </div>
-
-        {item.score != null && (
-          <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-            <span className="text-sm text-gray-600">Điểm số:</span>
-            <span className="font-medium text-green-600">{item.score}/{item.maxScore}</span>
-          </div>
-        )}
-
-        {item.submittedAt && (
-          <div className="text-xs text-gray-500">
-            Nộp lúc: {formatDateTime(item.submittedAt)}
-          </div>
-        )}
       </div>
-    </div>
-  );
-};
+    );
+  };
 
   return (
     <Page className="flex h-full min-h-0 flex-col bg-gray-100">
@@ -177,7 +179,7 @@ const renderHomeworkItem = (item: HomeworkAssignment) => {
           ].map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key as any)}
+              onClick={() => setActiveTab(tab.key as 'All' | 'Submitted' | 'Assigned' | 'Missing' | 'Graded')}
               className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 ${
                 activeTab === tab.key
                   ? 'border-red-600 text-red-600'

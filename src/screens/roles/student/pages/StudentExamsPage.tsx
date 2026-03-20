@@ -26,7 +26,7 @@ function StudentExamsPage() {
     
     try {
       const response = await examService.getMyExams();
-      if (response.isSuccess) {
+      if (response.isSuccess ?? response.success) {
         setExams(response.data || []);
       } else {
         setError("Không thể tải danh sách bài kiểm tra");
@@ -67,9 +67,28 @@ function StudentExamsPage() {
     navigate(`/student/exams/${examId}/result`);
   };
 
+  const getScoreBadgeClass = (score?: number, maxScore?: number) => {
+    if (score == null || !maxScore) return 'bg-slate-100 text-slate-600';
+    const percentage = (score / maxScore) * 100;
+    if (percentage >= 85) return 'bg-emerald-100 text-emerald-700';
+    if (percentage >= 70) return 'bg-blue-100 text-blue-700';
+    if (percentage >= 50) return 'bg-amber-100 text-amber-700';
+    return 'bg-rose-100 text-rose-700';
+  };
+
   const renderExamCard = (exam: Exam) => {
-    const statusColor = getExamStatusColor(exam.status);
-    const statusText = getExamStatusText(exam.status);
+    const examData = exam as Exam & {
+      classCode?: string;
+      classTitle?: string;
+      examDate?: string;
+      comment?: string;
+      examType?: string;
+    };
+    const classTitle =  examData.classTitle;
+    const examSubject = examData.classCode;
+    const startDateTime =  examData.examDate;
+    const endDateTime = examData.examDate;
+
     const isAvailable = isExamAvailable(exam);
     const isPast = isExamPast(exam);
 
@@ -77,54 +96,32 @@ function StudentExamsPage() {
       <div key={exam.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">{exam.title}</h3>
-            <p className="text-sm text-gray-600">{exam.subject}</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">{exam.classCode}</h3>
+            {classTitle && <p className="text-sm text-gray-600">{classTitle}</p>}
           </div>
-          <span className={`px-2 py-1 rounded text-xs font-medium ${statusColor}`}>
-            {statusText}
-          </span>
         </div>
-
-        {exam.description && (
-          <p className="text-gray-700 text-sm mb-3">{exam.description}</p>
-        )}
 
         <div className="grid grid-cols-2 gap-3 text-sm mb-4">
           <div>
             <span className="text-gray-500">Bắt đầu:</span>
-            <p className="font-medium">{formatDateTime(exam.startTime)}</p>
+            <p className="font-medium">{formatDateTime(startDateTime)}</p>
           </div>
           <div>
             <span className="text-gray-500">Kết thúc:</span>
-            <p className="font-medium">{formatDateTime(exam.endTime)}</p>
-          </div>
-          <div>
-            <span className="text-gray-500">Thời gian:</span>
-            <p className="font-medium">{formatDuration(exam.durationMinutes)}</p>
-          </div>
-          <div>
-            <span className="text-gray-500">Câu hỏi:</span>
-            <p className="font-medium">{exam.totalQuestions} câu</p>
+            <p className="font-medium">{formatDateTime(endDateTime)}</p>
           </div>
         </div>
 
         {exam.maxScore && (
-          <div className="text-sm mb-3">
-            <span className="text-gray-500">Điểm tối đa:</span>
-            <span className="font-medium ml-1">{exam.maxScore} điểm</span>
+          <div className="mb-3">
+            <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${getScoreBadgeClass(exam.score, exam.maxScore)}`}>
+              Điểm: {exam.score}/{exam.maxScore}
+            </span>
           </div>
         )}
 
         {/* Exam Actions */}
         <div className="flex space-x-2">
-          {isAvailable && !exam.submitted && (
-            <button 
-              onClick={() => handleStartExam(exam.id)}
-              className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors"
-            >
-              {(exam.attemptCount || 0) > 0 ? 'Tiếp tục làm bài' : 'Bắt đầu làm bài'}
-            </button>
-          )}
           
           {isPast && exam.submitted && (
             <button 
@@ -134,32 +131,7 @@ function StudentExamsPage() {
               Xem kết quả
             </button>
           )}
-
-          <button 
-            onClick={() => navigate(`/student/exams/${exam.id}/details`)}
-            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
-          >
-            Chi tiết
-          </button>
         </div>
-
-        {/* Show attempts and score if available */}
-        {(exam.attemptCount || 0) > 0 && (
-          <div className="mt-3 pt-3 border-t border-gray-100">
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <span className="text-gray-500">Lần thử:</span>
-                <span className="font-medium ml-1">{exam.attemptCount}/{exam.maxAttempts || 'Không giới hạn'}</span>
-              </div>
-              {exam.score !== undefined && (
-                <div>
-                  <span className="text-gray-500">Điểm:</span>
-                  <span className="font-medium ml-1">{exam.score}/{exam.maxScore}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </div>
     );
   };
@@ -235,7 +207,6 @@ function StudentExamsPage() {
         <div className="flex">
           {[
             { key: 'all', label: 'Tất cả' },
-            { key: 'available', label: 'Có thể làm' },
             { key: 'upcoming', label: 'Sắp tới' },
             { key: 'completed', label: 'Đã hoàn thành' }
           ].map(tab => (

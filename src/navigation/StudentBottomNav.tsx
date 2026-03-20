@@ -87,7 +87,7 @@ const StudentBottomNav: React.FC = () => {
                 {item.label}
               </span>
               {active && (
-                <div className="absolute bottom-1 h-1 w-8 rounded-full bg-red-600" />
+                <div className="absolute bottom-0.5 h-1 w-8 rounded-full bg-red-600" />
               )}
             </button>
           );
