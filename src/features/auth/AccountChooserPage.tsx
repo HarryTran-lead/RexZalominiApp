@@ -73,16 +73,19 @@ function AccountChooserPage() {
     }
   };
 
-  const handleVerifyParentPin = async () => {
-    if (!pendingParentProfile || pin.length === 0) return;
+  const handleVerifyParentPin = async (pinCode?: string) => {
+    const pinToVerify = pinCode ?? pin;
+    if (!pendingParentProfile || pinToVerify.length !== 4 || pinLoading) return;
     try {
       setPinLoading(true);
       const response = await authService.verifyParentPin({
         profileId: pendingParentProfile.id,
-        pin,
+        pin: pinToVerify,
       });
       if (response?.data?.success === false) {
         openSnackbar({ text: response.data.message ?? "PIN không hợp lệ", type: "error" });
+        setPin("");
+        setTimeout(() => pinInputRef.current?.focus(), 100);
         return;
       }
       setPinModalOpen(false);
@@ -91,6 +94,8 @@ function AccountChooserPage() {
       const msg =
         error?.response?.data?.message ?? "PIN không đúng, vui lòng thử lại";
       openSnackbar({ text: msg, type: "error" });
+      setPin("");
+      setTimeout(() => pinInputRef.current?.focus(), 100);
     } finally {
       setPinLoading(false);
     }
@@ -301,7 +306,13 @@ function AccountChooserPage() {
               maxLength={4}
               placeholder="Nhập PIN"
               value={pin}
-              onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
+              onChange={(e) => {
+                const nextPin = e.target.value.replace(/\D/g, "").slice(0, 4);
+                setPin(nextPin);
+                if (nextPin.length === 4) {
+                  void handleVerifyParentPin(nextPin);
+                }
+              }}
               onKeyDown={(e) => e.key === "Enter" && handleVerifyParentPin()}
               className="mb-4 w-full rounded-xl border-2 border-gray-200 px-4 py-3 text-center text-2xl tracking-[0.5em] text-gray-800 outline-none transition focus:border-red-400"
             />
@@ -315,7 +326,7 @@ function AccountChooserPage() {
               </button>
               <button
                 onClick={handleVerifyParentPin}
-                disabled={pin.length === 0 || pinLoading}
+                disabled={pin.length !== 4 || pinLoading}
                 className="flex-1 rounded-xl bg-red-500 py-3 text-sm font-semibold text-white shadow-md shadow-red-300/50 transition hover:bg-red-600 active:scale-95 disabled:opacity-50"
               >
                 {pinLoading ? "Đang xác thực..." : "Xác nhận"}

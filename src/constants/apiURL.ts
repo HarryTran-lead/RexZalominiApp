@@ -120,6 +120,13 @@ export const SESSION_REPORTS_ENDPOINTS = {
   DETAIL: (id: string) => `/session-reports/${id}`,
 };
 
+// Ticket Endpoints
+export const TICKET_ENDPOINTS = {
+  LIST: "/tickets",
+  CREATE: "/tickets",
+  DETAIL: (id: string) => `/tickets/${id}`,
+};
+
 // All API Endpoints
 export const API_ENDPOINTS = {
   AUTH: AUTH_ENDPOINTS,
@@ -130,4 +137,5 @@ export const API_ENDPOINTS = {
   GAMIFICATION: GAMIFICATION_ENDPOINTS,
   EXAM: EXAM_ENDPOINTS,
   HOMEWORK: HOMEWORK_ENDPOINTS,
+  TICKET: TICKET_ENDPOINTS,
 };

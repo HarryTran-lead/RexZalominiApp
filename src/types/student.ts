@@ -1,3 +1,5 @@
+import { ApiResponse, ListData } from "./apiResponse";
+
 // Student Types
 export interface StudentClass {
   id: string;
@@ -23,25 +25,25 @@ export interface StudentClass {
 
 // Homework Types
 export interface HomeworkAssignment {
-    id: string;
-    assignmentId: string;
-    assignmentTitle: string;
-    assignmentDescription: string;
-    classId: string;
-    classCode: string;
-    classTitle: string;
-    dueAt?: string;
-    book?: string;
-    pages?: string;
-    skills?: string[];
-    submissionType: "File" | "Text" | "Link" | "MultipleChoice";
-    maxScore?: number;
-    status: "Assigned" | "Submitted" | "Graded" | "Late" | "Missing";
-    submittedAt?: string;
-    gradedAt?: string;
-    score?: number;
-    isLate: boolean;
-    isOverdue: boolean;
+  id: string;
+  assignmentId: string;
+  assignmentTitle: string;
+  assignmentDescription: string;
+  classId: string;
+  classCode: string;
+  classTitle: string;
+  dueAt?: string;
+  book?: string;
+  pages?: string;
+  skills?: string[];
+  submissionType: "File" | "Text" | "Link" | "MultipleChoice";
+  maxScore?: number;
+  status: "Assigned" | "Submitted" | "Graded" | "Late" | "Missing";
+  submittedAt?: string;
+  gradedAt?: string;
+  score?: number;
+  isLate: boolean;
+  isOverdue: boolean;
 }
 
 export interface SubmitHomeworkRequest {
@@ -155,31 +157,17 @@ export interface StarTransaction {
 // Exam Types
 export interface Exam {
   id: string;
-  classId: string;
-  className?: string;
+  examId: string;
+  classCode: string;
+  classTitle?: string;
   title: string;
-  subject?: string;
-  examType:
-    | "Progress"
-    | "Midterm"
-    | "Final"
-    | "Speaking"
-    | "PlacementTest";
-  date: string;
-  startTime: string;
-  endTime: string;
+  examType: "Progress" | "Midterm" | "Final" | "Speaking" | "PlacementTest";
+  examDate: string;
+  createdAt: string;
   maxScore?: number;
-  description?: string;
-  scheduledStartTime?: string;
-  timeLimitMinutes?: number;
-  durationMinutes: number;
-  totalQuestions: number;
-  allowLateStart: boolean;
-  status: "Draft" | "Active" | "Completed" | "Cancelled";
   submitted?: boolean;
-  attemptCount?: number;
-  maxAttempts?: number;
   score?: number;
+  attachmentUrl?: [string];
 }
 
 export interface ExamSubmission {
@@ -254,3 +242,58 @@ export interface TimetableQueryParams {
 export interface RewardRedemptionQueryParams extends BaseQueryParams {
   status?: string;
 }
+
+export interface Ticket{
+  id: string;
+  openedByUserId: string;
+  openedByUserName: string;
+  openedByProfileId?: string;
+  openedByProfileName?: string;
+  branchId: string;
+  branchName: string;
+  classId?: string;
+  classCode?: string;
+  classTitle?: string;
+  category: TicketCategory;
+  type?: "General" | "DirectToTeacher";
+  subject: string;
+  message: string;
+  status: string;
+  assignedToUserId?: string;
+  assignedToUserName?: string;
+  createdAt: string;
+  updatedAt: string;
+  commentCount: number;
+}
+
+export type TicketStatus = "Open" | "InProgress" | "Resolved" | "Closed";
+export type TicketCategory = "Homework" | "Finance" | "Schedule" | "Tech";
+
+
+export interface CreateTicket {
+  openedByProfileId?: string;
+  branchId: string;
+  classId?: string;
+  category: TicketCategory;
+  subject: string;
+  message: string;
+  type: "General" | "DirectToTeacher";
+  assignedToUserId?: string;
+}
+
+export interface TicketComment {
+  id: string;
+  commenterUserId: string;
+  commenterUserName: string;
+  commenterProfileId?: string;
+  commenterProfileName?: string;
+  message: string;
+  attachmentUrl?: string;
+  createdAt: string;
+}
+
+
+export type TicketListResponse = ApiResponse<ListData<Ticket>>;
+export type TicketCreateResponse = ApiResponse<Ticket>;
+export type AddTicketCommentResponse = ApiResponse<TicketComment>;
+export type TicketHistoryResponse = ApiResponse<any>;

@@ -50,6 +50,8 @@ export const formatDateTime = (dateString?: string): string => {
 // Homework helpers
 export const getHomeworkStatusColor = (status?: string): string => {
   switch (status) {
+    case 'Assigned':
+      return 'text-indigo-600';
     case 'Submitted':
       return 'text-blue-600';
     case 'Graded':
@@ -66,6 +68,8 @@ export const getHomeworkStatusColor = (status?: string): string => {
 
 export const getHomeworkStatusText = (status?: string): string => {
   switch (status) {
+    case 'Assigned':
+      return 'Đã giao';
     case 'Pending':
       return 'Chưa nộp';
     case 'Submitted':
