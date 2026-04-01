@@ -18,7 +18,8 @@
     "login": "zmp login",
     "start": "zmp start",
     "dev": "vite",
-    "deploy": "zmp deploy"
+    "deploy": "zmp deploy",
+    "build": "vite build"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",
