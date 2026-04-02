@@ -58,7 +58,7 @@ function LoginPage() {
     if (role === 3) {
       navigate("/teacher");
     } else {
-      navigate("/");
+      navigate("/student");
     }
   };
 

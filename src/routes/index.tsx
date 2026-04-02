@@ -30,6 +30,7 @@ import ParentHomeworkPage from "@/screens/roles/parent/pages/ParentHomeworkPage"
 import ParentExamsPage from "@/screens/roles/parent/pages/ParentExamsPage";
 import ParentNotificationsPage from "@/screens/roles/parent/pages/ParentNotificationsPage";
 import ParentLeaveRequestPage from "@/screens/roles/parent/pages/ParentLeaveRequestPage";
+import LandingPage from "@/features/landing/LandingPage";
 
 // Teacher pages
 import TeacherMyClassesPage from "@/screens/roles/teacher/pages/TeacherMyClassesPage";
@@ -42,7 +43,10 @@ import TeacherReportsPage from "@/screens/roles/teacher/pages/TeacherReportsPage
 const MainRoutes: React.FC = () => {
   return (
     <AnimationRoutes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/faq" element={<LandingPage />} />
+      <Route path="/news" element={<LandingPage />} />
+      <Route path="/contact" element={<LandingPage />} />
 
       <Route
         path="/login"
@@ -267,7 +271,7 @@ const MainRoutes: React.FC = () => {
         }
       />
 
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </AnimationRoutes>
   );
 };

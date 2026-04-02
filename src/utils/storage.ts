@@ -1,4 +1,3 @@
-import { getStorage, setStorage, removeStorage } from "zmp-sdk";
 import { STORAGE_KEYS } from "../api/api";
 
 /**
@@ -12,8 +11,8 @@ export const storage = {
    */
   async getItem(key: string): Promise<string | null> {
     try {
-      const result = await getStorage({ keys: [key] });
-      return result[key] || null;
+      if (typeof window === "undefined") return null;
+      return window.localStorage.getItem(key);
     } catch (error) {
       console.error(`Error getting storage key "${key}":`, error);
       return null;
@@ -25,11 +24,8 @@ export const storage = {
    */
   async setItem(key: string, value: string): Promise<void> {
     try {
-      await setStorage({
-        data: {
-          [key]: value,
-        },
-      });
+      if (typeof window === "undefined") return;
+      window.localStorage.setItem(key, value);
     } catch (error) {
       console.error(`Error setting storage key "${key}":`, error);
       throw error;
@@ -41,7 +37,8 @@ export const storage = {
    */
   async removeItem(key: string): Promise<void> {
     try {
-      await removeStorage({ keys: [key] });
+      if (typeof window === "undefined") return;
+      window.localStorage.removeItem(key);
     } catch (error) {
       console.error(`Error removing storage key "${key}":`, error);
       throw error;
@@ -53,7 +50,11 @@ export const storage = {
    */
   async getMultiple(keys: string[]): Promise<Record<string, any>> {
     try {
-      return await getStorage({ keys });
+      if (typeof window === "undefined") return {};
+      return keys.reduce<Record<string, any>>((acc, key) => {
+        acc[key] = window.localStorage.getItem(key);
+        return acc;
+      }, {});
     } catch (error) {
       console.error("Error getting multiple storage keys:", error);
       return {};
@@ -65,7 +66,10 @@ export const storage = {
    */
   async setMultiple(data: Record<string, any>): Promise<void> {
     try {
-      await setStorage({ data });
+      if (typeof window === "undefined") return;
+      Object.entries(data).forEach(([key, value]) => {
+        window.localStorage.setItem(key, String(value));
+      });
     } catch (error) {
       console.error("Error setting multiple storage keys:", error);
       throw error;
@@ -77,7 +81,8 @@ export const storage = {
    */
   async removeMultiple(keys: string[]): Promise<void> {
     try {
-      await removeStorage({ keys });
+      if (typeof window === "undefined") return;
+      keys.forEach((key) => window.localStorage.removeItem(key));
     } catch (error) {
       console.error("Error removing multiple storage keys:", error);
       throw error;
