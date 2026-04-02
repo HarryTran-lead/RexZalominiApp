@@ -15,7 +15,7 @@ const TAB_PATHS: Record<LandingTab, string> = {
 };
 
 const ZALO_OA_ID = import.meta.env.VITE_ZALO_OA_ID ?? "";
-const ZALO_OA_URL = import.meta.env.VITE_ZALO_OA_URL ?? "";
+const ZALO_OA_FALLBACK_URL = ZALO_OA_ID ? `https://zalo.me/${ZALO_OA_ID}` : "";
 
 const normalizePhone = (rawPhone: string) => rawPhone.replace(/[^0-9]/g, "");
 
@@ -142,13 +142,15 @@ function LandingPage() {
         return;
       }
 
-      if (ZALO_OA_URL) {
-        window.location.href = ZALO_OA_URL;
+      const webOaUrl = ZALO_OA_FALLBACK_URL;
+
+      if (webOaUrl) {
+        window.location.href = webOaUrl;
         return;
       }
 
       openSnackbar({
-        text: "Thiếu cấu hình OA. Vui lòng thêm VITE_ZALO_OA_ID hoặc VITE_ZALO_OA_URL.",
+        text: "Thiếu cấu hình OA. Vui lòng thêm VITE_ZALO_OA_ID.",
         type: "warning",
       });
     } catch {

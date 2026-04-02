@@ -15,6 +15,7 @@ export default ({ mode }: { mode: string }) => {
     base: "./",
     plugins: [zaloMiniApp(), react()],
     build: {
+      outDir: "www",
       assetsInlineLimit: 0,
     },
     resolve: {
