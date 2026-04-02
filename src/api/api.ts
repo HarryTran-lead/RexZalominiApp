@@ -5,8 +5,6 @@ import axios, {
   InternalAxiosRequestConfig,
   AxiosHeaders,
 } from "axios";
-import { getStorage, setStorage, removeStorage } from "zmp-sdk";
-
 import { API_CONFIG } from "../constants/apiURL";
 
 export const STORAGE_KEYS = {
@@ -27,13 +25,25 @@ type RetryableRequestConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
 };
 
+const safeStorage = {
+  getItem(key: string): string | null {
+    if (typeof window === "undefined") return null;
+    return window.localStorage.getItem(key);
+  },
+  setItem(key: string, value: string): void {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(key, value);
+  },
+  removeItem(key: string): void {
+    if (typeof window === "undefined") return;
+    window.localStorage.removeItem(key);
+  },
+};
+
 apiClient.interceptors.request.use(
   async (config) => {
     try {
-      const result = await getStorage({
-        keys: [STORAGE_KEYS.ACCESS_TOKEN],
-      });
-      const token = result[STORAGE_KEYS.ACCESS_TOKEN];
+      const token = safeStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
       const headers = AxiosHeaders.from(config.headers);
       const hasAuthorizationHeader = Boolean(headers.get("Authorization"));
 
@@ -63,10 +73,7 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const result = await getStorage({
-          keys: [STORAGE_KEYS.REFRESH_TOKEN],
-        });
-        const refreshToken = result[STORAGE_KEYS.REFRESH_TOKEN];
+        const refreshToken = safeStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
 
         if (refreshToken) {
           // Remove trailing slash from BASE_URL if exists to avoid double slashes
@@ -79,17 +86,9 @@ apiClient.interceptors.response.use(
 
           const { accessToken, refreshToken: newRefreshToken } = response.data;
 
-          await setStorage({
-            data: {
-              [STORAGE_KEYS.ACCESS_TOKEN]: accessToken,
-            },
-          });
+          safeStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
           if (newRefreshToken) {
-            await setStorage({
-              data: {
-                [STORAGE_KEYS.REFRESH_TOKEN]: newRefreshToken,
-              },
-            });
+            safeStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, newRefreshToken);
           }
 
           const retryHeaders = AxiosHeaders.from(originalRequest.headers);
@@ -99,13 +98,9 @@ apiClient.interceptors.response.use(
           return apiClient(originalRequest);
         }
       } catch (refreshError) {
-        await removeStorage({
-          keys: [
-            STORAGE_KEYS.ACCESS_TOKEN,
-            STORAGE_KEYS.REFRESH_TOKEN,
-            STORAGE_KEYS.USER,
-          ],
-        });
+        safeStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+        safeStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+        safeStorage.removeItem(STORAGE_KEYS.USER);
 
         return Promise.reject(refreshError);
       }
