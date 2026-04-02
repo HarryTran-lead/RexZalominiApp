@@ -266,6 +266,8 @@ const MainRoutes: React.FC = () => {
           </ParentLayout>
         }
       />
+
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </AnimationRoutes>
   );
 };

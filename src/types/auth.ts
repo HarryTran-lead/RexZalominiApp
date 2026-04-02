@@ -6,6 +6,21 @@ export interface LoginRequest {
   password: string;
 }
 
+// Phone Login Request
+export interface LoginPhoneRequest {
+  phoneNumber: string;
+}
+
+// Phone OTP Request
+export interface SendPhoneOtpRequest {
+  phoneNumber: string;
+}
+
+export interface VerifyPhoneOtpRequest {
+  phoneNumber: string;
+  otpCode: string;
+}
+
 // Refresh Token Request
 export type RefreshTokenRequest = string;
 
@@ -88,6 +103,17 @@ export interface LoginResponse {
   profiles?: UserProfile[];
 }
 
+export interface SendPhoneOtpResponse {
+  success?: boolean;
+  message?: string;
+  requestId?: string;
+  expiresIn?: number;
+}
+
+export interface VerifyPhoneOtpResponse extends LoginResponse {
+  verified?: boolean;
+}
+
 // Refresh Token Response
 export interface RefreshTokenResponse {
   accessToken: string;
@@ -137,6 +163,8 @@ export interface UserMeResponse {
 // ==================== API Response Types ====================
 
 export type LoginApiResponse = ApiResponse<LoginResponse>;
+export type SendPhoneOtpApiResponse = ApiResponse<SendPhoneOtpResponse>;
+export type VerifyPhoneOtpApiResponse = ApiResponse<VerifyPhoneOtpResponse>;
 export type RefreshTokenApiResponse = ApiResponse<RefreshTokenResponse>;
 export type ChangePasswordApiResponse = ApiResponse<{ message: string }>;
 export type GetProfilesApiResponse = ApiResponse<GetProfilesResponse>;
