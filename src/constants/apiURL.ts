@@ -7,6 +7,9 @@ export const API_CONFIG = {
 // Authentication Endpoints
 export const AUTH_ENDPOINTS = {
   LOGIN: "/auth/login",
+  LOGIN_PHONE: "/auth/login-phone",
+  SEND_PHONE_OTP: "/auth/phone-otp/send",
+  VERIFY_PHONE_OTP: "/auth/phone-otp/verify",
   REFRESH_TOKEN: "/auth/refresh-token",
   CHANGE_PASSWORD: "/auth/change-password",
   PROFILES: "/auth/profiles",

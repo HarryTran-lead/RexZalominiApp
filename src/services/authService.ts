@@ -3,7 +3,12 @@ import { api } from "../api/api";
 import { AUTH_ENDPOINTS } from "../constants/apiURL";
 import {
   LoginRequest,
+  LoginPhoneRequest,
   LoginResponse,
+  SendPhoneOtpRequest,
+  SendPhoneOtpResponse,
+  VerifyPhoneOtpRequest,
+  VerifyPhoneOtpResponse,
   RefreshTokenRequest,
   RefreshTokenResponse,
   ChangePasswordRequest,
@@ -28,6 +33,37 @@ export const authService = {
       credentials
     );
   },
+
+  // Login with Phone Number
+  loginWithPhone: async (
+    data: LoginPhoneRequest
+  ): Promise<ApiResponse<LoginResponse>> => {
+    return await api.post<ApiResponse<LoginResponse>>(
+      AUTH_ENDPOINTS.LOGIN_PHONE,
+      data
+    );
+  },
+
+  // Send phone OTP
+  sendPhoneOtp: async (
+    data: SendPhoneOtpRequest
+  ): Promise<ApiResponse<SendPhoneOtpResponse>> => {
+    return await api.post<ApiResponse<SendPhoneOtpResponse>>(
+      AUTH_ENDPOINTS.SEND_PHONE_OTP,
+      data
+    );
+  },
+
+  // Verify phone OTP
+  verifyPhoneOtp: async (
+    data: VerifyPhoneOtpRequest
+  ): Promise<ApiResponse<VerifyPhoneOtpResponse>> => {
+    return await api.post<ApiResponse<VerifyPhoneOtpResponse>>(
+      AUTH_ENDPOINTS.VERIFY_PHONE_OTP,
+      data
+    );
+  },
+
 
   // Refresh Token
   refreshToken: async (
