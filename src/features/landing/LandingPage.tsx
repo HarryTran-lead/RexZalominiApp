@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Page, useSnackbar } from "zmp-ui";
 
@@ -20,6 +20,7 @@ const TAB_PATHS: Record<LandingTab, string> = {
   contact: "/contact",
 };
 
+// ── ENV VARS ──────────────────────────────────────────────────
 const ZALO_OA_ID = import.meta.env.VITE_ZALO_OA_ID ?? "";
 const ZALO_OA_URL = import.meta.env.VITE_ZALO_OA_URL ?? "";
 
@@ -32,8 +33,26 @@ const detectCurrentTab = (pathname: string): LandingTab => {
   return "home";
 };
 
-const isMiniAppRuntime = () =>
-  typeof (window as any)?.ZaloJavaScriptInterface !== "undefined";
+// ── RUNTIME DETECTION ─────────────────────────────────────────
+const isMiniAppRuntime = (): boolean => {
+  try {
+    return typeof (window as any)?.ZaloJavaScriptInterface !== "undefined";
+  } catch {
+    return false;
+  }
+};
+
+// ── SAFE ZMP-SDK IMPORT ───────────────────────────────────────
+// We wrap zmp-sdk imports in try-catch to prevent crashes on non-Zalo environments
+const getZmpApis = async () => {
+  try {
+    const apis = await import("zmp-sdk/apis");
+    return apis;
+  } catch (error) {
+    console.warn("[v0] zmp-sdk/apis not available:", error);
+    return null;
+  }
+};
 
 function LandingPage() {
   const location = useLocation();
@@ -48,7 +67,7 @@ function LandingPage() {
 
   // ─── HELPERS ────────────────────────────────────────────────
 
-  const handleLoginSuccess = async (payload: any) => {
+  const handleLoginSuccess = useCallback(async (payload: any) => {
     const accessToken = payload?.accessToken;
     const refreshToken = payload?.refreshToken;
     const role = payload?.role;
@@ -78,9 +97,9 @@ function LandingPage() {
       return;
     }
     navigate("/student");
-  };
+  }, [navigate]);
 
-  const handleQuickZaloLinkLogin = async () => {
+  const handleQuickZaloLinkLogin = useCallback(async () => {
     if (isLinking) return;
 
     if (!isMiniAppRuntime()) {
@@ -94,7 +113,12 @@ function LandingPage() {
 
     setIsLinking(true);
     try {
-      const { authorize, getPhoneNumber } = await import("zmp-sdk/apis");
+      const apis = await getZmpApis();
+      if (!apis) {
+        throw new Error("Không thể tải Zalo SDK.");
+      }
+
+      const { authorize, getPhoneNumber } = apis;
       await authorize({ scopes: ["scope.userPhonenumber"] });
 
       const phoneResult = (await getPhoneNumber()) as any;
@@ -130,38 +154,78 @@ function LandingPage() {
     } finally {
       setIsLinking(false);
     }
-  };
+  }, [isLinking, navigate, openSnackbar, handleLoginSuccess]);
 
   // ─── CONTACT → ZALO OA trực tiếp ────────────────────────────
-  const handleContactByZalo = async () => {
+  const handleContactByZalo = useCallback(async () => {
+    console.log("[v0] handleContactByZalo called");
+    console.log("[v0] ZALO_OA_ID:", ZALO_OA_ID);
+    console.log("[v0] ZALO_OA_URL:", ZALO_OA_URL);
+    console.log("[v0] isMiniAppRuntime:", isMiniAppRuntime());
+
     try {
+      // Option 1: In Zalo Mini App environment
       if (isMiniAppRuntime() && ZALO_OA_ID) {
-        const { interactOA, openChat } = await import("zmp-sdk/apis");
-        await interactOA({ oaId: ZALO_OA_ID });
-        await openChat({ id: ZALO_OA_ID, type: "oa" });
-        return;
+        console.log("[v0] Attempting to open Zalo OA chat in Mini App...");
+        
+        const apis = await getZmpApis();
+        if (apis) {
+          try {
+            // Try openChat first (direct message)
+            if (apis.openChat) {
+              console.log("[v0] Using openChat API...");
+              await apis.openChat({ id: ZALO_OA_ID, type: "oa" });
+              return;
+            }
+          } catch (chatError) {
+            console.warn("[v0] openChat failed:", chatError);
+          }
+
+          try {
+            // Fallback to interactOA
+            if (apis.interactOA) {
+              console.log("[v0] Using interactOA API...");
+              await apis.interactOA({ oaId: ZALO_OA_ID });
+              return;
+            }
+          } catch (interactError) {
+            console.warn("[v0] interactOA failed:", interactError);
+          }
+        }
       }
 
+      // Option 2: Fallback to Zalo OA URL (works on web browsers)
       if (ZALO_OA_URL) {
-        window.location.href = ZALO_OA_URL;
+        console.log("[v0] Opening ZALO_OA_URL:", ZALO_OA_URL);
+        window.open(ZALO_OA_URL, "_blank");
         return;
       }
 
+      // Option 3: Construct URL from OA ID
+      if (ZALO_OA_ID) {
+        const constructedUrl = `https://zalo.me/${ZALO_OA_ID}`;
+        console.log("[v0] Opening constructed Zalo URL:", constructedUrl);
+        window.open(constructedUrl, "_blank");
+        return;
+      }
+
+      // No config available
       openSnackbar({
-        text: "Thiếu cấu hình OA. Vui lòng thêm VITE_ZALO_OA_ID hoặc VITE_ZALO_OA_URL.",
+        text: "Vui lòng cấu hình VITE_ZALO_OA_ID hoặc VITE_ZALO_OA_URL trong .env",
         type: "warning",
       });
-    } catch {
+    } catch (error) {
+      console.error("[v0] handleContactByZalo error:", error);
       openSnackbar({
         text: "Không thể mở Zalo OA lúc này. Vui lòng thử lại.",
         type: "error",
       });
     }
-  };
+  }, [openSnackbar]);
 
-  const handleTabChange = (tab: LandingTab) => {
+  const handleTabChange = useCallback((tab: LandingTab) => {
     navigate(TAB_PATHS[tab]);
-  };
+  }, [navigate]);
 
   // ─── RENDER ──────────────────────────────────────────────────
 
@@ -183,7 +247,7 @@ function LandingPage() {
             </p>
           </div>
           {/* Ưu đãi badge */}
-          <span className="rounded-full bg-red-600 px-2.5 py-1 text-[10px] font-bold text-white">
+          <span className="rounded-full bg-gradient-to-r from-red-600 to-red-500 px-2.5 py-1 text-[10px] font-bold text-white shadow-sm animate-pulse">
             Ưu đãi
           </span>
         </header>
@@ -198,10 +262,10 @@ function LandingPage() {
           )}
           {activeTab === "faq" && <FAQTab />}
           {activeTab === "news" && <NewsTab />}
-          {/* contact tab is handled by bottom nav directly */}
+          {/* contact tab content */}
           {activeTab === "contact" && (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-red-600 shadow-lg">
+            <div className="flex flex-col items-center justify-center py-16 text-center animate-fade-in">
+              <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-red-600 to-red-500 shadow-lg animate-bounce-subtle">
                 <svg viewBox="0 0 24 24" className="h-10 w-10" fill="none" stroke="white" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" />
                 </svg>
@@ -213,7 +277,7 @@ function LandingPage() {
               <button
                 type="button"
                 onClick={handleContactByZalo}
-                className="mt-6 flex h-12 items-center gap-2.5 rounded-2xl bg-red-600 px-8 text-sm font-bold text-white shadow-md active:bg-red-700"
+                className="mt-6 flex h-12 items-center gap-2.5 rounded-2xl bg-gradient-to-r from-red-600 to-red-500 px-8 text-sm font-bold text-white shadow-md active:scale-95 transition-transform"
               >
                 <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" />
@@ -222,12 +286,29 @@ function LandingPage() {
               </button>
               <div className="mt-6 space-y-2.5 w-full">
                 {[
-                  { icon: "📍", label: "Địa chỉ", value: "Rex English Centre, TP.HCM" },
-                  { icon: "📞", label: "Hotline", value: "0901 234 567" },
-                  { icon: "🕐", label: "Giờ làm việc", value: "7:30 – 21:30 · Thứ 2–CN" },
+                  { icon: "location", label: "Địa chỉ", value: "Rex English Centre, TP.HCM" },
+                  { icon: "phone", label: "Hotline", value: "0901 234 567" },
+                  { icon: "clock", label: "Giờ làm việc", value: "7:30 – 21:30 · Thứ 2–CN" },
                 ].map((info) => (
-                  <div key={info.label} className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-3 text-left shadow-sm">
-                    <span className="text-xl">{info.icon}</span>
+                  <div key={info.label} className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-3 text-left shadow-sm transition-all hover:shadow-md">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-500">
+                      {info.icon === "location" && (
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      )}
+                      {info.icon === "phone" && (
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                      )}
+                      {info.icon === "clock" && (
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      )}
+                    </span>
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">{info.label}</p>
                       <p className="text-sm font-semibold text-slate-800">{info.value}</p>
