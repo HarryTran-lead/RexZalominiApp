@@ -1,6 +1,5 @@
 import React from "react";
-import { AnimationRoutes, Route } from "zmp-ui";
-import { Navigate } from "react-router-dom";
+import {Route, Navigate } from "react-router-dom";
 import AuthLayout from "../layouts/AuthLayout";
 import StudentLayout from "../layouts/StudentLayout";
 import TeacherLayout from "../layouts/TeacherLayout";
@@ -38,6 +37,8 @@ import TeacherSubjectsPage from "@/screens/roles/teacher/pages/TeacherSubjectsPa
 import TeacherAssignmentsPage from "@/screens/roles/teacher/pages/TeacherAssignmentsPage";
 import TeacherAttendancePage from "@/screens/roles/teacher/pages/TeacherAttendancePage";
 import TeacherReportsPage from "@/screens/roles/teacher/pages/TeacherReportsPage";
+import { AnimationRoutes } from "zmp-ui";
+
 
 
 const MainRoutes: React.FC = () => {

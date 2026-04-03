@@ -20,11 +20,7 @@ const AppLayout = () => {
 
   return (
     <App theme={theme}>
-      <SnackbarProvider>
-        {/* Thêm dòng này để test */}
-        <h1 style={{ position: "absolute", zIndex: 9999, top: "50px", left: "20px", color: "red", fontSize: "24px" }}>
-          LAYOUT ĐÃ CHẠY! LỖI NẰM Ở ROUTER
-        </h1>
+      <SnackbarProvider>    
         <ZMPRouter>
           <MainRoutes />
         </ZMPRouter>

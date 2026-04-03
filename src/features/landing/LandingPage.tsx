@@ -160,7 +160,6 @@ function LandingPage() {
   const handleContactByZalo = useCallback(async () => {
     console.log("[v0] handleContactByZalo called");
     console.log("[v0] ZALO_OA_ID:", ZALO_OA_ID);
-    console.log("[v0] ZALO_OA_URL:", ZALO_OA_URL);
     console.log("[v0] isMiniAppRuntime:", isMiniAppRuntime());
 
     try {
@@ -192,13 +191,6 @@ function LandingPage() {
             console.warn("[v0] interactOA failed:", interactError);
           }
         }
-      }
-
-      // Option 2: Fallback to Zalo OA URL (works on web browsers)
-      if (ZALO_OA_URL) {
-        console.log("[v0] Opening ZALO_OA_URL:", ZALO_OA_URL);
-        window.open(ZALO_OA_URL, "_blank");
-        return;
       }
 
       // Option 3: Construct URL from OA ID
