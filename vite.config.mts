@@ -12,9 +12,10 @@ export default ({ mode }: { mode: string }) => {
   const env = loadEnv(mode, process.cwd(), '');
   
   return defineConfig({
-    base: "./",
+   base: process.env.VERCEL ? "/" : "./",
     plugins: [zaloMiniApp(), react()],
     build: {
+      outDir: "www",
       assetsInlineLimit: 0,
     },
     resolve: {

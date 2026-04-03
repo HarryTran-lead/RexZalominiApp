@@ -1,11 +1,17 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Button, Page, Text, useSnackbar } from "zmp-ui";
+import { Page, useSnackbar } from "zmp-ui";
+
 import logoRex from "../../assets/images/LogoRex.png";
 import { authService } from "../../services/authService";
 import { storage } from "../../utils/storage";
 
-type LandingTab = "home" | "faq" | "news" | "contact";
+import HomeTab from "./tabs/HomeTab";
+import FAQTab from "./tabs/FAQTab";
+import NewsTab from "./tabs/NewsTab";
+import LandingBottomNav from "./components/LandingBottomNav";
+
+export type LandingTab = "home" | "faq" | "news" | "contact";
 
 const TAB_PATHS: Record<LandingTab, string> = {
   home: "/",
@@ -14,10 +20,11 @@ const TAB_PATHS: Record<LandingTab, string> = {
   contact: "/contact",
 };
 
+// ── ENV VARS ──────────────────────────────────────────────────
 const ZALO_OA_ID = import.meta.env.VITE_ZALO_OA_ID ?? "";
-const ZALO_OA_URL = import.meta.env.VITE_ZALO_OA_URL ?? "";
+const ZALO_OA_FALLBACK_URL = ZALO_OA_ID ? `https://zalo.me/${ZALO_OA_ID}` : "";
 
-const normalizePhone = (rawPhone: string) => rawPhone.replace(/[^0-9]/g, "");
+const normalizePhone = (raw: string) => raw.replace(/[^0-9]/g, "");
 
 const detectCurrentTab = (pathname: string): LandingTab => {
   if (pathname === "/faq") return "faq";
@@ -26,7 +33,26 @@ const detectCurrentTab = (pathname: string): LandingTab => {
   return "home";
 };
 
-const isMiniAppRuntime = () => typeof (window as any)?.ZaloJavaScriptInterface !== "undefined";
+// ── RUNTIME DETECTION ─────────────────────────────────────────
+const isMiniAppRuntime = (): boolean => {
+  try {
+    return typeof (window as any)?.ZaloJavaScriptInterface !== "undefined";
+  } catch {
+    return false;
+  }
+};
+
+// ── SAFE ZMP-SDK IMPORT ───────────────────────────────────────
+// We wrap zmp-sdk imports in try-catch to prevent crashes on non-Zalo environments
+const getZmpApis = async () => {
+  try {
+    const apis = await import("zmp-sdk/apis");
+    return apis;
+  } catch (error) {
+    console.warn("[v0] zmp-sdk/apis not available:", error);
+    return null;
+  }
+};
 
 function LandingPage() {
   const location = useLocation();
@@ -34,9 +60,14 @@ function LandingPage() {
   const { openSnackbar } = useSnackbar();
   const [isLinking, setIsLinking] = useState(false);
 
-  const activeTab = useMemo(() => detectCurrentTab(location.pathname), [location.pathname]);
+  const activeTab = useMemo(
+    () => detectCurrentTab(location.pathname),
+    [location.pathname]
+  );
 
-  const handleLoginSuccess = async (payload: any) => {
+  // ─── HELPERS ────────────────────────────────────────────────
+
+  const handleLoginSuccess = useCallback(async (payload: any) => {
     const accessToken = payload?.accessToken;
     const refreshToken = payload?.refreshToken;
     const role = payload?.role;
@@ -52,25 +83,23 @@ function LandingPage() {
 
     try {
       const profilesResponse = await authService.getProfiles();
-      const isProfilesSuccess = profilesResponse.isSuccess ?? profilesResponse.success;
-
-      if (isProfilesSuccess && profilesResponse.data?.length) {
+      const isOk = profilesResponse.isSuccess ?? profilesResponse.success;
+      if (isOk && profilesResponse.data?.length) {
         navigate("/account-chooser");
         return;
       }
     } catch {
-      // Ignore profile check failure and fallback by role.
+      // fallback by role
     }
 
     if (role === 3) {
       navigate("/teacher");
       return;
     }
-
     navigate("/student");
-  };
+  }, [navigate]);
 
-  const handleQuickZaloLinkLogin = async () => {
+  const handleQuickZaloLinkLogin = useCallback(async () => {
     if (isLinking) return;
 
     if (!isMiniAppRuntime()) {
@@ -83,13 +112,14 @@ function LandingPage() {
     }
 
     setIsLinking(true);
-
     try {
-      const { authorize, getPhoneNumber } = await import("zmp-sdk/apis");
+      const apis = await getZmpApis();
+      if (!apis) {
+        throw new Error("Không thể tải Zalo SDK.");
+      }
 
-      await authorize({
-        scopes: ["scope.userPhonenumber"],
-      });
+      const { authorize, getPhoneNumber } = apis;
+      await authorize({ scopes: ["scope.userPhonenumber"] });
 
       const phoneResult = (await getPhoneNumber()) as any;
       const rawPhone =
@@ -100,7 +130,6 @@ function LandingPage() {
         "";
 
       const phoneNumber = normalizePhone(rawPhone);
-
       if (!phoneNumber) {
         throw new Error(
           "Không đọc được số điện thoại từ Zalo. Vui lòng mở quyền SĐT hoặc đăng nhập thủ công."
@@ -109,205 +138,186 @@ function LandingPage() {
 
       const response = await authService.loginWithPhone({ phoneNumber });
       const isSuccess = response.isSuccess ?? response.success;
-
       if (!isSuccess) {
         throw new Error(response.message || "Liên kết Zalo thất bại. Vui lòng thử lại.");
       }
 
-      openSnackbar({
-        text: "Liên kết thành công. Đang vào hệ thống...",
-        type: "success",
-      });
-
+      openSnackbar({ text: "Liên kết thành công. Đang vào hệ thống...", type: "success" });
       await handleLoginSuccess(response.data);
     } catch (error: any) {
-      const errorMessage =
+      const msg =
         error?.response?.data?.message ||
         error?.message ||
         "Không thể liên kết SĐT Zalo. Vui lòng đăng nhập bằng số điện thoại.";
-
-      openSnackbar({ text: errorMessage, type: "error" });
+      openSnackbar({ text: msg, type: "error" });
       navigate("/login");
     } finally {
       setIsLinking(false);
     }
-  };
+  }, [isLinking, navigate, openSnackbar, handleLoginSuccess]);
 
-  const handleContactByZalo = async () => {
+  // ─── CONTACT → ZALO OA trực tiếp ────────────────────────────
+  const handleContactByZalo = useCallback(async () => {
+    console.log("[v0] handleContactByZalo called");
+    console.log("[v0] ZALO_OA_ID:", ZALO_OA_ID);
+    console.log("[v0] isMiniAppRuntime:", isMiniAppRuntime());
+
     try {
+      // Option 1: In Zalo Mini App environment
       if (isMiniAppRuntime() && ZALO_OA_ID) {
-        const { interactOA, openChat } = await import("zmp-sdk/apis");
-        await interactOA({ oaId: ZALO_OA_ID });
-        await openChat({ id: ZALO_OA_ID, type: "oa" });
+        console.log("[v0] Attempting to open Zalo OA chat in Mini App...");
+        
+        const apis = await getZmpApis();
+        if (apis) {
+          try {
+            // Try openChat first (direct message)
+            if (apis.openChat) {
+              console.log("[v0] Using openChat API...");
+              await apis.openChat({ id: ZALO_OA_ID, type: "oa" });
+              return;
+            }
+          } catch (chatError) {
+            console.warn("[v0] openChat failed:", chatError);
+          }
+
+          try {
+            // Fallback to interactOA
+            if (apis.interactOA) {
+              console.log("[v0] Using interactOA API...");
+              await apis.interactOA({ oaId: ZALO_OA_ID });
+              return;
+            }
+          } catch (interactError) {
+            console.warn("[v0] interactOA failed:", interactError);
+          }
+        }
+      }
+
+      // Option 3: Construct URL from OA ID
+      if (ZALO_OA_ID) {
+        const constructedUrl = `https://zalo.me/${ZALO_OA_ID}`;
+        console.log("[v0] Opening constructed Zalo URL:", constructedUrl);
+        window.open(constructedUrl, "_blank");
         return;
       }
 
-      if (ZALO_OA_URL) {
-        window.location.href = ZALO_OA_URL;
-        return;
-      }
-
+      // No config available
       openSnackbar({
-        text: "Thiếu cấu hình OA. Vui lòng thêm VITE_ZALO_OA_ID hoặc VITE_ZALO_OA_URL.",
+        text: "Vui lòng cấu hình VITE_ZALO_OA_ID hoặc VITE_ZALO_OA_URL trong .env",
         type: "warning",
       });
-    } catch {
-      openSnackbar({ text: "Không thể mở Zalo OA lúc này. Vui lòng thử lại.", type: "error" });
+    } catch (error) {
+      console.error("[v0] handleContactByZalo error:", error);
+      openSnackbar({
+        text: "Không thể mở Zalo OA lúc này. Vui lòng thử lại.",
+        type: "error",
+      });
     }
-  };
+  }, [openSnackbar]);
 
-  const renderHomeTab = () => (
-    <div className="space-y-5">
-      <div className="overflow-hidden rounded-3xl border border-red-100 bg-white shadow-sm">
-        <div className="bg-gradient-to-r from-red-600 via-red-500 to-orange-500 p-6 text-white">
-          <p className="text-xs uppercase tracking-[0.18em] text-red-100">Rex English Centre</p>
-          <h1 className="mt-2 text-2xl font-extrabold leading-tight">
-            Học tiếng Anh bài bản,
-            <br />
-            theo sát từng học viên
-          </h1>
-          <p className="mt-2 text-sm text-red-50">
-            Theo dõi lịch học, bài tập, điểm số và thông báo ngay trên Mini App.
-          </p>
-        </div>
-        <div className="space-y-3 p-4">
-          <Button
-            fullWidth
-            onClick={() => navigate("/login")}
-            className="h-11 rounded-2xl bg-red-600 text-base font-bold text-white"
-          >
-            Đăng nhập vào hệ thống
-          </Button>
-          <Button
-            fullWidth
-            onClick={handleQuickZaloLinkLogin}
-            loading={isLinking}
-            className="h-11 rounded-2xl bg-slate-900 text-sm font-semibold text-white"
-          >
-            Liên kết SĐT Zalo và vào nhanh
-          </Button>
-        </div>
-      </div>
+  const handleTabChange = useCallback((tab: LandingTab) => {
+    navigate(TAB_PATHS[tab]);
+  }, [navigate]);
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-2xl border border-red-100 bg-white p-3">
-          <p className="text-xs text-slate-500">Lộ trình</p>
-          <p className="mt-1 text-sm font-bold text-slate-900">Cambridge + giao tiếp</p>
-        </div>
-        <div className="rounded-2xl border border-red-100 bg-white p-3">
-          <p className="text-xs text-slate-500">Báo cáo</p>
-          <p className="mt-1 text-sm font-bold text-slate-900">Theo buổi và theo tháng</p>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderFaqTab = () => (
-    <div className="space-y-3">
-      {[
-        {
-          question: "Rex Mini App dùng để làm gì?",
-          answer:
-            "Phụ huynh, học viên, giáo viên theo dõi lịch học, điểm danh, bài tập và thông báo trên cùng một ứng dụng.",
-        },
-        {
-          question: "Tôi có thể đăng nhập bằng số điện thoại không?",
-          answer:
-            "Có. Bạn có thể đăng nhập trực tiếp bằng số điện thoại đã được trung tâm cấp tài khoản.",
-        },
-        {
-          question: "Liên kết Zalo để vào nhanh như thế nào?",
-          answer:
-            "Ở trang chủ, bấm nút Liên kết SĐT Zalo và vào nhanh để dùng thông tin SĐT đã liên kết với Zalo.",
-        },
-      ].map((item) => (
-        <div key={item.question} className="rounded-2xl border border-red-100 bg-white p-4">
-          <p className="text-sm font-bold text-slate-900">{item.question}</p>
-          <p className="mt-2 text-sm text-slate-600">{item.answer}</p>
-        </div>
-      ))}
-    </div>
-  );
-
-  const renderNewsTab = () => (
-    <div className="space-y-3">
-      {[
-        { title: "Khai giảng lớp Starter tháng 4", time: "02/04/2026" },
-        { title: "Cập nhật chính sách điểm danh mới", time: "30/03/2026" },
-        { title: "Lịch thi thử Cambridge quý II", time: "28/03/2026" },
-      ].map((item) => (
-        <div key={item.title} className="rounded-2xl border border-red-100 bg-white p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-red-500">Bản tin</p>
-          <p className="mt-1 text-sm font-bold text-slate-900">{item.title}</p>
-          <p className="mt-2 text-xs text-slate-500">{item.time}</p>
-        </div>
-      ))}
-    </div>
-  );
-
-  const renderContactTab = () => (
-    <div className="space-y-4 rounded-2xl border border-red-100 bg-white p-4">
-      <p className="text-sm text-slate-600">
-        Cần tư vấn lộ trình học, lớp phù hợp hoặc hỗ trợ tài khoản? Nhấn nút bên dưới để nhắn tin trực tiếp với Zalo OA của Rex.
-      </p>
-      <Button
-        fullWidth
-        onClick={handleContactByZalo}
-        className="h-11 rounded-2xl bg-red-600 text-base font-bold text-white"
-      >
-        Nhắn tin Zalo OA để tư vấn
-      </Button>
-    </div>
-  );
+  // ─── RENDER ──────────────────────────────────────────────────
 
   return (
-    <Page className="min-h-screen bg-gradient-to-b from-red-50 via-white to-rose-100 text-slate-900">
-      <div className="mx-auto flex min-h-screen w-full max-w-[430px] flex-col px-4 pt-6">
-        <div className="mb-4 flex items-center gap-3">
-          <div className="h-auto w-auto overflow-hidden ">
-            <img src={logoRex} alt="Rex" className="h-28 w-28 object-cover" />
+    <Page className="!bg-[#F9FAFB] text-slate-900">
+      <div className="mx-auto flex min-h-screen w-full max-w-[430px] flex-col">
+        {/* ── TOP HEADER ── */}
+        <header className="flex items-center gap-3 border-b border-slate-100 bg-white px-4 py-3 shadow-sm">
+          <img src={logoRex} alt="Rex English" className="h-10 w-10 rounded-xl object-cover" />
+          <div className="flex-1">
+            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-red-500">
+              Rex English Centre
+            </p>
+            <p className="text-sm font-extrabold leading-tight text-slate-900">
+              {activeTab === "home" && "Trang chủ"}
+              {activeTab === "faq" && "Câu hỏi thường gặp"}
+              {activeTab === "news" && "Bản tin"}
+              {activeTab === "contact" && "Liên hệ"}
+            </p>
           </div>
-          <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-red-500">Rex English</p>
-            <Text className="text-base font-bold text-slate-900">Trung tâm tiếng Anh Rex</Text>
-          </div>
-        </div>
+          {/* Ưu đãi badge */}
+          <span className="rounded-full bg-gradient-to-r from-red-600 to-red-500 px-2.5 py-1 text-[10px] font-bold text-white shadow-sm animate-pulse">
+            Ưu đãi
+          </span>
+        </header>
 
-        <div className="flex-1 overflow-y-auto pb-28">
-          {activeTab === "home" ? renderHomeTab() : null}
-          {activeTab === "faq" ? renderFaqTab() : null}
-          {activeTab === "news" ? renderNewsTab() : null}
-          {activeTab === "contact" ? renderContactTab() : null}
-        </div>
+        {/* ── CONTENT ── */}
+        <main className="flex-1 overflow-y-auto px-4 pt-4 pb-[80px]">
+          {activeTab === "home" && (
+            <HomeTab
+              isLinking={isLinking}
+              onQuickZaloLink={handleQuickZaloLinkLogin}
+            />
+          )}
+          {activeTab === "faq" && <FAQTab />}
+          {activeTab === "news" && <NewsTab />}
+          {/* contact tab content */}
+          {activeTab === "contact" && (
+            <div className="flex flex-col items-center justify-center py-16 text-center animate-fade-in">
+              <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-red-600 to-red-500 shadow-lg animate-bounce-subtle">
+                <svg viewBox="0 0 24 24" className="h-10 w-10" fill="none" stroke="white" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" />
+                </svg>
+              </div>
+              <h2 className="mt-5 text-lg font-extrabold text-slate-900">Nhắn tin qua Zalo</h2>
+              <p className="mt-2 max-w-[260px] text-sm leading-relaxed text-slate-500">
+                Cần tư vấn lộ trình học, lớp phù hợp hoặc hỗ trợ tài khoản? Chúng tôi luôn sẵn sàng.
+              </p>
+              <button
+                type="button"
+                onClick={handleContactByZalo}
+                className="mt-6 flex h-12 items-center gap-2.5 rounded-2xl bg-gradient-to-r from-red-600 to-red-500 px-8 text-sm font-bold text-white shadow-md active:scale-95 transition-transform"
+              >
+                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" />
+                </svg>
+                Mở Zalo OA Rex
+              </button>
+              <div className="mt-6 space-y-2.5 w-full">
+                {[
+                  { icon: "location", label: "Địa chỉ", value: "Rex English Centre, TP.HCM" },
+                  { icon: "phone", label: "Hotline", value: "0901 234 567" },
+                  { icon: "clock", label: "Giờ làm việc", value: "7:30 – 21:30 · Thứ 2–CN" },
+                ].map((info) => (
+                  <div key={info.label} className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-3 text-left shadow-sm transition-all hover:shadow-md">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-500">
+                      {info.icon === "location" && (
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      )}
+                      {info.icon === "phone" && (
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                      )}
+                      {info.icon === "clock" && (
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      )}
+                    </span>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">{info.label}</p>
+                      <p className="text-sm font-semibold text-slate-800">{info.value}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </main>
 
-        <div
-          className="fixed bottom-0 left-1/2 z-50 w-full max-w-[430px] -translate-x-1/2 px-3 pb-2"
-          style={{ paddingBottom: "max(env(safe-area-inset-bottom), 8px)" }}
-        >
-          <div className="grid h-16 grid-cols-4 rounded-2xl border border-red-100 bg-white/95 shadow-lg backdrop-blur">
-            {([
-              { key: "home", label: "Trang chủ" },
-              { key: "faq", label: "FAQ" },
-              { key: "news", label: "Bản tin" },
-              { key: "contact", label: "Liên hệ" },
-            ] as Array<{ key: LandingTab; label: string }>).map((item) => {
-              const isActive = activeTab === item.key;
-              return (
-                <button
-                  key={item.key}
-                  type="button"
-                  onClick={() => navigate(TAB_PATHS[item.key])}
-                  className={`relative flex flex-col items-center justify-center text-[11px] font-semibold transition ${
-                    isActive ? "text-red-600" : "text-slate-500"
-                  }`}
-                >
-                  <span>{item.label}</span>
-                  {isActive ? <span className="absolute bottom-1 h-1 w-8 rounded-full bg-red-600" /> : null}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        {/* ── BOTTOM NAV ── */}
+        <LandingBottomNav
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          onContactPress={handleContactByZalo}
+        />
       </div>
     </Page>
   );

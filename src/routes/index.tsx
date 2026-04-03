@@ -1,6 +1,6 @@
 import React from "react";
-import { AnimationRoutes, Route } from "zmp-ui";
-import { Navigate } from "react-router-dom";
+import { Routes as WebRoutes, Route as WebRoute, Navigate } from "react-router-dom";
+import { AnimationRoutes as ZMPRoutes, Route as ZMPRoute } from "zmp-ui";
 import AuthLayout from "../layouts/AuthLayout";
 import StudentLayout from "../layouts/StudentLayout";
 import TeacherLayout from "../layouts/TeacherLayout";
@@ -39,16 +39,20 @@ import TeacherAssignmentsPage from "@/screens/roles/teacher/pages/TeacherAssignm
 import TeacherAttendancePage from "@/screens/roles/teacher/pages/TeacherAttendancePage";
 import TeacherReportsPage from "@/screens/roles/teacher/pages/TeacherReportsPage";
 
+const isWeb = window.location.hostname.includes("vercel.app") || window.location.hostname === "localhost";
+
+const RouteContainer: any = isWeb ? WebRoutes : ZMPRoutes;
+const AppRoute: any = isWeb ? WebRoute : ZMPRoute;
 
 const MainRoutes: React.FC = () => {
   return (
-    <AnimationRoutes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/faq" element={<LandingPage />} />
-      <Route path="/news" element={<LandingPage />} />
-      <Route path="/contact" element={<LandingPage />} />
+    <RouteContainer>
+      <AppRoute path="/" element={<LandingPage />} />
+      <AppRoute path="/faq" element={<LandingPage />} />
+      <AppRoute path="/news" element={<LandingPage />} />
+      <AppRoute path="/contact" element={<LandingPage />} />
 
-      <Route
+      <AppRoute 
         path="/login"
         element={
           <AuthLayout>
@@ -56,7 +60,7 @@ const MainRoutes: React.FC = () => {
           </AuthLayout>
         }
       />
-      <Route
+      <AppRoute
         path="/account-chooser"
         element={
           <AuthLayout>
@@ -64,7 +68,7 @@ const MainRoutes: React.FC = () => {
           </AuthLayout>
         }
       />
-      <Route
+      <AppRoute
         path="/parent/select-child"
         element={
           <AuthLayout>
@@ -74,7 +78,7 @@ const MainRoutes: React.FC = () => {
       />
 
       {/* Student Routes */}
-      <Route
+      <AppRoute
         path="/student"
         element={
           <StudentLayout>
@@ -82,7 +86,7 @@ const MainRoutes: React.FC = () => {
           </StudentLayout>
         }
       />
-      <Route
+      <WebRoute
         path="/student/dashboard"
         element={
           <StudentLayout>
@@ -90,7 +94,7 @@ const MainRoutes: React.FC = () => {
           </StudentLayout>
         }
       />
-      <Route
+      <AppRoute
         path="/student/timetable"
         element={
           <StudentLayout>
@@ -98,7 +102,7 @@ const MainRoutes: React.FC = () => {
           </StudentLayout>
         }
       />
-      <Route
+      <AppRoute
         path="/student/homework"
         element={
           <StudentLayout>
@@ -106,7 +110,7 @@ const MainRoutes: React.FC = () => {
           </StudentLayout>
         }
       />
-      <Route
+      <AppRoute
         path="/student/gamification"
         element={
           <StudentLayout>
@@ -114,7 +118,7 @@ const MainRoutes: React.FC = () => {
           </StudentLayout>
         }
       />
-      <Route
+      <AppRoute
         path="/student/application"
         element={
           <StudentLayout>
@@ -122,7 +126,7 @@ const MainRoutes: React.FC = () => {
           </StudentLayout>
         }
       />
-      <Route
+      <AppRoute
         path="/student/rewards"
         element={
           <StudentLayout>
@@ -130,7 +134,7 @@ const MainRoutes: React.FC = () => {
           </StudentLayout>
         }
       />
-      <Route
+      <AppRoute
         path="/student/documents"
         element={
           <StudentLayout>
@@ -138,7 +142,7 @@ const MainRoutes: React.FC = () => {
           </StudentLayout>
         }
       />
-      <Route
+      <AppRoute
         path="/student/exams"
         element={
           <StudentLayout>
@@ -147,8 +151,8 @@ const MainRoutes: React.FC = () => {
         }
       />
 
-      {/* Teacher Routes */}
-      <Route
+      {/* Teacher AppRoutes */}
+      <AppRoute
         path="/teacher"
         element={
           <TeacherLayout>
@@ -156,7 +160,7 @@ const MainRoutes: React.FC = () => {
           </TeacherLayout>
         }
       />
-      <Route
+      <AppRoute
         path="/teacher/dashboard"
         element={
           <TeacherLayout>
@@ -164,7 +168,7 @@ const MainRoutes: React.FC = () => {
           </TeacherLayout>
         }
       />
-      <Route
+      <AppRoute
         path="/teacher/timetable"
         element={
           <TeacherLayout>
@@ -172,7 +176,7 @@ const MainRoutes: React.FC = () => {
           </TeacherLayout>
         }
       />
-      <Route
+      <AppRoute
         path="/teacher/my-classes"
         element={
           <TeacherLayout>
@@ -180,7 +184,7 @@ const MainRoutes: React.FC = () => {
           </TeacherLayout>
         }
       />
-      <Route
+      <AppRoute
         path="/teacher/subjects"
         element={
           <TeacherLayout>
@@ -188,7 +192,7 @@ const MainRoutes: React.FC = () => {
           </TeacherLayout>
         }
       />
-      <Route
+      <AppRoute
         path="/teacher/assignments"
         element={
           <TeacherLayout>
@@ -196,7 +200,7 @@ const MainRoutes: React.FC = () => {
           </TeacherLayout>
         }
       />
-      <Route
+      <AppRoute
         path="/teacher/attendance/:sessionId"
         element={
           <TeacherLayout>
@@ -204,7 +208,7 @@ const MainRoutes: React.FC = () => {
           </TeacherLayout>
         }
       />
-      <Route
+      <AppRoute
         path="/teacher/reports"
         element={
           <TeacherLayout>
@@ -213,8 +217,8 @@ const MainRoutes: React.FC = () => {
         }
       />
 
-      {/* Parent Routes */}
-      <Route
+      {/* Parent AppRoutes */}
+      <AppRoute
         path="/parent"
         element={
           <ParentLayout>
@@ -222,7 +226,7 @@ const MainRoutes: React.FC = () => {
           </ParentLayout>
         }
       />
-      <Route
+      <AppRoute
         path="/parent/dashboard"
         element={
           <ParentLayout>
@@ -230,7 +234,7 @@ const MainRoutes: React.FC = () => {
           </ParentLayout>
         }
       />
-      <Route
+      <AppRoute
         path="/parent/timetable"
         element={
           <ParentLayout>
@@ -238,7 +242,7 @@ const MainRoutes: React.FC = () => {
           </ParentLayout>
         }
       />
-      <Route
+      <AppRoute
         path="/parent/homework"
         element={
           <ParentLayout>
@@ -246,7 +250,7 @@ const MainRoutes: React.FC = () => {
           </ParentLayout>
         }
       />
-      <Route
+      <AppRoute
         path="/parent/exams"
         element={
           <ParentLayout>
@@ -254,7 +258,7 @@ const MainRoutes: React.FC = () => {
           </ParentLayout>
         }
       />
-      <Route
+      <AppRoute
         path="/parent/notifications"
         element={
           <ParentLayout>
@@ -262,7 +266,7 @@ const MainRoutes: React.FC = () => {
           </ParentLayout>
         }
       />
-      <Route
+      <AppRoute
         path="/parent/leave-request"
         element={
           <ParentLayout>
@@ -271,8 +275,9 @@ const MainRoutes: React.FC = () => {
         }
       />
 
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </AnimationRoutes>
+      {/* Catch-all AppRoute */}
+      <AppRoute path="*" element={<Navigate to="/" replace />} />
+    </RouteContainer>
   );
 };
 
