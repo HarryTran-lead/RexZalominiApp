@@ -134,29 +134,35 @@ function LandingPage() {
   };
 
   const handleContactByZalo = async () => {
-    try {
-      if (isMiniAppRuntime() && ZALO_OA_ID) {
-        const { interactOA, openChat } = await import("zmp-sdk/apis");
-        await interactOA({ oaId: ZALO_OA_ID });
-        await openChat({ id: ZALO_OA_ID, type: "oa" });
-        return;
-      }
+  try {
+    if ((window as any).zmp && ZALO_OA_ID) {
+      const { openChat } = await import("zmp-sdk/apis");
 
-      const webOaUrl = ZALO_OA_FALLBACK_URL;
-
-      if (webOaUrl) {
-        window.location.href = webOaUrl;
-        return;
-      }
-
-      openSnackbar({
-        text: "Thiếu cấu hình OA. Vui lòng thêm VITE_ZALO_OA_ID.",
-        type: "warning",
+      await openChat({
+        type: "oa",
+        id: ZALO_OA_ID,
       });
-    } catch {
-      openSnackbar({ text: "Không thể mở Zalo OA lúc này. Vui lòng thử lại.", type: "error" });
+
+      return;
     }
-  };
+
+    if (ZALO_OA_FALLBACK_URL) {
+      window.open(ZALO_OA_FALLBACK_URL, "_blank");
+      return;
+    }
+
+    openSnackbar({
+      text: "Thiếu cấu hình OA.",
+      type: "warning",
+    });
+  } catch (err) {
+    console.error(err);
+    openSnackbar({
+      text: "Không thể mở Zalo OA.",
+      type: "error",
+    });
+  }
+};
 
   const renderHomeTab = () => (
     <div className="space-y-5">
@@ -265,14 +271,8 @@ function LandingPage() {
   return (
     <Page className="min-h-screen bg-gradient-to-b from-red-50 via-white to-rose-100 text-slate-900">
       <div className="mx-auto flex min-h-screen w-full max-w-[430px] flex-col px-4 pt-6">
-        <div className="mb-4 flex items-center gap-3">
-          <div className="h-auto w-auto overflow-hidden ">
+        <div className="mb-4 flex items-center justify-center gap-3">
             <img src={logoRex} alt="Rex" className="h-28 w-28 object-cover" />
-          </div>
-          <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-red-500">Rex English</p>
-            <Text className="text-base font-bold text-slate-900">Trung tâm tiếng Anh Rex</Text>
-          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto pb-28">
