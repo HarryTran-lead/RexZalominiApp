@@ -10,39 +10,88 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 
 // Mount the app
-
-
-// Expose app configuration
 import appConfig from "../app-config.json";
 import AppLayout from "./layouts/AppLayout";
 
-const renderBootstrapError = (message: string) => {
-  const container = document.getElementById("app");
-  if (!container) return;
+// Debug log for production
+console.log("[v0] App starting...");
+console.log("[v0] Environment:", import.meta.env.MODE);
+console.log("[v0] ZALO_OA_ID available:", !!import.meta.env.VITE_ZALO_OA_ID);
 
-  container.innerHTML = `
-    <div style="padding:16px;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#991b1b;background:#fef2f2;min-height:100vh;box-sizing:border-box;">
-      <h2 style="margin:0 0 8px 0;font-size:18px;">Ung dung gap loi khoi tao</h2>
-      <p style="margin:0;line-height:1.5;">${message}</p>
-    </div>
-  `;
-};
+if (!window.APP_CONFIG) {
+  window.APP_CONFIG = appConfig as any;
+}
 
-try {
-  if (!window.APP_CONFIG) {
-    window.APP_CONFIG = appConfig as any;
+// Error boundary wrapper
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
   }
 
-  const appElement = document.getElementById("app");
-
-  if (!appElement) {
-    throw new Error("Khong tim thay #app de mount ung dung.");
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
   }
 
-  const root = createRoot(appElement);
-  root.render(React.createElement(AppLayout));
-} catch (error) {
-  const errorMessage = error instanceof Error ? error.message : "Loi khong xac dinh";
-  console.error("App bootstrap failed:", error);
-  renderBootstrapError(errorMessage);
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("[v0] App Error:", error);
+    console.error("[v0] Error Info:", errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return React.createElement(
+        "div",
+        {
+          style: {
+            padding: "20px",
+            textAlign: "center",
+            fontFamily: "system-ui, sans-serif",
+          },
+        },
+        React.createElement("h1", { style: { color: "#dc2626" } }, "Đã có lỗi xảy ra"),
+        React.createElement(
+          "p",
+          { style: { color: "#666", marginTop: "10px" } },
+          this.state.error?.message || "Unknown error"
+        ),
+        React.createElement(
+          "button",
+          {
+            onClick: () => window.location.reload(),
+            style: {
+              marginTop: "20px",
+              padding: "10px 20px",
+              background: "#dc2626",
+              color: "white",
+              border: "none",
+              borderRadius: "8px",
+              cursor: "pointer",
+            },
+          },
+          "Tải lại trang"
+        )
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+const rootElement = document.getElementById("app");
+if (rootElement) {
+  console.log("[v0] Root element found, rendering app...");
+  const root = createRoot(rootElement);
+  root.render(
+    React.createElement(
+      ErrorBoundary,
+      null,
+      React.createElement(AppLayout)
+    )
+  );
+} else {
+  console.error("[v0] Root element #app not found!");
 }
