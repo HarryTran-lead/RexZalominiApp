@@ -1,6 +1,6 @@
 import React from "react";
-import { Routes, Navigate } from "react-router-dom";
-import { AnimationRoutes, Route } from "zmp-ui";
+import { Routes, Navigate, Route } from "react-router-dom";
+// import { AnimationRoutes } from "zmp-ui";
 import AuthLayout from "../layouts/AuthLayout";
 import StudentLayout from "../layouts/StudentLayout";
 import TeacherLayout from "../layouts/TeacherLayout";
