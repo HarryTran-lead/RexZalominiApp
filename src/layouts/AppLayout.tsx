@@ -1,9 +1,17 @@
 import { useEffect, useState } from "react";
-import { App } from "zmp-ui"; // Đã bỏ ZMPRouter ở đây
+import { App, ZMPRouter } from "zmp-ui"; // Lấy ZMPRouter của Zalo
 import SnackbarProvider from "zmp-ui/snackbar-provider";
 import type { AppProps } from "zmp-ui/app";
 import MainRoutes from "@/routes";
+
+// Import thêm BrowserRouter của React cho Web
 import { BrowserRouter } from "react-router-dom";
+
+// 1. Tạo biến nhận diện môi trường (Vercel hoặc Localhost là Web)
+const isWeb = window.location.hostname.includes("vercel.app") || window.location.hostname === "localhost";
+
+// 2. Component tự động chuyển đổi
+const RouterComponent = isWeb ? BrowserRouter : ZMPRouter;
 
 const AppLayout = () => {
   const [theme, setTheme] = useState<AppProps["theme"]>("light");
@@ -22,10 +30,10 @@ const AppLayout = () => {
   return (
     <App theme={theme}>
       <SnackbarProvider>
-        {/* THAY ZMPRouter THÀNH BrowserRouter */}
-        <BrowserRouter>
+        {/* 3. Render Router tương ứng với môi trường */}
+        <RouterComponent>
           <MainRoutes />
-        </BrowserRouter>
+        </RouterComponent>
       </SnackbarProvider>
     </App>
   );
