@@ -6,6 +6,7 @@ import axios, {
   AxiosHeaders,
 } from "axios";
 import { API_CONFIG } from "../constants/apiURL";
+// import { getStorage, setStorage, removeStorage } from "zmp-sdk/apis";
 
 export const STORAGE_KEYS = {
   ACCESS_TOKEN: "@access_token",
@@ -39,6 +40,13 @@ const safeStorage = {
     window.localStorage.removeItem(key);
   },
 };
+
+// const safeStorage = {
+//   getItem: (key: string) => {
+//     // Lưu ý: zmp-sdk storage là dạng bất đồng bộ (Promise) hoặc sync tùy cấu hình, 
+//     // bạn cần đọc document zmp-sdk để đồng bộ với cơ chế interceptor nhé.
+//     return window.localStorage.getItem(key); // Tạm giữ nguyên để web chạy
+//   },
 
 apiClient.interceptors.request.use(
   async (config) => {
