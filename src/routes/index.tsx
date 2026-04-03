@@ -41,7 +41,7 @@ import TeacherReportsPage from "@/screens/roles/teacher/pages/TeacherReportsPage
 
 const MainRoutes: React.FC = () => {
   return (
-    <AnimationRoutes>
+    <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/faq" element={<LandingPage />} />
       <Route path="/news" element={<LandingPage />} />
@@ -272,7 +272,7 @@ const MainRoutes: React.FC = () => {
 
       {/* Catch-all route */}
       <Route path="*" element={<Navigate to="/" replace />} />
-    </AnimationRoutes>
+    </Routes>
   );
 };
 
