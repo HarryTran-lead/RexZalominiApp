@@ -21,6 +21,16 @@ export const AUTH_ENDPOINTS = {
   REQUEST_PIN_RESET: "/auth/profiles/request-pin-reset",
 };
 
+export const ME_ENDPOINTS = {
+  GET: "/me",
+  UPDATE: "/me",
+};
+
+export const FILE_ENDPOINTS = {
+  AVATAR: "/files/avatar",
+  UPLOAD: "/files/upload",
+};
+
 // Student Endpoints
 export const STUDENT_ENDPOINTS = {
   TIMETABLE: "/students/timetable",
@@ -133,6 +143,8 @@ export const TICKET_ENDPOINTS = {
 // All API Endpoints
 export const API_ENDPOINTS = {
   AUTH: AUTH_ENDPOINTS,
+  ME: ME_ENDPOINTS,
+  FILE: FILE_ENDPOINTS,
   STUDENT: STUDENT_ENDPOINTS,
   TEACHER: TEACHER_ENDPOINTS,
   PARENT: PARENT_ENDPOINTS,

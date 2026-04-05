@@ -38,6 +38,7 @@ import TeacherSubjectsPage from "@/screens/roles/teacher/pages/TeacherSubjectsPa
 import TeacherAssignmentsPage from "@/screens/roles/teacher/pages/TeacherAssignmentsPage";
 import TeacherAttendancePage from "@/screens/roles/teacher/pages/TeacherAttendancePage";
 import TeacherReportsPage from "@/screens/roles/teacher/pages/TeacherReportsPage";
+import ProfilePage from "@/screens/ProfilePage";
 
 const isWeb = window.location.hostname.includes("vercel.app") || window.location.hostname === "localhost";
 
@@ -150,6 +151,14 @@ const MainRoutes: React.FC = () => {
           </StudentLayout>
         }
       />
+      <AppRoute
+        path="/student/profile"
+        element={
+          <StudentLayout>
+            <ProfilePage />
+          </StudentLayout>
+        }
+      />
 
       {/* Teacher AppRoutes */}
       <AppRoute
@@ -216,6 +225,14 @@ const MainRoutes: React.FC = () => {
           </TeacherLayout>
         }
       />
+      <AppRoute
+        path="/teacher/profile"
+        element={
+          <TeacherLayout>
+            <ProfilePage />
+          </TeacherLayout>
+        }
+      />
 
       {/* Parent AppRoutes */}
       <AppRoute
@@ -271,6 +288,14 @@ const MainRoutes: React.FC = () => {
         element={
           <ParentLayout>
             <ParentLeaveRequestPage />
+          </ParentLayout>
+        }
+      />
+      <AppRoute
+        path="/parent/profile"
+        element={
+          <ParentLayout>
+            <ProfilePage />
           </ParentLayout>
         }
       />

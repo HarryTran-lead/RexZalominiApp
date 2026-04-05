@@ -5,6 +5,8 @@ export { homeworkService } from "./homeworkService";
 export { reportService } from "./reportService";
 export { parentService } from "./parentService";
 export { studentService, gamificationService, examService } from "./studentService";
+export { meService } from "./meService";
+export { fileService } from "./fileService";
 export type { TeacherClass, ClassStudent } from "@/types/teacher";
 export type { Homework, HomeworkSubmission } from "@/types/teacher";
 export type {
