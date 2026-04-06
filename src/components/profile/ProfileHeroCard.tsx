@@ -12,7 +12,6 @@ interface ProfileHeroCardProps {
 
 const ProfileHeroCard: React.FC<ProfileHeroCardProps> = ({
   fullName,
-  userCode,
   roleLabel,
   isActive,
   avatarUrl,
@@ -44,8 +43,8 @@ const ProfileHeroCard: React.FC<ProfileHeroCardProps> = ({
           </span>
         </button>
 
-        <h2 className="mt-4 text-2xl font-extrabold uppercase tracking-wide text-slate-900">
-          {fullName || "Người dùng"}
+        <h2 className="mt-4 text-2xl font-extrabold tracking-wide text-slate-900">
+          {fullName}
         </h2>
 
         <div className="mt-2 flex items-center gap-2 text-sm text-slate-500">

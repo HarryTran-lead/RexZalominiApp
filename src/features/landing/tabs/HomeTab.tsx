@@ -196,7 +196,7 @@ const TESTIMONIALS = [
 function useCarousel(itemCount: number, autoPlayMs = 4000) {
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const next = useCallback(() => {
     setCurrent((prev) => (prev + 1) % itemCount);

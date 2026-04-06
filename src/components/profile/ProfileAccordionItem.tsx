@@ -1,4 +1,5 @@
 import React from "react";
+import { ChevronRight } from "lucide-react";
 
 interface ProfileAccordionItemProps {
   title: string;
@@ -20,21 +21,16 @@ const ProfileAccordionItem: React.FC<ProfileAccordionItemProps> = ({
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center justify-between gap-3 px-4 py-4 text-left"
+        className="flex w-full h-12 items-center justify-between gap-3 px-4 py-4 text-left"
       >
-        <div className="flex items-center gap-3">
-          <span className="flex h-8 w-8 items-center justify-center text-slate-700">{icon}</span>
-          <span className="text-[22px] font-semibold text-slate-900">{title}</span>
+        <div className="flex items-center gap-2">
+          <span className="flex h-5 w-5 items-center justify-center text-slate-700">{icon}</span>
+          <span className="text-[16px] font-semibold text-slate-900">{title}</span> 
         </div>
-        <svg
+        <ChevronRight
           className={`h-6 w-6 text-slate-400 transition-transform ${expanded ? "rotate-90" : ""}`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
           strokeWidth={2}
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-        </svg>
+        />
       </button>
 
       {expanded && <div className="border-t border-slate-100 px-4 py-4">{children}</div>}

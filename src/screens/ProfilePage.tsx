@@ -6,6 +6,7 @@ import ProfileAccountSection from "@/components/profile/ProfileAccountSection";
 import ProfileHeroCard from "@/components/profile/ProfileHeroCard";
 import ProfileInfoSection from "@/components/profile/ProfileInfoSection";
 import ProfileSecuritySection from "@/components/profile/ProfileSecuritySection";
+import { CircleUserRound, FileText, Info, Lock, RotateCw } from "lucide-react";
 import { API_CONFIG } from "@/constants/apiURL";
 import { authService } from "@/services/authService";
 import { fileService } from "@/services/fileService";
@@ -351,21 +352,11 @@ const ProfilePage: React.FC = () => {
         className="hidden"
       />
 
-      <header className="sticky top-0 z-20 border-b border-red-100 bg-white/95 px-4 py-4 backdrop-blur-sm">
-        <div className="flex items-center justify-between">
+      <header className="sticky top-0 z-20 border-b border-red-700 bg-red-600 px-4 py-3 text-white">
+        <div className="relative flex items-center justify-center">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-red-600">
-              Hồ sơ cá nhân
-            </p>
-            <h1 className="text-xl font-extrabold text-slate-900">Tài khoản</h1>
+            <h1 className="text-lg font-bold">Hồ sơ cá nhân</h1>
           </div>
-          <button
-            type="button"
-            onClick={() => void loadProfile()}
-            className="rounded-xl border border-red-200 px-3 py-2 text-xs font-semibold text-red-600 transition active:scale-95"
-          >
-            Tải lại
-          </button>
         </div>
       </header>
 
@@ -387,10 +378,7 @@ const ProfilePage: React.FC = () => {
             setActiveSection((prev) => (prev === "account" ? null : "account"))
           }
           icon={
-            <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 11a4 4 0 100-8 4 4 0 000 8z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 21a8 8 0 0116 0" />
-            </svg>
+            <CircleUserRound className="h-7 w-7" strokeWidth={2} />
           }
         >
           <ProfileAccountSection
@@ -419,10 +407,7 @@ const ProfilePage: React.FC = () => {
             setActiveSection((prev) => (prev === "security" ? null : "security"))
           }
           icon={
-            <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 11c1.657 0 3-1.79 3-4s-1.343-4-3-4-3 1.79-3 4 1.343 4 3 4z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14v9H5z" />
-            </svg>
+            <Lock className="h-7 w-7" strokeWidth={2} />
           }
         >
           <ProfileSecuritySection
@@ -456,9 +441,7 @@ const ProfilePage: React.FC = () => {
             setActiveSection((prev) => (prev === "terms" ? null : "terms"))
           }
           icon={
-            <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6M9 16h6M8 4h8a2 2 0 012 2v12a2 2 0 01-2 2H8a2 2 0 01-2-2V6a2 2 0 012-2z" />
-            </svg>
+            <FileText className="h-7 w-7" strokeWidth={2} />
           }
         >
           <ProfileInfoSection type="terms" />
@@ -471,10 +454,7 @@ const ProfilePage: React.FC = () => {
             setActiveSection((prev) => (prev === "about" ? null : "about"))
           }
           icon={
-            <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-              <circle cx="12" cy="12" r="10" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8h.01M11 12h2v4h-2z" />
-            </svg>
+            <Info className="h-7 w-7" strokeWidth={2} />
           }
         >
           <ProfileInfoSection type="about" />

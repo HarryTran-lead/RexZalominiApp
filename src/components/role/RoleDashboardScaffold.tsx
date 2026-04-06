@@ -59,7 +59,7 @@ const RoleDashboardScaffold: React.FC<RoleDashboardScaffoldProps> = ({
           {sections.map((section) => (
             <section key={section.title}>
               <div className="mb-3">
-                <h2 className="text-sm font-bold text-gray-900">{section.title}</h2>
+                <h2 className="text-md font-bold text-gray-900">{section.title}</h2>
                 {section.description && <p className="mt-0.5 text-xs text-gray-500">{section.description}</p>}
               </div>
 

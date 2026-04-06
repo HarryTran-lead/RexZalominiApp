@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 
 interface ProfileSecuritySectionProps {
   currentPassword: string;
@@ -14,23 +15,6 @@ interface ProfileSecuritySectionProps {
   changingPassword: boolean;
   sendingForgotPassword: boolean;
 }
-
-const EyeIcon: React.FC<{ shown: boolean }> = ({ shown }) => (
-  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-    {shown ? (
-      <>
-        <path d="M3 3l18 18" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M10.58 10.58a2 2 0 102.83 2.83" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M9.88 5.09A9.77 9.77 0 0112 5c7 0 10 7 10 7a17.56 17.56 0 01-3.16 4.19M6.71 6.72C3.74 8.8 2 12 2 12a17.59 17.59 0 004.23 4.9A9.76 9.76 0 0012 19c1.61 0 3.1-.39 4.42-1.09" strokeLinecap="round" strokeLinejoin="round" />
-      </>
-    ) : (
-      <>
-        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" strokeLinecap="round" strokeLinejoin="round" />
-        <circle cx="12" cy="12" r="3" />
-      </>
-    )}
-  </svg>
-);
 
 const PasswordInput: React.FC<{
   value: string;
@@ -53,7 +37,7 @@ const PasswordInput: React.FC<{
         onClick={() => setShow((prev) => !prev)}
         className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400"
       >
-        <EyeIcon shown={show} />
+        {show ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
       </button>
     </div>
   );
