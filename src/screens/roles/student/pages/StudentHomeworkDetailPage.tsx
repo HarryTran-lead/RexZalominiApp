@@ -1,10 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Page, Spinner, useSnackbar } from "zmp-ui";
+import StudentHomeworkAiTools from "@/components/homework/student/StudentHomeworkAiTools";
 import { fileService } from "@/services/fileService";
 import { homeworkService } from "@/services/homeworkService";
 import {
+  HomeworkAiFeatureAvailability,
   MyHomeworkSubmissionDetail,
+  SubmissionType,
   SubmitHomeworkRequest,
   SubmitMultipleChoiceRequest,
 } from "@/types/homework";
@@ -36,6 +39,15 @@ function formatDateTime(iso?: string): string {
   });
 }
 
+function formatCountdown(totalSeconds: number): string {
+  const safeSeconds = Math.max(0, totalSeconds);
+  const minutes = Math.floor(safeSeconds / 60)
+    .toString()
+    .padStart(2, "0");
+  const seconds = (safeSeconds % 60).toString().padStart(2, "0");
+  return `${minutes}:${seconds}`;
+}
+
 function normalizeUrlList(value: unknown): string[] {
   if (Array.isArray(value)) {
     return value.map((item) => String(item)).filter(Boolean);
@@ -49,6 +61,12 @@ function normalizeUrlList(value: unknown): string[] {
   return [];
 }
 
+function normalizeSubmissionType(value?: string | null): string {
+  return String(value || "")
+    .replace(/\s+/g, "_")
+    .toUpperCase();
+}
+
 const StudentHomeworkDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { openSnackbar } = useSnackbar();
@@ -59,6 +77,9 @@ const StudentHomeworkDetailPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [mcqStarted, setMcqStarted] = useState(false);
+  const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
+  const [timeExpired, setTimeExpired] = useState(false);
 
   const [textAnswer, setTextAnswer] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
@@ -203,7 +224,14 @@ const StudentHomeworkDetailPage: React.FC = () => {
   }, [loadDetail]);
 
   const normalizedStatus = (detail?.status || "").toLowerCase();
-  const isGraded = normalizedStatus === "graded";
+  const normalizedSubmissionType = normalizeSubmissionType(detail?.submissionType);
+  const isMultipleChoice = normalizedSubmissionType === SubmissionType.MULTIPLE_CHOICE;
+  const isTextSubmission = normalizedSubmissionType === normalizeSubmissionType(SubmissionType.TEXT);
+  const isLinkSubmission = normalizedSubmissionType === normalizeSubmissionType(SubmissionType.LINK);
+  const isFileSubmission =
+    normalizedSubmissionType === normalizeSubmissionType(SubmissionType.FILE) ||
+    normalizedSubmissionType === normalizeSubmissionType(SubmissionType.IMAGE);
+
   const canSubmit = useMemo(() => {
     if (!detail) return false;
     const alreadySubmitted =
@@ -212,12 +240,128 @@ const StudentHomeworkDetailPage: React.FC = () => {
     return true;
   }, [detail, normalizedStatus]);
 
+  const isGraded = normalizedStatus === "graded";
+  const isSubmitted = normalizedStatus === "submitted";
+  const hasMcqTimeLimit = isMultipleChoice && (detail?.timeLimitMinutes ?? 0) > 0;
+  const requiresStartForMcq = hasMcqTimeLimit && canSubmit;
+  const mcqAiLockedBeforeStart = isMultipleChoice && requiresStartForMcq && !mcqStarted && !timeExpired;
+
+  const canSubmitMcq = !isMultipleChoice || !requiresStartForMcq || (mcqStarted && !timeExpired);
+  const canSubmitNow = canSubmit && canSubmitMcq;
+
+  const aiAnswerContext = useMemo(() => {
+    if (isTextSubmission) {
+      return textAnswer.trim();
+    }
+    if (isLinkSubmission) {
+      return linkUrl.trim();
+    }
+    if (isMultipleChoice && detail?.questions?.length) {
+      if (detail.review?.answerResults?.length) {
+        return detail.review.answerResults
+          .map(
+            (result, index) =>
+              `Câu ${index + 1}: ${result.selectedOptionText || result.selectedOptionId || "Chưa chọn"}`
+          )
+          .join("\n");
+      }
+
+      return detail.questions
+        .map((question, index) => {
+          const selectedOptionId = mcqAnswers[question.id];
+          const selectedOption = question.options.find((option) => option.id === selectedOptionId);
+          return `Câu ${index + 1}: ${selectedOption?.text || "Chưa chọn"}`;
+        })
+        .join("\n");
+    }
+    return "";
+  }, [
+    isTextSubmission,
+    textAnswer,
+    isLinkSubmission,
+    linkUrl,
+    isMultipleChoice,
+    detail?.questions,
+    detail?.review?.answerResults,
+    mcqAnswers,
+  ]);
+
+  const aiAvailability = useMemo<HomeworkAiFeatureAvailability>(() => {
+    const hintAllowedByStatus = canSubmit && !isSubmitted && !isGraded;
+    const recommendationAllowedByStatus = isSubmitted || isGraded;
+
+    const canUseHint = Boolean(detail?.aiHintEnabled) && hintAllowedByStatus && !mcqAiLockedBeforeStart;
+    const canUseRecommendation =
+      Boolean(detail?.aiRecommendEnabled) && recommendationAllowedByStatus && !mcqAiLockedBeforeStart;
+
+    let hintMessage: string | undefined;
+    let recommendationMessage: string | undefined;
+
+    if (!detail?.aiHintEnabled) {
+      hintMessage = "Bài này chưa bật tính năng gợi ý đáp án.";
+    } else if (mcqAiLockedBeforeStart) {
+      hintMessage = "Với trắc nghiệm, hãy bấm Bắt đầu làm bài để dùng AI.";
+    } else if (!hintAllowedByStatus) {
+      hintMessage = "Gợi ý chỉ dùng trong quá trình làm bài.";
+    }
+
+    if (!detail?.aiRecommendEnabled) {
+      recommendationMessage = "Bài này chưa bật tính năng khuyên ôn luyện.";
+    } else if (mcqAiLockedBeforeStart) {
+      recommendationMessage = "Với trắc nghiệm, hãy bấm Bắt đầu làm bài để dùng AI.";
+    } else if (!recommendationAllowedByStatus) {
+      recommendationMessage = "Khuyên ôn luyện chỉ khả dụng sau khi đã nộp hoặc đã chấm.";
+    }
+
+    return {
+      canUseHint,
+      canUseRecommendation,
+      hintMessage,
+      recommendationMessage,
+    };
+  }, [canSubmit, isSubmitted, isGraded, detail?.aiHintEnabled, detail?.aiRecommendEnabled, mcqAiLockedBeforeStart]);
+
+  useEffect(() => {
+    if (!detail || !isMultipleChoice) {
+      setMcqStarted(false);
+      setRemainingSeconds(null);
+      setTimeExpired(false);
+      return;
+    }
+
+    const seconds = Number(detail.timeLimitMinutes ?? 0) * 60;
+    setRemainingSeconds(seconds > 0 ? Math.floor(seconds) : null);
+    setMcqStarted(false);
+    setTimeExpired(false);
+  }, [detail, isMultipleChoice]);
+
+  useEffect(() => {
+    if (!requiresStartForMcq || !mcqStarted || remainingSeconds == null || timeExpired) {
+      return;
+    }
+
+    const timerId = setInterval(() => {
+      setRemainingSeconds((previous) => {
+        if (previous == null) return previous;
+        if (previous <= 1) {
+          setMcqStarted(false);
+          setTimeExpired(true);
+          openSnackbar({ text: "Đã hết thời gian làm bài trắc nghiệm", type: "warning" });
+          return 0;
+        }
+        return previous - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timerId);
+  }, [requiresStartForMcq, mcqStarted, remainingSeconds, timeExpired, openSnackbar]);
+
   const handleSubmit = async () => {
-    if (!detail || !homeworkStudentId || !canSubmit) return;
+    if (!detail || !homeworkStudentId || !canSubmitNow) return;
     setSubmitting(true);
     try {
       if (
-        detail.submissionType === "MULTIPLE_CHOICE" &&
+        isMultipleChoice &&
         detail.questions?.length
       ) {
         const answers = detail.questions.map((q) => ({
@@ -241,17 +385,23 @@ const StudentHomeworkDetailPage: React.FC = () => {
         };
         await homeworkService.submitMultipleChoiceHomework(payload);
       } else {
-        const attachments = attachmentInput
-          .split(/\n|,/g)
-          .map((v) => v.trim())
-          .filter(Boolean);
+        const attachments = normalizeUrlList(attachmentInput);
+        const nextTextAnswer = textAnswer.trim();
+        const nextLinkUrl = linkUrl.trim();
 
-        const payload: SubmitHomeworkRequest = {
-          homeworkStudentId,
-          textAnswer: textAnswer.trim() || undefined,
-          linkUrl: linkUrl.trim() || undefined,
-          attachmentUrls: attachments.length > 0 ? attachments : undefined,
-        };
+        const payload: SubmitHomeworkRequest = { homeworkStudentId };
+
+        if (isTextSubmission) {
+          payload.textAnswer = nextTextAnswer || undefined;
+        } else if (isLinkSubmission) {
+          payload.linkUrl = nextLinkUrl || undefined;
+          payload.links = nextLinkUrl ? [nextLinkUrl] : undefined;
+        } else if (isFileSubmission) {
+          payload.attachmentUrls = attachments.length > 0 ? attachments : undefined;
+        } else {
+          payload.textAnswer = nextTextAnswer || undefined;
+        }
+
         await homeworkService.submitHomework(payload);
       }
 
@@ -347,44 +497,73 @@ const StudentHomeworkDetailPage: React.FC = () => {
                 Nội dung làm bài
               </p>
 
-              {detail.submissionType === "MULTIPLE_CHOICE" &&
-              detail.questions?.length ? (
+              {isMultipleChoice && detail.questions?.length ? (
                 <div className="mt-3 space-y-3">
-                  {detail.questions.map((question, index) => (
-                    <div
-                      key={question.id}
-                      className="rounded-lg border border-gray-200 p-3"
-                    >
-                      <p className="text-sm font-medium text-gray-800">
-                        Câu {index + 1}: {question.questionText}
+                  {requiresStartForMcq && (
+                    <div className="rounded-lg border border-red-100 bg-red-50 p-3">
+                      <p className="text-xs text-red-700">
+                        Thời gian làm bài: {formatCountdown(remainingSeconds ?? 0)}
                       </p>
-                      <div className="mt-2 space-y-1.5">
-                        {question.options.map((option) => (
-                          <label
-                            key={option.id}
-                            className="flex items-center gap-2 text-sm text-gray-700"
-                          >
-                            <input
-                              type="radio"
-                              name={`q-${question.id}`}
-                              value={option.id}
-                              checked={mcqAnswers[question.id] === option.id}
-                              onChange={() =>
-                                setMcqAnswers((prev) => ({
-                                  ...prev,
-                                  [question.id]: option.id,
-                                }))
-                              }
-                              disabled={!canSubmit || submitting}
-                            />
-                            {option.text}
-                          </label>
-                        ))}
-                      </div>
+                      {!mcqStarted && !timeExpired && (
+                        <button
+                          type="button"
+                          onClick={() => setMcqStarted(true)}
+                          className="mt-2 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white"
+                          disabled={!canSubmit || submitting}
+                        >
+                          Bắt đầu làm bài
+                        </button>
+                      )}
+                      {timeExpired && (
+                        <p className="mt-2 text-xs font-semibold text-rose-600">
+                          Đã hết thời gian làm bài.
+                        </p>
+                      )}
                     </div>
-                  ))}
+                  )}
+
+                  {requiresStartForMcq && !mcqStarted && !timeExpired && (
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700">
+                      Nhấn "Bắt đầu làm bài" để mở câu hỏi và chạy đồng hồ đếm ngược.
+                    </div>
+                  )}
+
+                  {(!requiresStartForMcq || mcqStarted || timeExpired) &&
+                    detail.questions.map((question, index) => (
+                      <div
+                        key={question.id}
+                        className="rounded-lg border border-gray-200 p-3"
+                      >
+                        <p className="text-sm font-medium text-gray-800">
+                          Câu {index + 1}: {question.questionText}
+                        </p>
+                        <div className="mt-2 space-y-1.5">
+                          {question.options.map((option) => (
+                            <label
+                              key={option.id}
+                              className="flex items-center gap-2 text-sm text-gray-700"
+                            >
+                              <input
+                                type="radio"
+                                name={`q-${question.id}`}
+                                value={option.id}
+                                checked={mcqAnswers[question.id] === option.id}
+                                onChange={() =>
+                                  setMcqAnswers((prev) => ({
+                                    ...prev,
+                                    [question.id]: option.id,
+                                  }))
+                                }
+                                disabled={!canSubmit || submitting || (requiresStartForMcq && !mcqStarted) || timeExpired}
+                              />
+                              {option.text}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
                 </div>
-              ) : (
+              ) : isTextSubmission ? (
                 <div className="mt-3 space-y-2">
                   <textarea
                     value={textAnswer}
@@ -394,13 +573,19 @@ const StudentHomeworkDetailPage: React.FC = () => {
                     placeholder="Nhập câu trả lời của bạn"
                     className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-red-400 disabled:cursor-not-allowed disabled:bg-gray-100"
                   />
+                </div>
+              ) : isLinkSubmission ? (
+                <div className="mt-3 space-y-2">
                   <input
                     value={linkUrl}
                     onChange={(event) => setLinkUrl(event.target.value)}
                     disabled={!canSubmit || submitting}
-                    placeholder="Link bài làm (nếu có)"
+                    placeholder="Nhập link bài làm"
                     className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-red-400 disabled:cursor-not-allowed disabled:bg-gray-100"
                   />
+                </div>
+              ) : isFileSubmission ? (
+                <div className="mt-3 space-y-2">
                   <textarea
                     value={attachmentInput}
                     onChange={(event) => setAttachmentInput(event.target.value)}
@@ -435,21 +620,44 @@ const StudentHomeworkDetailPage: React.FC = () => {
                     )}
                   </div>
                 </div>
+              ) : (
+                <div className="mt-3 space-y-2">
+                  <textarea
+                    value={textAnswer}
+                    onChange={(event) => setTextAnswer(event.target.value)}
+                    rows={5}
+                    disabled={!canSubmit || submitting}
+                    placeholder="Nhập câu trả lời của bạn"
+                    className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-red-400 disabled:cursor-not-allowed disabled:bg-gray-100"
+                  />
+                </div>
               )}
             </div>
+
+            {detail.aiHintEnabled || detail.aiRecommendEnabled ? (
+              <StudentHomeworkAiTools
+                homeworkStudentId={homeworkStudentId || ""}
+                currentAnswerText={aiAnswerContext}
+                hintEnabled={detail.aiHintEnabled}
+                recommendationEnabled={detail.aiRecommendEnabled}
+                availability={aiAvailability}
+              />
+            ) : null}
 
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={!canSubmit || submitting || uploading}
+              disabled={!canSubmitNow || submitting || uploading}
               className="w-full rounded-xl bg-red-600 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               {submitting
                 ? "Đang nộp..."
                 : uploading
                   ? "Đang upload file..."
-                  : canSubmit
+                  : canSubmitNow
                     ? "Nộp bài"
+                    : isMultipleChoice && requiresStartForMcq && !mcqStarted && !timeExpired
+                      ? "Bắt đầu làm bài để nộp"
                     : "Đã nộp"}
             </button>
           </div>

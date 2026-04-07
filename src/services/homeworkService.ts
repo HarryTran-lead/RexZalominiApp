@@ -2,6 +2,10 @@ import { api } from "@/api/api";
 import { ApiResponse } from "@/types/apiResponse";
 import { STUDENT_ENDPOINTS, TEACHER_ENDPOINTS } from "@/constants/apiURL";
 import {
+  AIHintRequest,
+  AIHintResponse,
+  AIRecommendationRequest,
+  AIRecommendationResponse,
   GradeHomeworkPayload,
   HomeworkAssignmentDetail,
   HomeworkAssignmentListItem,
@@ -160,6 +164,28 @@ export const homeworkService = {
       payload
     );
     return Boolean(res?.isSuccess ?? res?.success ?? true);
+  },
+
+  getHomeworkHint: async (
+    homeworkStudentId: string,
+    payload: AIHintRequest
+  ): Promise<AIHintResponse | null> => {
+    const res = await api.post<ApiResponse<AIHintResponse>>(
+      STUDENT_ENDPOINTS.HOMEWORK_HINT(homeworkStudentId),
+      payload
+    );
+    return res?.data ?? null;
+  },
+
+  getHomeworkRecommendations: async (
+    homeworkStudentId: string,
+    payload: AIRecommendationRequest
+  ): Promise<AIRecommendationResponse | null> => {
+    const res = await api.post<ApiResponse<AIRecommendationResponse>>(
+      STUDENT_ENDPOINTS.HOMEWORK_RECOMMENDATIONS(homeworkStudentId),
+      payload
+    );
+    return res?.data ?? null;
   },
 
   gradeHomeworkSubmission: async (

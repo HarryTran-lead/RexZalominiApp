@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Page, Spinner } from "zmp-ui";
-import StudentHomeworkCard from "@/components/homework/StudentHomeworkCard";
-import StudentHomeworkTabs, { HomeworkTab } from "@/components/homework/StudentHomeworkTabs";
+import StudentHomeworkCard from "@/components/homework/student/StudentHomeworkCard";
+import StudentHomeworkClassFilter from "@/components/homework/student/StudentHomeworkClassFilter";
+import StudentHomeworkTabs, { HomeworkTab } from "@/components/homework/student/StudentHomeworkTabs";
 import { homeworkService } from "@/services/homeworkService";
 import { MyHomeworkListItem } from "@/types/homework";
 
@@ -16,6 +17,7 @@ const StudentHomeworkPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<HomeworkTab>("all");
+  const [selectedClassName, setSelectedClassName] = useState("");
 
   const fetchHomework = useCallback(async () => {
     setLoading(true);
@@ -72,27 +74,47 @@ const StudentHomeworkPage: React.FC = () => {
     fetchHomework();
   }, [fetchHomework]);
 
+  const classOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          allHomework
+            .map((item) => item.className || item.classTitle || item.classCode || "")
+            .map((value) => value.trim())
+            .filter(Boolean)
+        )
+      ).sort((a, b) => a.localeCompare(b, "vi")),
+    [allHomework]
+  );
+
+  const classFilteredHomework = useMemo(() => {
+    if (!selectedClassName) return allHomework;
+    return allHomework.filter(
+      (item) => (item.className || item.classTitle || item.classCode || "") === selectedClassName
+    );
+  }, [allHomework, selectedClassName]);
+
   const counts = useMemo(() => {
-    const missing = allHomework.filter((item) => {
+    const missing = classFilteredHomework.filter((item) => {
       const status = normalizeStatus(item.status);
       return status === "missing" || status === "assigned" || status === "late";
     }).length;
 
-    const submitted = allHomework.filter((item) => normalizeStatus(item.status) === "submitted").length;
-    const graded = allHomework.filter((item) => normalizeStatus(item.status) === "graded").length;
+    const submitted = classFilteredHomework.filter((item) => normalizeStatus(item.status) === "submitted").length;
+    const graded = classFilteredHomework.filter((item) => normalizeStatus(item.status) === "graded").length;
 
     return {
-      all: allHomework.length,
+      all: classFilteredHomework.length,
       missing,
       submitted,
       graded,
     };
-  }, [allHomework]);
+  }, [classFilteredHomework]);
 
   const filteredHomework = useMemo(() => {
-    if (activeTab === "all") return allHomework;
+    if (activeTab === "all") return classFilteredHomework;
 
-    return allHomework.filter((item) => {
+    return classFilteredHomework.filter((item) => {
       const status = normalizeStatus(item.status);
       if (activeTab === "missing") {
         return status === "missing" || status === "assigned" || status === "late";
@@ -102,7 +124,7 @@ const StudentHomeworkPage: React.FC = () => {
       }
       return status === "graded";
     });
-  }, [allHomework, activeTab]);
+  }, [classFilteredHomework, activeTab]);
 
   return (
     <Page className="flex h-full min-h-0 flex-col bg-gray-100">
@@ -116,6 +138,11 @@ const StudentHomeworkPage: React.FC = () => {
       </div>
 
       <StudentHomeworkTabs activeTab={activeTab} counts={counts} onChange={setActiveTab} />
+      <StudentHomeworkClassFilter
+        classes={classOptions}
+        value={selectedClassName}
+        onChange={setSelectedClassName}
+      />
 
       <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 pb-24">
         {loading && (

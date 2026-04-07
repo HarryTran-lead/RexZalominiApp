@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Page, Spinner, useSnackbar } from "zmp-ui";
 import ConfirmModal from "@/components/common/ConfirmModal";
-import TeacherHomeworkStudentList from "@/components/homework/TeacherHomeworkStudentList";
+import TeacherHomeworkStudentList from "@/components/homework/teacher/TeacherHomeworkStudentList";
 import { homeworkService } from "@/services/homeworkService";
 import { HomeworkAssignmentDetail, HomeworkStudentProgressItem } from "@/types/homework";
 
