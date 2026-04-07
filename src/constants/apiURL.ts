@@ -55,6 +55,8 @@ export const TEACHER_ENDPOINTS = {
   HOMEWORK_SUBMISSIONS: "/homework/submissions",
   HOMEWORK_SUBMISSION_DETAIL: (homeworkStudentId: string) =>
     `/homework/submissions/${homeworkStudentId}`,
+  HOMEWORK_SUBMISSION_GRADE: (homeworkStudentId: string) =>
+    `/homework/submissions/${homeworkStudentId}/grade`,
   SESSION_REPORTS: "/session-reports",
   SESSION_REPORT_DETAIL: (id: string) => `/session-reports/${id}`,
   SESSION_REPORT_SUBMIT: (id: string) => `/session-reports/${id}/submit`,
@@ -79,6 +81,7 @@ export const ATTENDANCE_ENDPOINTS = {
 export const PARENT_ENDPOINTS = {
   TIMETABLE: "/parent/timetable",
   OVERVIEW: "/parent/overview",
+  SESSION_REPORTS: "/session-reports",
   ATTENDANCE: "/parent/attendance",
   EXAM_RESULTS: "/parent/exam-results",
   NOTIFICATIONS: "/parent/notifications",

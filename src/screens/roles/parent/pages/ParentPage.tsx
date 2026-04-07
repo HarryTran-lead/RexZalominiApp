@@ -102,6 +102,12 @@ function ParentPage() {
           path: "/parent/exams",
           helper: "Kết quả kiểm tra gần đây",
         },
+        {
+          icon: <FileText className="w-10 h-10" strokeWidth={1.5} />,
+          label: "Báo cáo buổi học",
+          path: "/parent/session-reports",
+          helper: "Nhận xét giáo viên theo từng buổi",
+        },
       ],
     },
     {
