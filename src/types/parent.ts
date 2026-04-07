@@ -178,3 +178,21 @@ export interface ParentAttendanceResponse {
   pageNumber?: number;
   pageSize?: number;
 }
+
+// ====== Session Reports ======
+
+export interface ParentSessionReport {
+  id: string;
+  sessionId?: string;
+  classId?: string;
+  classCode?: string;
+  classTitle?: string;
+  studentProfileId?: string;
+  studentName?: string;
+  feedback?: string;
+  status?: string;
+  reportDate?: string;
+  sessionDate?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}

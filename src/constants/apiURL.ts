@@ -21,6 +21,16 @@ export const AUTH_ENDPOINTS = {
   REQUEST_PIN_RESET: "/auth/profiles/request-pin-reset",
 };
 
+export const ME_ENDPOINTS = {
+  GET: "/me",
+  UPDATE: "/me",
+};
+
+export const FILE_ENDPOINTS = {
+  AVATAR: "/files/avatar",
+  UPLOAD: "/files/upload",
+};
+
 // Student Endpoints
 export const STUDENT_ENDPOINTS = {
   TIMETABLE: "/students/timetable",
@@ -45,8 +55,12 @@ export const TEACHER_ENDPOINTS = {
   HOMEWORK_SUBMISSIONS: "/homework/submissions",
   HOMEWORK_SUBMISSION_DETAIL: (homeworkStudentId: string) =>
     `/homework/submissions/${homeworkStudentId}`,
+  HOMEWORK_SUBMISSION_GRADE: (homeworkStudentId: string) =>
+    `/homework/submissions/${homeworkStudentId}/grade`,
   SESSION_REPORTS: "/session-reports",
   SESSION_REPORT_DETAIL: (id: string) => `/session-reports/${id}`,
+  SESSION_REPORT_SUBMIT: (id: string) => `/session-reports/${id}/submit`,
+  SESSION_REPORT_AI_ENHANCE: "/session-reports/ai/enhance-feedback",
   TEACHER_MONTHLY_SESSION_REPORT: (teacherUserId: string) =>
     `/session-reports/teachers/${teacherUserId}/monthly`,
   MONTHLY_REPORTS: "/monthly-reports",
@@ -67,6 +81,7 @@ export const ATTENDANCE_ENDPOINTS = {
 export const PARENT_ENDPOINTS = {
   TIMETABLE: "/parent/timetable",
   OVERVIEW: "/parent/overview",
+  SESSION_REPORTS: "/session-reports",
   ATTENDANCE: "/parent/attendance",
   EXAM_RESULTS: "/parent/exam-results",
   NOTIFICATIONS: "/parent/notifications",
@@ -133,6 +148,8 @@ export const TICKET_ENDPOINTS = {
 // All API Endpoints
 export const API_ENDPOINTS = {
   AUTH: AUTH_ENDPOINTS,
+  ME: ME_ENDPOINTS,
+  FILE: FILE_ENDPOINTS,
   STUDENT: STUDENT_ENDPOINTS,
   TEACHER: TEACHER_ENDPOINTS,
   PARENT: PARENT_ENDPOINTS,

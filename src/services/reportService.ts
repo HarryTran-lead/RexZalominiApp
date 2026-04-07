@@ -1,7 +1,15 @@
 import { api } from "@/api/api";
 import { ApiResponse } from "@/types/apiResponse";
 import { TEACHER_ENDPOINTS } from "@/constants/apiURL";
-import { MonthlyReport, MonthlySessionReport, SessionReport } from "@/types/teacher";
+import {
+  AIEnhanceFeedbackRequest,
+  CreateSessionReportRequest,
+  MonthlyReport,
+  MonthlySessionReport,
+  SessionReport,
+  SessionReportAiEnhanceData,
+  UpdateSessionReportRequest,
+} from "@/types/teacher";
 
 /**
  * GET /api/session-reports
@@ -15,6 +23,20 @@ export const getSessionReports = async (): Promise<SessionReport[]> => {
 };
 
 /**
+ * POST /api/session-reports
+ * Creates a new daily/session report.
+ */
+export const createSessionReport = async (
+  payload: CreateSessionReportRequest
+): Promise<SessionReport | null> => {
+  const res = await api.post<ApiResponse<SessionReport>>(
+    TEACHER_ENDPOINTS.SESSION_REPORTS,
+    payload
+  );
+  return res?.data ?? null;
+};
+
+/**
  * GET /api/session-reports/{id}
  * Returns a single session report by ID.
  */
@@ -25,6 +47,53 @@ export const getSessionReportById = async (
     TEACHER_ENDPOINTS.SESSION_REPORT_DETAIL(id)
   );
   return res?.data ?? null;
+};
+
+/**
+ * PUT /api/session-reports/{id}
+ * Updates an existing report content.
+ */
+export const updateSessionReport = async (
+  id: string,
+  payload: UpdateSessionReportRequest
+): Promise<SessionReport | null> => {
+  const res = await api.put<ApiResponse<SessionReport>>(
+    TEACHER_ENDPOINTS.SESSION_REPORT_DETAIL(id),
+    payload
+  );
+  return res?.data ?? null;
+};
+
+/**
+ * POST /api/session-reports/{id}/submit
+ * Sends report for review/approval flow.
+ */
+export const submitSessionReport = async (id: string): Promise<SessionReport | null> => {
+  const res = await api.post<ApiResponse<SessionReport>>(
+    TEACHER_ENDPOINTS.SESSION_REPORT_SUBMIT(id)
+  );
+  return res?.data ?? null;
+};
+
+/**
+ * POST /api/session-reports/ai/enhance-feedback
+ * Enhances teacher draft feedback using AI.
+ */
+export const enhanceSessionReportFeedback = async (
+  payload: AIEnhanceFeedbackRequest
+): Promise<SessionReportAiEnhanceData | null> => {
+  const res = await api.post<ApiResponse<SessionReportAiEnhanceData>>(
+    TEACHER_ENDPOINTS.SESSION_REPORT_AI_ENHANCE,
+    payload
+  );
+
+  if (!res?.data) return null;
+
+  if ((res.data as SessionReportAiEnhanceData).enhancedFeedback) {
+    return res.data as SessionReportAiEnhanceData;
+  }
+
+  return (res.data as { data?: SessionReportAiEnhanceData })?.data ?? null;
 };
 
 /**
@@ -66,7 +135,11 @@ export const getMonthlyReportById = async (
 
 export const reportService = {
   getSessionReports,
+  createSessionReport,
   getSessionReportById,
+  updateSessionReport,
+  submitSessionReport,
+  enhanceSessionReportFeedback,
   getTeacherMonthlySessionReports,
   getMonthlyReports,
   getMonthlyReportById,

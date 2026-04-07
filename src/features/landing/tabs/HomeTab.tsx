@@ -196,7 +196,7 @@ const TESTIMONIALS = [
 function useCarousel(itemCount: number, autoPlayMs = 4000) {
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const next = useCallback(() => {
     setCurrent((prev) => (prev + 1) % itemCount);
@@ -515,7 +515,7 @@ function HomeTab({ isLinking, onQuickZaloLink }: HomeTabProps) {
         
         <div className="relative overflow-hidden rounded-3xl border border-amber-100 bg-gradient-to-br from-white to-amber-50 p-4 shadow-md">
           {/* Carousel content */}
-          <div className="relative h-[180px] overflow-hidden">
+          <div className="relative h-[130px] overflow-hidden">
             {TESTIMONIALS.map((t, i) => (
               <div
                 key={t.id}
@@ -574,7 +574,7 @@ function HomeTab({ isLinking, onQuickZaloLink }: HomeTabProps) {
           </div>
           
           {/* Prev/Next arrows */}
-          <button
+          {/* <button
             type="button"
             onClick={testimonialCarousel.prev}
             className="absolute left-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 shadow-md active:scale-90 transition-transform"
@@ -593,7 +593,7 @@ function HomeTab({ isLinking, onQuickZaloLink }: HomeTabProps) {
             <svg className="h-4 w-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
-          </button>
+          </button> */}
         </div>
       </section>
     </div>

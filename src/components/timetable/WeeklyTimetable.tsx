@@ -246,7 +246,8 @@ const WeeklyTimetable: React.FC<WeeklyTimetableProps> = ({
                     const teacherDisplay = session.plannedTeacherName ?? null;
                     const sessionKey = session.id ?? `${dateKey}-${idx}`;
                     const attendanceBadge =
-                      ATTENDANCE_STATUS_BADGE[session.attendanceStatus ?? "Unmarked"];
+                      ATTENDANCE_STATUS_BADGE[session.attendanceStatus ?? "Unmarked"] ??
+                      ATTENDANCE_STATUS_BADGE.Unmarked;
 
                     return (
                       <div key={`${dateKey}-${sessionKey}`} className="flex min-h-[100px]">

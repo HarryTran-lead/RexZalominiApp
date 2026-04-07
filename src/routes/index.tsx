@@ -18,7 +18,8 @@ import TeacherTimetablePage from "@/screens/roles/teacher/pages/TeacherTimetable
 import ParentTimetablePage from "@/screens/roles/parent/pages/ParentTimetablePage";
 
 // Student pages
-import StudentHomeworkPage from "@/screens/roles/student/pages/StudentHomeworkPage";
+import StudentHomeworkPage from "../screens/roles/student/pages/StudentHomeworkPage";
+import StudentHomeworkDetailPage from "../screens/roles/student/pages/StudentHomeworkDetailPage";
 import StudentGamificationPage from "@/screens/roles/student/pages/StudentGamificationPage";
 import StudentApplicationPage from "@/screens/roles/student/pages/StudentApplicationPage";
 import StudentRewardsPage from "@/screens/roles/student/pages/StudentRewardsPage";
@@ -28,6 +29,7 @@ import StudentExamsPage from "@/screens/roles/student/pages/StudentExamsPage";
 // Parent pages
 import ParentHomeworkPage from "@/screens/roles/parent/pages/ParentHomeworkPage";
 import ParentExamsPage from "@/screens/roles/parent/pages/ParentExamsPage";
+import ParentSessionReportsPage from "@/screens/roles/parent/pages/ParentSessionReportsPage";
 import ParentNotificationsPage from "@/screens/roles/parent/pages/ParentNotificationsPage";
 import ParentLeaveRequestPage from "@/screens/roles/parent/pages/ParentLeaveRequestPage";
 import LandingPage from "@/features/landing/LandingPage";
@@ -36,8 +38,12 @@ import LandingPage from "@/features/landing/LandingPage";
 import TeacherMyClassesPage from "@/screens/roles/teacher/pages/TeacherMyClassesPage";
 import TeacherSubjectsPage from "@/screens/roles/teacher/pages/TeacherSubjectsPage";
 import TeacherAssignmentsPage from "@/screens/roles/teacher/pages/TeacherAssignmentsPage";
+import TeacherHomeworkDetailPage from "@/screens/roles/teacher/pages/TeacherHomeworkDetailPage";
 import TeacherAttendancePage from "@/screens/roles/teacher/pages/TeacherAttendancePage";
-import TeacherReportsPage from "@/screens/roles/teacher/pages/TeacherReportsPage";
+import TeacherReportCreatePage from "@/screens/roles/teacher/pages/TeacherReportCreatePage";
+import TeacherReportListPage from "@/screens/roles/teacher/pages/TeacherReportListPage";
+import TeacherReportsPage from "../screens/roles/teacher/pages/TeacherReportsPage";
+import ProfilePage from "@/screens/ProfilePage";
 
 const isWeb = window.location.hostname.includes("vercel.app") || window.location.hostname === "localhost";
 
@@ -111,6 +117,14 @@ const MainRoutes: React.FC = () => {
         }
       />
       <AppRoute
+        path="/student/homework/:homeworkStudentId"
+        element={
+          <StudentLayout>
+            <StudentHomeworkDetailPage />
+          </StudentLayout>
+        }
+      />
+      <AppRoute
         path="/student/gamification"
         element={
           <StudentLayout>
@@ -147,6 +161,14 @@ const MainRoutes: React.FC = () => {
         element={
           <StudentLayout>
             <StudentExamsPage />
+          </StudentLayout>
+        }
+      />
+      <AppRoute
+        path="/student/profile"
+        element={
+          <StudentLayout>
+            <ProfilePage />
           </StudentLayout>
         }
       />
@@ -201,6 +223,14 @@ const MainRoutes: React.FC = () => {
         }
       />
       <AppRoute
+        path="/teacher/assignments/:homeworkId"
+        element={
+          <TeacherLayout>
+            <TeacherHomeworkDetailPage />
+          </TeacherLayout>
+        }
+      />
+      <AppRoute
         path="/teacher/attendance/:sessionId"
         element={
           <TeacherLayout>
@@ -213,6 +243,30 @@ const MainRoutes: React.FC = () => {
         element={
           <TeacherLayout>
             <TeacherReportsPage />
+          </TeacherLayout>
+        }
+      />
+      <AppRoute
+        path="/teacher/reports/create"
+        element={
+          <TeacherLayout>
+            <TeacherReportCreatePage />
+          </TeacherLayout>
+        }
+      />
+      <AppRoute
+        path="/teacher/reports/list"
+        element={
+          <TeacherLayout>
+            <TeacherReportListPage />
+          </TeacherLayout>
+        }
+      />
+      <AppRoute
+        path="/teacher/profile"
+        element={
+          <TeacherLayout>
+            <ProfilePage />
           </TeacherLayout>
         }
       />
@@ -259,6 +313,14 @@ const MainRoutes: React.FC = () => {
         }
       />
       <AppRoute
+        path="/parent/session-reports"
+        element={
+          <ParentLayout>
+            <ParentSessionReportsPage />
+          </ParentLayout>
+        }
+      />
+      <AppRoute
         path="/parent/notifications"
         element={
           <ParentLayout>
@@ -271,6 +333,14 @@ const MainRoutes: React.FC = () => {
         element={
           <ParentLayout>
             <ParentLeaveRequestPage />
+          </ParentLayout>
+        }
+      />
+      <AppRoute
+        path="/parent/profile"
+        element={
+          <ParentLayout>
+            <ProfilePage />
           </ParentLayout>
         }
       />

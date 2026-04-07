@@ -9,6 +9,7 @@ import {
   ParentLeaveRequest,
   ParentLeaveRequestsResponse,
   ParentAttendanceRecord,
+  ParentSessionReport,
 } from "@/types/parent";
 
 /**
@@ -86,6 +87,16 @@ export const parentService = {
   }): Promise<ParentAttendanceRecord[]> => {
     const res = await api.get<any>(PARENT_ENDPOINTS.ATTENDANCE, { params });
     return extractItems<ParentAttendanceRecord>(res);
+  },
+
+  /** GET /api/session-reports */
+  getSessionReports: async (params?: {
+    fromDate?: string;
+    toDate?: string;
+    classId?: string;
+  }): Promise<ParentSessionReport[]> => {
+    const res = await api.get<any>(PARENT_ENDPOINTS.SESSION_REPORTS, { params });
+    return extractItems<ParentSessionReport>(res);
   },
 
   /** GET /api/leave-requests — list leave requests */

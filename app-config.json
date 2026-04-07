@@ -1,14 +1,14 @@
 {
   "app": {
-    "title": "Rex 2",
-    "headerTitle": "Rex 2",
-    "headerColor": "#1843EF",
+    "title": "Rex",
+    "headerTitle": "Rex",
+    "headerColor": "#BB0000",
     "textColor": "white",
     "leftButton": "back",
     "statusBar": "normal",
     "actionBarHidden": false,
-    "hideAndroidBottomNavigationBar": false,
-    "hideIOSSafeAreaBottom": false
+    "hideAndroidBottomNavigationBar": true,
+    "hideIOSSafeAreaBottom": true
   },
   "listCSS": [],
   "listSyncJS": [],

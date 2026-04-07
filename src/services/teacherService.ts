@@ -20,9 +20,28 @@ export const getTeacherClasses = async (): Promise<TeacherClass[]> => {
  */
 export const getClassStudents = async (classId: string): Promise<ClassStudent[]> => {
   const res = await api.get<ApiResponse<ClassStudent[]>>(
-    TEACHER_ENDPOINTS.TEACHER_CLASS_STUDENTS(classId)
+    TEACHER_ENDPOINTS.TEACHER_CLASS_STUDENTS(classId),
+    {
+      params: {
+        pageNumber: 1,
+        pageSize: 100,
+      },
+    }
   );
-  return Array.isArray(res?.data) ? res.data : (res?.data as any)?.items ?? [];
+  if (Array.isArray(res?.data)) {
+    return res.data;
+  }
+  const payload = res?.data as {
+    students?: ClassStudent[] | { items?: ClassStudent[] };
+    items?: ClassStudent[];
+  } | undefined;
+  if (Array.isArray(payload?.students)) {
+    return payload.students;
+  }
+  if (Array.isArray(payload?.students?.items)) {
+    return payload.students.items;
+  }
+  return Array.isArray(payload?.items) ? payload.items : [];
 };
 
 export const teacherService = {
