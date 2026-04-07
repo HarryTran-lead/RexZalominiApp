@@ -10,4 +10,7 @@ export interface UploadedFileData {
   [key: string]: unknown;
 }
 
-export type UploadFileApiResponse = ApiResponse<UploadedFileData | string>;
+export type UploadFileApiResponse =
+  | ApiResponse<UploadedFileData | string>
+  | UploadedFileData
+  | string;
