@@ -124,6 +124,30 @@ const ProfilePage: React.FC = () => {
     );
   };
 
+  const normalizeApiResponse = (response: unknown) => {
+    if (!response || typeof response !== "object") {
+      return {
+        success: true,
+        data: response,
+        message: undefined as string | undefined,
+      };
+    }
+
+    const payload = response as Record<string, unknown>;
+    const success =
+      typeof payload.isSuccess === "boolean"
+        ? payload.isSuccess
+        : typeof payload.success === "boolean"
+          ? payload.success
+          : true;
+
+    return {
+      success,
+      data: payload.data,
+      message: typeof payload.message === "string" ? payload.message : undefined,
+    };
+  };
+
   const hydrateAccountForm = (data: UserData) => {
     setAccountForm({
       fullName: data.fullName ?? "",
@@ -224,13 +248,14 @@ const ProfilePage: React.FC = () => {
 
       // Use dedicated avatar API for profile avatar updates.
       const uploadResponse = await fileService.uploadAvatar(file);
+      const uploadMeta = normalizeApiResponse(uploadResponse);
 
-      if (!isResponseSuccess(uploadResponse)) {
-        throw new Error(uploadResponse.message || "Upload avatar thất bại.");
+      if (!uploadMeta.success) {
+        throw new Error(uploadMeta.message || "Upload avatar thất bại.");
       }
 
       // Some BE responses are wrapped ({data: {url}}), some are direct ({url}).
-      const rawUrl = extractFileUrl(uploadResponse.data ?? uploadResponse);
+      const rawUrl = extractFileUrl(uploadMeta.data ?? uploadResponse);
       if (!rawUrl) {
         throw new Error("Không đọc được URL avatar từ API upload.");
       }
