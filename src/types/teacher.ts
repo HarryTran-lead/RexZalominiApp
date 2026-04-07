@@ -30,18 +30,63 @@ export interface ClassStudent {
 }
 
 export interface SessionReport {
-  id: string;
-  sessionId?: string;
-  sessionDate?: string;
+  id: string; // guid
+  sessionId: string;
+  studentProfileId?: string;
+  teacherUserId: string;
   classId?: string;
   classCode?: string;
   classTitle?: string;
-  studentProfileId?: string;
   studentName?: string;
+  sessionDate?: string;
+  reportDate: string; // "YYYY-MM-DD"
+  feedback: string;
+  status: SessionReportStatus;
+  rejectReason?: string; // Có nếu bị reject
+  createdAt: string;
+  updatedAt: string;
+}
+export interface CreateSessionReportRequest {
+  sessionId: string;
+  studentProfileId: string;
+  reportDate: string; // "YYYY-MM-DD"
+  feedback: string;
+}
+
+export interface UpdateSessionReportRequest {
+  feedback: string;
+}
+
+export interface AIEnhanceFeedbackRequest {
+  draft: string;
+  sessionId?: string; // Optional for better personalization
+  studentProfileId?: string; // Optional
+}
+
+export interface AIEnhanceFeedbackResponse {
+  isSuccess: boolean;
+  data: {
+    enhancedFeedback: string;
+    originalFeedback: string;
+    isMock: boolean;
+  };
+}
+
+export interface SessionReportAiEnhanceData {
+  enhancedFeedback?: string;
+  originalFeedback?: string;
+  isMock?: boolean;
+}
+
+export interface GetSessionReportsParams {
+  sessionId?: string;
+  studentProfileId?: string;
   teacherUserId?: string;
-  teacherName?: string;
-  reportDate?: string;
-  feedback?: string;
+  classId?: string;
+  fromDate?: string; // "YYYY-MM-DD"
+  toDate?: string; // "YYYY-MM-DD"
+  pageNumber?: number; // default: 1
+  pageSize?: number; // default: 10
 }
 
 export interface MonthlySessionReport {
@@ -101,3 +146,12 @@ export interface HomeworkSubmission {
   feedback?: string;
   fileUrl?: string;
 }
+
+export enum SessionReportStatus {
+  DRAFT = 'DRAFT',
+  REVIEW = 'REVIEW',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+  PUBLISHED = 'PUBLISHED'
+}
+

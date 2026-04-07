@@ -24,7 +24,7 @@ const ProfileHeroCard: React.FC<ProfileHeroCardProps> = ({
         <button
           type="button"
           onClick={onAvatarClick}
-          className="relative h-28 w-28 overflow-hidden rounded-full border-4 border-white bg-gradient-to-br from-red-500 to-red-600 shadow-lg ring-2 ring-red-100"
+          className="relative h-28 w-28 overflow-hidden rounded-full border-4 border-white shadow-lg ring-2 ring-red-100"
         >
           {avatarUrl ? (
             <img

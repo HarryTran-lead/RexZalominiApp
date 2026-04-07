@@ -37,7 +37,9 @@ import TeacherMyClassesPage from "@/screens/roles/teacher/pages/TeacherMyClasses
 import TeacherSubjectsPage from "@/screens/roles/teacher/pages/TeacherSubjectsPage";
 import TeacherAssignmentsPage from "@/screens/roles/teacher/pages/TeacherAssignmentsPage";
 import TeacherAttendancePage from "@/screens/roles/teacher/pages/TeacherAttendancePage";
-import TeacherReportsPage from "@/screens/roles/teacher/pages/TeacherReportsPage";
+import TeacherReportCreatePage from "@/screens/roles/teacher/pages/TeacherReportCreatePage";
+import TeacherReportListPage from "@/screens/roles/teacher/pages/TeacherReportListPage";
+import TeacherReportsPage from "../screens/roles/teacher/pages/TeacherReportsPage";
 import ProfilePage from "@/screens/ProfilePage";
 
 const isWeb = window.location.hostname.includes("vercel.app") || window.location.hostname === "localhost";
@@ -222,6 +224,22 @@ const MainRoutes: React.FC = () => {
         element={
           <TeacherLayout>
             <TeacherReportsPage />
+          </TeacherLayout>
+        }
+      />
+      <AppRoute
+        path="/teacher/reports/create"
+        element={
+          <TeacherLayout>
+            <TeacherReportCreatePage />
+          </TeacherLayout>
+        }
+      />
+      <AppRoute
+        path="/teacher/reports/list"
+        element={
+          <TeacherLayout>
+            <TeacherReportListPage />
           </TeacherLayout>
         }
       />

@@ -57,6 +57,8 @@ export const TEACHER_ENDPOINTS = {
     `/homework/submissions/${homeworkStudentId}`,
   SESSION_REPORTS: "/session-reports",
   SESSION_REPORT_DETAIL: (id: string) => `/session-reports/${id}`,
+  SESSION_REPORT_SUBMIT: (id: string) => `/session-reports/${id}/submit`,
+  SESSION_REPORT_AI_ENHANCE: "/session-reports/ai/enhance-feedback",
   TEACHER_MONTHLY_SESSION_REPORT: (teacherUserId: string) =>
     `/session-reports/teachers/${teacherUserId}/monthly`,
   MONTHLY_REPORTS: "/monthly-reports",
