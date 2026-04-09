@@ -103,17 +103,34 @@ export interface StarBalance {
 export interface StudentLevel {
   level: number;
   currentXp: number;
-  xpForNextLevel: number;
-  levelName?: string;
+  xpRequiredForNextLevel: number;
   studentProfileId: string;
 }
 
 export interface AttendanceStreak {
   currentStreak: number;
-  longestStreak: number;
-  lastCheckIn?: string;
-  streakBonus: number;
+  maxStreak: number;
+  lastAttendanceDate?: string;
+  recentStreaks: StreakRecord[],
   studentProfileId: string;
+}
+
+export interface StreakRecord {
+  id: string;
+  attendanceDate: string;
+  currentStreak: number;
+  rewardStars: number;
+  rewardExp: number;
+  createdAt: string;
+}
+
+export interface AttendanceCheckInResult {
+  isNewStreak?: boolean;
+  currentStreak?: number;
+  maxStreak?: number;
+  awardedStars?: number;
+  awardedXp?: number;
+  checkedInAt?: string;
 }
 
 export interface RewardStoreItem {
@@ -133,9 +150,10 @@ export interface RewardRedemption {
   studentProfileId: string;
   quantity: number;
   totalCostStars: number;
-  status: "Pending" | "Approved" | "Delivered" | "Received" | "Cancelled";
+  status: "Requested" | "Pending" | "Approved" | "Delivered" | "Received" | "Cancelled";
   requestedAt: string;
   processedAt?: string;
+  cancelReason?: string;
 }
 
 export interface RequestRewardRedemptionRequest {
@@ -152,6 +170,21 @@ export interface StarTransaction {
   transactionDate: string;
   relatedHomeworkId?: string;
   relatedMissionId?: string;
+}
+
+export interface MissionProgressItem {
+  id: string;
+  missionId?: string;
+  missionCode?: string;
+  title: string;
+  description?: string;
+  status: "Assigned" | "InProgress" | "Completed" | string;
+  progressCurrent?: number;
+  progressTarget?: number;
+  progressPercentage?: number;
+  rewardStars?: number;
+  rewardXp?: number;
+  dueAt?: string;
 }
 
 // Exam Types

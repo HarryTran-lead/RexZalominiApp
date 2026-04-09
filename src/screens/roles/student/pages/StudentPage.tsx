@@ -62,12 +62,6 @@ function StudentPage() {
           path: "/student/application",
           helper: "Nộp yêu cầu nhanh",
         },
-        {
-          icon: <Gift className="w-10 h-10" strokeWidth={1.5} />,
-          label: "Đổi thưởng",
-          path: "/student/rewards",
-          helper: "Đổi sao lấy quà",
-        },
       ],
     },
   ];

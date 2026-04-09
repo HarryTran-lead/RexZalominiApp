@@ -114,6 +114,7 @@ export const GAMIFICATION_ENDPOINTS = {
   LEVEL_ME: "/gamification/level/me",
   ATTENDANCE_STREAK_ME: "/gamification/attendance-streak/me",
   ATTENDANCE_CHECKIN: "/gamification/attendance-streak/check-in",
+  MISSIONS_ME_PROGRESS: "/missions/me/progress",
   REWARD_STORE_ITEMS: "/gamification/reward-store/items/active",
   AVAILABLE_REWARDS: "/gamification/rewards/available",
   REWARD_REDEMPTIONS: "/gamification/reward-redemptions",

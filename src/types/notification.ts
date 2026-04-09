@@ -8,15 +8,15 @@ export type NotificationStatus = "Pending" | "Sent" | "Failed";
 export interface NotificationItem {
   id: string;
   recipientUserId: string;
-  recipientProfileId?: string | null; // Có thể null nếu thông báo gửi chung cho User thay vì Profile cụ thể
+  recipientProfileId?: string | null; 
   channel: NotificationChannel;
   title: string;
   content?: string | null;
-  deeplink?: string | null;           // Dùng để điều hướng trong Mini App khi click vào
+  deeplink?: string | null;           
   status: NotificationStatus;
-  sentAt?: string | null;             // Thời gian gửi (nếu có)
-  createdAt: string;                  // Thời gian tạo (ISO String)
-  isRead: boolean;                    // Trạng thái đã đọc hay chưa
+  sentAt?: string | null;             
+  createdAt: string;            
+  isRead: boolean;                   
 }
 
 

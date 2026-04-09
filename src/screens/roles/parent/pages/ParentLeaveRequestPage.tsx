@@ -935,7 +935,6 @@ function ParentLeaveRequestPage() {
                           <div className="flex items-start justify-between mb-2">
                             <div className="flex-1 mr-2">
                               <h3 className="font-bold text-gray-800 text-sm">{studentName}</h3>
-                              <p className="text-xs text-gray-500 mt-0.5">ID: {item.classId}</p>
                             </div>
                             <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${badge.className}`}>
                               {badge.label}

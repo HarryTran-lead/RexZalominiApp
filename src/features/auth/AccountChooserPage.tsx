@@ -17,6 +17,7 @@ function AccountChooserPage() {
   const [pin, setPin] = useState("");
   const [pinLoading, setPinLoading] = useState(false);
   const pinInputRef = useRef<HTMLInputElement>(null);
+  const isCompactProfiles = profiles.length <= 2;
 
   useEffect(() => {
     fetchProfiles();
@@ -174,17 +175,26 @@ function AccountChooserPage() {
           </div>
         ) : (
           <div
-            className="flex gap-8 overflow-x-auto w-full px-4 pb-4"
-            style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch", msOverflowStyle: "none", scrollbarWidth: "none" }}
+            className={`flex w-full pb-4 ${
+              isCompactProfiles
+                ? "justify-center gap-8 px-2"
+                : "gap-8 overflow-x-auto px-4"
+            }`}
+            style={{
+              scrollSnapType: isCompactProfiles ? undefined : "x mandatory",
+              WebkitOverflowScrolling: "touch",
+              msOverflowStyle: "none",
+              scrollbarWidth: "none",
+            }}
           >
             {profiles.map((profile, index) => (
               <button
                 key={profile.id}
-                className="group flex flex-col items-center gap-3 transition shrink-0 pt-1"
+                className="group flex w-[146px] shrink-0 flex-col items-center gap-3 pt-1 transition"
                 onClick={() => handleSelectProfile(profile)}
                 type="button"
                 style={{
-                  scrollSnapAlign: "center",
+                  scrollSnapAlign: isCompactProfiles ? undefined : "center",
                   animation: `scaleIn 0.5s ease-out ${index * 0.15}s both`
                 }}
               >
@@ -325,7 +335,9 @@ function AccountChooserPage() {
                 Huỷ
               </button>
               <button
-                onClick={handleVerifyParentPin}
+                onClick={() => {
+                  void handleVerifyParentPin();
+                }}
                 disabled={pin.length !== 4 || pinLoading}
                 className="flex-1 rounded-xl bg-red-500 py-3 text-sm font-semibold text-white shadow-md shadow-red-300/50 transition hover:bg-red-600 active:scale-95 disabled:opacity-50"
               >
