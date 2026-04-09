@@ -6,6 +6,7 @@ import { fileService } from "@/services/fileService";
 import { homeworkService } from "@/services/homeworkService";
 import {
   HomeworkAiFeatureAvailability,
+  MyHomeworkAttemptDetail,
   MyHomeworkSubmissionDetail,
   SubmissionType,
   SubmitHomeworkRequest,
@@ -37,6 +38,25 @@ function formatDateTime(iso?: string): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function getStatusLabel(status?: string): string {
+  const normalized = String(status || "").toLowerCase();
+  if (normalized === "assigned") return "Đã giao";
+  if (normalized === "submitted") return "Đã nộp";
+  if (normalized === "graded") return "Đã chấm";
+  if (normalized === "late") return "Nộp muộn";
+  if (normalized === "missing") return "Chưa nộp";
+  return status || "Không xác định";
+}
+
+function getStatusClass(status?: string): string {
+  const normalized = String(status || "").toLowerCase();
+  if (normalized === "graded") return "bg-emerald-100 text-emerald-700";
+  if (normalized === "submitted") return "bg-blue-100 text-blue-700";
+  if (normalized === "late") return "bg-amber-100 text-amber-700";
+  if (normalized === "missing") return "bg-rose-100 text-rose-700";
+  return "bg-indigo-100 text-indigo-700";
 }
 
 function formatCountdown(totalSeconds: number): string {
@@ -77,6 +97,8 @@ const StudentHomeworkDetailPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [attemptsLoading, setAttemptsLoading] = useState(false);
+  const [attemptHistory, setAttemptHistory] = useState<MyHomeworkAttemptDetail[]>([]);
   const [mcqStarted, setMcqStarted] = useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
   const [timeExpired, setTimeExpired] = useState(false);
@@ -194,6 +216,60 @@ const StudentHomeworkDetailPage: React.FC = () => {
 
   const [mcqAnswers, setMcqAnswers] = useState<Record<string, string>>({});
 
+  const loadAttemptHistory = useCallback(async (id: string, seedAttemptNumber?: number) => {
+    const initialAttemptNumber =
+      typeof seedAttemptNumber === "number" && seedAttemptNumber > 0 ? seedAttemptNumber : 1;
+
+    setAttemptsLoading(true);
+    try {
+      const firstAttempt = await homeworkService.getMyHomeworkAttemptDetail(id, initialAttemptNumber);
+      if (!firstAttempt) {
+        setAttemptHistory([]);
+        return;
+      }
+
+      const totalAttempts = Math.max(
+        Number(firstAttempt.attemptCount ?? 0),
+        Number(firstAttempt.attemptNumber ?? initialAttemptNumber),
+        1
+      );
+
+      if (totalAttempts === 1) {
+        setAttemptHistory([firstAttempt]);
+        return;
+      }
+
+      const remainingNumbers = Array.from({ length: totalAttempts }, (_, index) => index + 1).filter(
+        (attemptNumber) => attemptNumber !== initialAttemptNumber
+      );
+
+      const remainingResults = await Promise.all(
+        remainingNumbers.map((attemptNumber) =>
+          homeworkService.getMyHomeworkAttemptDetail(id, attemptNumber)
+            .then((attempt) => attempt)
+            .catch(() => null)
+        )
+      );
+
+      const resolvedAttempts: MyHomeworkAttemptDetail[] = [firstAttempt];
+      remainingResults.forEach((result) => {
+        if (result) {
+          resolvedAttempts.push(result);
+        }
+      });
+
+      const uniqueAttempts = Array.from(
+        new Map(resolvedAttempts.map((attempt) => [attempt.attemptNumber, attempt])).values()
+      ).sort((a, b) => b.attemptNumber - a.attemptNumber);
+
+      setAttemptHistory(uniqueAttempts);
+    } catch {
+      setAttemptHistory([]);
+    } finally {
+      setAttemptsLoading(false);
+    }
+  }, []);
+
   const loadDetail = useCallback(async () => {
     if (!homeworkStudentId) return;
     setLoading(true);
@@ -210,14 +286,30 @@ const StudentHomeworkDetailPage: React.FC = () => {
         ...normalizeUrlList(submission?.attachmentUrls),
       ];
       setAttachmentInput(Array.from(new Set(attachmentUrls)).join("\n"));
+
+      const statusNormalized = String(data?.status || "").toLowerCase();
+      const attemptCount = Number(data?.attemptCount ?? 0);
+      const attemptNumber = Number(data?.attemptNumber ?? 0);
+      const shouldLoadAttempts =
+        statusNormalized === "submitted" ||
+        statusNormalized === "graded" ||
+        attemptCount > 0 ||
+        attemptNumber > 0;
+
+      if (shouldLoadAttempts) {
+        await loadAttemptHistory(homeworkStudentId, attemptNumber > 0 ? attemptNumber : undefined);
+      } else {
+        setAttemptHistory([]);
+      }
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "Không thể tải chi tiết bài tập";
       setError(message);
+      setAttemptHistory([]);
     } finally {
       setLoading(false);
     }
-  }, [homeworkStudentId]);
+  }, [homeworkStudentId, loadAttemptHistory]);
 
   useEffect(() => {
     loadDetail();
@@ -488,6 +580,60 @@ const StudentHomeworkDetailPage: React.FC = () => {
                   <p className="mt-1 text-xs text-emerald-700">
                     Chấm lúc: {formatDateTime(detail.gradedAt)}
                   </p>
+                )}
+              </div>
+            )}
+
+            {(attemptsLoading || attemptHistory.length > 0) && (
+              <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <p className="text-sm font-semibold text-gray-800">Lịch sử làm bài</p>
+                  {!attemptsLoading && (
+                    <span className="rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">
+                      {Math.max(
+                        Number(attemptHistory[0]?.attemptCount ?? 0),
+                        Number(detail.attemptCount ?? 0),
+                        attemptHistory.length
+                      )} lần
+                    </span>
+                  )}
+                </div>
+
+                {attemptsLoading ? (
+                  <div className="py-2 text-xs text-gray-500">Đang tải lịch sử làm bài...</div>
+                ) : (
+                  <div className="space-y-2.5">
+                    {attemptHistory.map((attempt) => (
+                      <div key={attempt.id || attempt.attemptNumber} className="rounded-lg border border-gray-200 p-3">
+                        <div className="mb-2 flex items-center justify-between gap-2">
+                          <p className="text-sm font-semibold text-gray-800">Lần {attempt.attemptNumber}</p>
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${getStatusClass(
+                              String(attempt.status)
+                            )}`}
+                          >
+                            {getStatusLabel(String(attempt.status))}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-gray-600">
+                          <p>Nộp lúc: {formatDateTime(attempt.submittedAt)}</p>
+                          <p>Chấm lúc: {formatDateTime(attempt.gradedAt)}</p>
+                          <p>
+                            Điểm: {attempt.score ?? 0}/{attempt.maxScore ?? detail.maxScore ?? 0}
+                          </p>
+                          <p>Sao thưởng: {attempt.rewardStars ?? 0}</p>
+                        </div>
+
+                        {typeof attempt.totalCount === "number" && (
+                          <p className="mt-1.5 text-xs text-gray-600">
+                            Đúng/Sai/Bỏ qua: {attempt.correctCount ?? 0}/{attempt.wrongCount ?? 0}/
+                            {attempt.skippedCount ?? 0} trên {attempt.totalCount}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             )}

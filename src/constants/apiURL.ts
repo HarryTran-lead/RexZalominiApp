@@ -38,6 +38,8 @@ export const STUDENT_ENDPOINTS = {
   HOMEWORK_MY: "/students/homework/my",
   HOMEWORK_SUBMITTED: "/students/homework/submitted",
   HOMEWORK_DETAIL: (homeworkStudentId: string) => `/students/homework/${homeworkStudentId}`,
+  HOMEWORK_ATTEMPT_DETAIL: (homeworkStudentId: string, attemptNumber: number) =>
+    `/students/homework/${homeworkStudentId}/attempts/${attemptNumber}`,
   HOMEWORK_SUBMIT: "/students/homework/submit",
   HOMEWORK_MULTIPLE_CHOICE_SUBMIT: "/students/homework/multiple-choice/submit",
   HOMEWORK_HINT: (homeworkStudentId: string) => `/students/homework/${homeworkStudentId}/hint`,

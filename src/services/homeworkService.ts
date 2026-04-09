@@ -10,6 +10,7 @@ import {
   HomeworkAssignmentDetail,
   HomeworkAssignmentListItem,
   HomeworkSubmissionListItem,
+  MyHomeworkAttemptDetail,
   MyHomeworkListItem,
   MyHomeworkSubmissionDetail,
   SubmitHomeworkRequest,
@@ -90,6 +91,28 @@ function normalizeTeacherHomeworkDetail(payload: unknown): HomeworkAssignmentDet
   return null;
 }
 
+function normalizeHomeworkAttemptDetail(payload: unknown): MyHomeworkAttemptDetail | null {
+  if (!payload || typeof payload !== "object") {
+    return null;
+  }
+
+  if ("attemptNumber" in payload || "attemptId" in payload) {
+    return payload as MyHomeworkAttemptDetail;
+  }
+
+  if ("data" in payload) {
+    const wrapped = payload as { data?: unknown };
+    if (wrapped.data && typeof wrapped.data === "object") {
+      const candidate = wrapped.data as Record<string, unknown>;
+      if ("attemptNumber" in candidate || "attemptId" in candidate) {
+        return candidate as unknown as MyHomeworkAttemptDetail;
+      }
+    }
+  }
+
+  return null;
+}
+
 export interface TeacherHomeworkQuery {
   classId?: string;
   sessionId?: string;
@@ -151,6 +174,16 @@ export const homeworkService = {
       STUDENT_ENDPOINTS.HOMEWORK_DETAIL(homeworkStudentId)
     );
     return res?.data ?? null;
+  },
+
+  getMyHomeworkAttemptDetail: async (
+    homeworkStudentId: string,
+    attemptNumber: number
+  ): Promise<MyHomeworkAttemptDetail | null> => {
+    const res = await api.get<ApiResponse<MyHomeworkAttemptDetail> | MyHomeworkAttemptDetail>(
+      STUDENT_ENDPOINTS.HOMEWORK_ATTEMPT_DETAIL(homeworkStudentId, attemptNumber)
+    );
+    return normalizeHomeworkAttemptDetail(res);
   },
 
   submitHomework: async (payload: SubmitHomeworkRequest): Promise<boolean> => {

@@ -267,8 +267,32 @@ export interface MyHomeworkSubmissionDetail {
   showReview?: boolean;
   showCorrectAnswer?: boolean;
   showExplanation?: boolean;
+  attemptId?: string;
+  attemptNumber?: number;
+  attemptCount?: number;
   isLate: boolean;
   rewardStars?: number;
+}
+
+export interface MyHomeworkAttemptDetail {
+  id: string;
+  assignmentId: string;
+  status: HomeworkStatus | string;
+  submittedAt?: string;
+  gradedAt?: string;
+  attemptId?: string;
+  attemptNumber: number;
+  attemptCount?: number;
+  maxScore?: number;
+  score?: number;
+  rewardStars?: number;
+  correctCount?: number;
+  wrongCount?: number;
+  skippedCount?: number;
+  totalCount?: number;
+  totalPoints?: number;
+  earnedPoints?: number;
+  answerResults?: AnswerResult[];
 }
 
 // ==========================================
