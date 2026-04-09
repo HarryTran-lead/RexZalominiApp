@@ -1,4 +1,5 @@
 import { MissionProgressItem, RewardRedemption, RewardStoreItem } from "@/types/student";
+import { API_CONFIG } from "@/constants/apiURL";
 
 export function isApiSuccess(response?: { isSuccess?: boolean; success?: boolean }): boolean {
   return Boolean(response?.isSuccess ?? response?.success ?? true);
@@ -38,8 +39,12 @@ export function parseApiDateTime(value?: string | null): Date {
   if (!value) return new Date(NaN);
 
   const normalized = value.trim();
-  if (/z$/i.test(normalized) || /[+-]\d{2}:\d{2}$/i.test(normalized)) {
-    return new Date(normalized.replace(/z$/i, "").replace(/[+-]\d{2}:\d{2}$/i, ""));
+
+  // Treat date-only values as local date to avoid implicit UTC conversion.
+  const dateOnlyMatch = normalized.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (dateOnlyMatch) {
+    const [, y, m, d] = dateOnlyMatch;
+    return new Date(Number(y), Number(m) - 1, Number(d), 0, 0, 0, 0);
   }
 
   return new Date(normalized);
@@ -47,8 +52,17 @@ export function parseApiDateTime(value?: string | null): Date {
 
 export function formatGamificationDateTime(value?: string | null): string {
   if (!value) return "";
+  const normalized = value.trim();
   const d = parseApiDateTime(value);
   if (Number.isNaN(d.getTime())) return "";
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
+    return new Intl.DateTimeFormat("vi-VN", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    }).format(d);
+  }
 
   return new Intl.DateTimeFormat("vi-VN", {
     year: "numeric",
@@ -56,7 +70,32 @@ export function formatGamificationDateTime(value?: string | null): string {
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    second: "2-digit",
   }).format(d);
+}
+
+function resolveImageUrl(rawUrl?: string): string | undefined {
+  if (!rawUrl) return undefined;
+
+  const normalized = rawUrl.trim();
+  if (!normalized) return undefined;
+
+  if (/^(https?:)?\/\//i.test(normalized) || normalized.startsWith("data:")) {
+    return normalized;
+  }
+
+  const baseUrl = API_CONFIG.BASE_URL;
+  if (!baseUrl) return normalized;
+
+  try {
+    const apiOrigin = new URL(baseUrl, typeof window !== "undefined" ? window.location.origin : "http://localhost").origin;
+    if (normalized.startsWith("/")) {
+      return `${apiOrigin}${normalized}`;
+    }
+    return `${apiOrigin}/${normalized}`;
+  } catch {
+    return normalized;
+  }
 }
 
 export function isToday(iso?: string): boolean {
@@ -98,7 +137,17 @@ export function normalizeRewardItems(payload: unknown): RewardStoreItem[] {
     id: String(item.id ?? ""),
     title: String(item.title ?? item.itemName ?? "Quà tặng"),
     description: typeof item.description === "string" ? item.description : undefined,
-    imageUrl: typeof item.imageUrl === "string" ? item.imageUrl : undefined,
+    imageUrl: resolveImageUrl(
+      typeof item.imageUrl === "string"
+        ? item.imageUrl
+        : typeof item.image === "string"
+        ? item.image
+        : typeof item.thumbnailUrl === "string"
+        ? item.thumbnailUrl
+        : typeof item.iconUrl === "string"
+        ? item.iconUrl
+        : undefined
+    ),
     costStars: Number(item.costStars ?? 0),
     quantity: Number(item.quantity ?? 0),
     isActive: Boolean(item.isActive ?? true),

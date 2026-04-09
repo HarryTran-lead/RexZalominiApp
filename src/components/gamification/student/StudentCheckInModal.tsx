@@ -26,6 +26,7 @@ function StudentCheckInModal({
   onCheckIn,
 }: StudentCheckInModalProps) {
   const [activeTab, setActiveTab] = useState<CheckInModalTab>("checkin");
+  const latestAttendanceTimestamp = recentStreaks[0]?.createdAt || attendanceStreak?.lastAttendanceDate;
 
   useEffect(() => {
     if (show) {
@@ -75,9 +76,9 @@ function StudentCheckInModal({
               </div>
             </div>
 
-            {attendanceStreak?.lastAttendanceDate && (
+            {latestAttendanceTimestamp && (
               <p className="mt-3 text-xs text-gray-500">
-                Điểm danh gần nhất: {formatGamificationDateTime(attendanceStreak.lastAttendanceDate)}
+                Điểm danh gần nhất: {formatGamificationDateTime(latestAttendanceTimestamp)}
               </p>
             )}
 
@@ -101,7 +102,9 @@ function StudentCheckInModal({
               recentStreaks.slice(0, 20).map((record) => (
                 <div key={record.id} className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
                   <div className="flex items-center justify-between gap-2 text-xs">
-                    <span className="font-semibold text-gray-700">{formatGamificationDateTime(record.attendanceDate)}</span>
+                    <span className="font-semibold text-gray-700">
+                      {formatGamificationDateTime(record.createdAt || record.attendanceDate)}
+                    </span>
                     <span className="rounded-full bg-emerald-100 px-2 py-0.5 font-semibold text-emerald-700">+{record.rewardStars} sao</span>
                   </div>
                   <div className="mt-1 flex items-center justify-between text-[11px] text-gray-500">
