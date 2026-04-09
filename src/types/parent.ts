@@ -196,3 +196,70 @@ export interface ParentSessionReport {
   createdAt?: string;
   updatedAt?: string;
 }
+
+export enum PauseEnrollmentRequestStatus {
+  PENDING = 'Pending',
+  APPROVED = 'Approved',
+  REJECTED = 'Rejected',
+  CANCELLED = 'Cancelled',
+}
+
+export enum PauseEnrollmentOutcome {
+  CONTINUE_SAME_CLASS = 'ContinueSameClass',
+  REASSIGN_EQUIVALENT_CLASS = 'ReassignEquivalentClass',
+  CONTINUE_WITH_TUTORING = 'ContinueWithTutoring',
+}
+
+export interface PauseClassInfo {
+  id: string;
+  code: string;
+  title: string;
+  programId: string;
+  programName: string;
+  branchId: string;
+  branchName: string;
+  startDate: string;
+  endDate: string;
+  status: string;
+}
+
+export interface PauseEnrollmentRequest {
+  id: string; 
+  studentProfileId: string;
+  classId: string | null; 
+  pauseFrom: string;
+  pauseTo: string;
+  reason: string | null;
+  status: PauseEnrollmentRequestStatus;
+  requestedAt: string;
+  approvedBy?: string | null; 
+  approvedAt?: string | null;
+  cancelledBy?: string | null;
+  cancelledAt?: string | null;
+  outcome?: PauseEnrollmentOutcome | null;
+  outcomeNote?: string | null;
+  outcomeBy?: string | null;
+  outcomeAt?: string | null;
+  classes: PauseClassInfo[];
+}
+
+export interface PaginatedPauseRequests {
+  items: PauseEnrollmentRequest[];
+  pageNumber: number;
+  totalPages: number;
+  totalCount: number;
+}
+
+export interface CreatePauseRequestPayload {
+  studentProfileId: string;
+  pauseFrom: string;
+  pauseTo: string;
+  reason?: string | null;
+}
+
+export interface GetPauseRequestsParams {
+  studentProfileId: string;
+  status?: PauseEnrollmentRequestStatus;
+  pageNumber?: number;
+  pageSize?: number;
+}

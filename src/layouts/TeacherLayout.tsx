@@ -1,11 +1,15 @@
 import React from "react";
 import TeacherBottomNav from "@/navigation/TeacherBottomNav";
+import { useNotificationPolling } from "@/hooks/useNotificationPolling"; // Thêm import
 
 interface TeacherLayoutProps {
   children: React.ReactNode;
 }
 
 const TeacherLayout: React.FC<TeacherLayoutProps> = ({ children }) => {
+  // Bật polling ngầm cho Teacher
+  useNotificationPolling("Teacher");
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-red-50 via-white to-red-50">
       <div className="mx-auto flex h-screen w-full max-w-[430px] flex-col overflow-hidden">

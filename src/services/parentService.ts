@@ -2,6 +2,9 @@ import { api } from "@/api/api";
 import { ApiResponse } from "@/types/apiResponse";
 import { PARENT_ENDPOINTS, LEAVE_REQUEST_ENDPOINTS, STUDENT_ENDPOINTS } from "@/constants/apiURL";
 import {
+  CreatePauseRequestPayload,
+  GetPauseRequestsParams,
+  PaginatedPauseRequests,
   ParentOverviewResponse,
   ParentHomeworkItem,
   ParentExamResult,
@@ -10,6 +13,7 @@ import {
   ParentLeaveRequestsResponse,
   ParentAttendanceRecord,
   ParentSessionReport,
+  PauseEnrollmentRequest,
 } from "@/types/parent";
 
 /**
@@ -114,6 +118,33 @@ export const parentService = {
   ): Promise<ApiResponse<ParentLeaveRequest>> => {
     return await api.post<ApiResponse<ParentLeaveRequest>>(
       LEAVE_REQUEST_ENDPOINTS.LIST,
+      payload
+    );
+  },
+
+  /** GET /api/pause-enrollment-requests — list pause requests */
+  getPauseRequests: async (
+    params: GetPauseRequestsParams
+  ): Promise<PaginatedPauseRequests> => {
+    const res = await api.get<any>(PARENT_ENDPOINTS.PAUSE_ENROLLMENT_REQUESTS, {
+      params,
+    });
+
+    const data = res?.data ?? res;
+    return {
+      items: Array.isArray(data?.items) ? data.items : [],
+      pageNumber: Number(data?.pageNumber ?? params.pageNumber ?? 1),
+      totalPages: Number(data?.totalPages ?? 1),
+      totalCount: Number(data?.totalCount ?? 0),
+    };
+  },
+
+  /** POST /api/pause-enrollment-requests — create a long-term pause request */
+  createPauseRequest: async (
+    payload: CreatePauseRequestPayload
+  ): Promise<ApiResponse<PauseEnrollmentRequest>> => {
+    return await api.post<ApiResponse<PauseEnrollmentRequest>>(
+      PARENT_ENDPOINTS.PAUSE_ENROLLMENT_REQUESTS,
       payload
     );
   },

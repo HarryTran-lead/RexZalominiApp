@@ -1,11 +1,15 @@
 import React from "react";
 import ParentBottomNav from "@/navigation/ParentBottomNav";
+import { useNotificationPolling } from "@/hooks/useNotificationPolling"; // Thêm import
 
 interface ParentLayoutProps {
   children: React.ReactNode;
 }
 
 const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
+  // Bật polling ngầm cho Parent
+  useNotificationPolling("Parent");
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-red-50 via-white to-red-50">
       <div className="mx-auto flex h-screen w-full max-w-[430px] flex-col overflow-hidden">

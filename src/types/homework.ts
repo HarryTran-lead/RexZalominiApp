@@ -187,12 +187,11 @@ export interface AIQuickGradeResponse {
 // ==========================================
 export interface MyHomeworkListItem {
   id: string; // HomeworkStudentId
-  homeworkId: string; // AssignmentId
-  homeworkTitle: string;
+  assignmentId: string; // AssignmentId
+  assignmentTitle: string;
   classId: string;
   classCode?: string;
   classTitle?: string;
-  className: string;
   description?: string;
   sessionId?: string;
   sessionName?: string;
@@ -213,9 +212,9 @@ export interface MyHomeworkListItem {
 
 export interface MySubmittedHomeworkListItem {
   id: string;
-  homeworkId: string;
-  homeworkTitle: string;
-  className: string;
+  assignmentId: string;
+  assignmentTitle: string;
+  classTitle: string;
   status: HomeworkStatus;
   dueAt?: string;
   submittedAt?: string;
@@ -268,8 +267,32 @@ export interface MyHomeworkSubmissionDetail {
   showReview?: boolean;
   showCorrectAnswer?: boolean;
   showExplanation?: boolean;
+  attemptId?: string;
+  attemptNumber?: number;
+  attemptCount?: number;
   isLate: boolean;
   rewardStars?: number;
+}
+
+export interface MyHomeworkAttemptDetail {
+  id: string;
+  assignmentId: string;
+  status: HomeworkStatus | string;
+  submittedAt?: string;
+  gradedAt?: string;
+  attemptId?: string;
+  attemptNumber: number;
+  attemptCount?: number;
+  maxScore?: number;
+  score?: number;
+  rewardStars?: number;
+  correctCount?: number;
+  wrongCount?: number;
+  skippedCount?: number;
+  totalCount?: number;
+  totalPoints?: number;
+  earnedPoints?: number;
+  answerResults?: AnswerResult[];
 }
 
 // ==========================================
@@ -280,6 +303,7 @@ export interface SubmitHomeworkRequest {
   textAnswer?: string;
   attachmentUrls?: string[];
   linkUrl?: string;
+  links?: string[];
 }
 
 export interface GradeHomeworkPayload {
@@ -395,6 +419,21 @@ export interface AIRecommendationResponse {
   practiceTypes: string[];
   warnings?: string[];
   items: RecommendationItem[];
+}
+
+export interface HomeworkAiFeatureAvailability {
+  canUseHint: boolean;
+  canUseRecommendation: boolean;
+  hintMessage?: string;
+  recommendationMessage?: string;
+}
+
+export interface HomeworkAiToolContext {
+  homeworkStudentId: string;
+  currentAnswerText: string;
+  hintEnabled?: boolean;
+  recommendationEnabled?: boolean;
+  availability: HomeworkAiFeatureAvailability;
 }
 
 export interface AISpeakingAnalysisRequest {

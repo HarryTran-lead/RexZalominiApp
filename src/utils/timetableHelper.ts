@@ -1,5 +1,21 @@
 import { TimetableSession } from "@/types/timetable";
 
+/**
+ * Backend currently returns some timetable datetimes with trailing Z while the
+ * clock value is already intended for local display. Keep the HH:mm as-is.
+ */
+export function parseTimetableDateTime(value?: string | null): Date {
+  if (!value) return new Date(NaN);
+  if (/z$/i.test(value)) {
+    return new Date(value.replace(/z$/i, ""));
+  }
+  return new Date(value);
+}
+
+export function getSessionDisplayDatetime(session: TimetableSession): string {
+  return session.actualDatetime || session.plannedDatetime;
+}
+
 /** Returns a YYYY-MM-DD key based on the **local** date (avoids UTC offset shift). */
 export function toLocalDateKey(d: Date): string {
   const y = d.getFullYear();
@@ -34,7 +50,7 @@ export function groupSessionsByDay(
   const groups: Record<string, TimetableSession[]> = {};
 
   sessions.forEach((session) => {
-    const date = new Date(session.plannedDatetime);
+    const date = parseTimetableDateTime(getSessionDisplayDatetime(session));
     const key = toLocalDateKey(date);
     if (!groups[key]) {
       groups[key] = [];
@@ -46,8 +62,8 @@ export function groupSessionsByDay(
   Object.keys(groups).forEach((key) => {
     groups[key].sort(
       (a, b) =>
-        new Date(a.plannedDatetime).getTime() -
-        new Date(b.plannedDatetime).getTime()
+        parseTimetableDateTime(getSessionDisplayDatetime(a)).getTime() -
+        parseTimetableDateTime(getSessionDisplayDatetime(b)).getTime()
     );
   });
 

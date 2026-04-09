@@ -2,10 +2,15 @@ import { api } from "@/api/api";
 import { ApiResponse } from "@/types/apiResponse";
 import { STUDENT_ENDPOINTS, TEACHER_ENDPOINTS } from "@/constants/apiURL";
 import {
+  AIHintRequest,
+  AIHintResponse,
+  AIRecommendationRequest,
+  AIRecommendationResponse,
   GradeHomeworkPayload,
   HomeworkAssignmentDetail,
   HomeworkAssignmentListItem,
   HomeworkSubmissionListItem,
+  MyHomeworkAttemptDetail,
   MyHomeworkListItem,
   MyHomeworkSubmissionDetail,
   SubmitHomeworkRequest,
@@ -86,6 +91,28 @@ function normalizeTeacherHomeworkDetail(payload: unknown): HomeworkAssignmentDet
   return null;
 }
 
+function normalizeHomeworkAttemptDetail(payload: unknown): MyHomeworkAttemptDetail | null {
+  if (!payload || typeof payload !== "object") {
+    return null;
+  }
+
+  if ("attemptNumber" in payload || "attemptId" in payload) {
+    return payload as MyHomeworkAttemptDetail;
+  }
+
+  if ("data" in payload) {
+    const wrapped = payload as { data?: unknown };
+    if (wrapped.data && typeof wrapped.data === "object") {
+      const candidate = wrapped.data as Record<string, unknown>;
+      if ("attemptNumber" in candidate || "attemptId" in candidate) {
+        return candidate as unknown as MyHomeworkAttemptDetail;
+      }
+    }
+  }
+
+  return null;
+}
+
 export interface TeacherHomeworkQuery {
   classId?: string;
   sessionId?: string;
@@ -149,6 +176,16 @@ export const homeworkService = {
     return res?.data ?? null;
   },
 
+  getMyHomeworkAttemptDetail: async (
+    homeworkStudentId: string,
+    attemptNumber: number
+  ): Promise<MyHomeworkAttemptDetail | null> => {
+    const res = await api.get<ApiResponse<MyHomeworkAttemptDetail> | MyHomeworkAttemptDetail>(
+      STUDENT_ENDPOINTS.HOMEWORK_ATTEMPT_DETAIL(homeworkStudentId, attemptNumber)
+    );
+    return normalizeHomeworkAttemptDetail(res);
+  },
+
   submitHomework: async (payload: SubmitHomeworkRequest): Promise<boolean> => {
     const res = await api.post<ApiResponse<unknown>>(STUDENT_ENDPOINTS.HOMEWORK_SUBMIT, payload);
     return Boolean(res?.isSuccess ?? res?.success ?? true);
@@ -160,6 +197,28 @@ export const homeworkService = {
       payload
     );
     return Boolean(res?.isSuccess ?? res?.success ?? true);
+  },
+
+  getHomeworkHint: async (
+    homeworkStudentId: string,
+    payload: AIHintRequest
+  ): Promise<AIHintResponse | null> => {
+    const res = await api.post<ApiResponse<AIHintResponse>>(
+      STUDENT_ENDPOINTS.HOMEWORK_HINT(homeworkStudentId),
+      payload
+    );
+    return res?.data ?? null;
+  },
+
+  getHomeworkRecommendations: async (
+    homeworkStudentId: string,
+    payload: AIRecommendationRequest
+  ): Promise<AIRecommendationResponse | null> => {
+    const res = await api.post<ApiResponse<AIRecommendationResponse>>(
+      STUDENT_ENDPOINTS.HOMEWORK_RECOMMENDATIONS(homeworkStudentId),
+      payload
+    );
+    return res?.data ?? null;
   },
 
   gradeHomeworkSubmission: async (

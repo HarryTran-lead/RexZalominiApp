@@ -34,6 +34,16 @@ function formatDate(iso?: string): string {
   });
 }
 
+function getSubmissionTypeLabel(type?: string): string {
+  const normalized = (type || "").replace(/\s+/g, "_").toUpperCase();
+  if (normalized === "TEXT") return "Tự luận";
+  if (normalized === "LINK") return "Nộp link";
+  if (normalized === "FILE") return "Nộp file";
+  if (normalized === "IMAGE") return "Nộp ảnh";
+  if (normalized === "MULTIPLE_CHOICE") return "Trắc nghiệm";
+  return type || "Khác";
+}
+
 const StudentHomeworkCard: React.FC<StudentHomeworkCardProps> = ({ item, onClick }) => {
   return (
     <button
@@ -43,8 +53,9 @@ const StudentHomeworkCard: React.FC<StudentHomeworkCardProps> = ({ item, onClick
     >
       <div className="mb-2 flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-base font-bold text-gray-900">{item.classCode || item.className}</h3>
-          <p className="truncate text-sm font-medium text-red-700">{item.homeworkTitle}</p>
+          <h3 className="truncate text-base font-bold text-gray-900">{item.classCode || item.classTitle}</h3>
+          <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-gray-500">Tiêu đề: {item.assignmentTitle}</p>
+          <p className="line-clamp-2 text-sm font-bold text-red-700">{item.assignmentTitle}</p>
         </div>
         <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusClass(item.status)}`}>
           {getStatusLabel(item.status)}
@@ -61,6 +72,10 @@ const StudentHomeworkCard: React.FC<StudentHomeworkCardProps> = ({ item, onClick
           </span>
         )}
       </div>
+
+      <p className="mt-2 text-xs text-gray-600">
+        Hình thức: <span className="font-semibold text-gray-700">{getSubmissionTypeLabel(item.submissionType)}</span>
+      </p>
 
       {item.teacherFeedback && (
         <p className="mt-2 line-clamp-2 rounded-lg bg-emerald-50 px-2.5 py-2 text-xs text-emerald-800">

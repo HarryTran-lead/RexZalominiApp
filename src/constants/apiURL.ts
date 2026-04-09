@@ -38,8 +38,12 @@ export const STUDENT_ENDPOINTS = {
   HOMEWORK_MY: "/students/homework/my",
   HOMEWORK_SUBMITTED: "/students/homework/submitted",
   HOMEWORK_DETAIL: (homeworkStudentId: string) => `/students/homework/${homeworkStudentId}`,
+  HOMEWORK_ATTEMPT_DETAIL: (homeworkStudentId: string, attemptNumber: number) =>
+    `/students/homework/${homeworkStudentId}/attempts/${attemptNumber}`,
   HOMEWORK_SUBMIT: "/students/homework/submit",
   HOMEWORK_MULTIPLE_CHOICE_SUBMIT: "/students/homework/multiple-choice/submit",
+  HOMEWORK_HINT: (homeworkStudentId: string) => `/students/homework/${homeworkStudentId}/hint`,
+  HOMEWORK_RECOMMENDATIONS: (homeworkStudentId: string) => `/students/homework/${homeworkStudentId}/recommendations`,
   HOMEWORK_FEEDBACK_MY: "/students/homework/feedback/my",
 };
 
@@ -88,6 +92,8 @@ export const PARENT_ENDPOINTS = {
   STUDENTS_MAKEUP_OR_LEAVE: "/parent/students-with-makeup-or-leave",
   INVOICES: "/parent/invoices",
   MEDIA: "/parent/media",
+  PAUSE_ENROLLMENT_REQUESTS: "/pause-enrollment-requests",
+  PAUSE_ENROLLMENT_REQUEST_DETAIL: (id: string) => `/pause-enrollment-requests/${id}`,
 };
 
 // Leave Request Endpoints
@@ -108,6 +114,7 @@ export const GAMIFICATION_ENDPOINTS = {
   LEVEL_ME: "/gamification/level/me",
   ATTENDANCE_STREAK_ME: "/gamification/attendance-streak/me",
   ATTENDANCE_CHECKIN: "/gamification/attendance-streak/check-in",
+  MISSIONS_ME_PROGRESS: "/missions/me/progress",
   REWARD_STORE_ITEMS: "/gamification/reward-store/items/active",
   AVAILABLE_REWARDS: "/gamification/rewards/available",
   REWARD_REDEMPTIONS: "/gamification/reward-redemptions",

@@ -1,7 +1,12 @@
 import React, { useMemo } from "react";
 import { Spinner, Text } from "zmp-ui";
 import { TimetableSession } from "@/types/timetable";
-import { groupSessionsByDay, toLocalDateKey } from "@/utils/timetableHelper";
+import {
+  getSessionDisplayDatetime,
+  groupSessionsByDay,
+  parseTimetableDateTime,
+  toLocalDateKey,
+} from "@/utils/timetableHelper";
 
 const DAY_LABELS_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -27,12 +32,12 @@ const ATTENDANCE_STATUS_BADGE: Record<
 };
 
 function formatTime(isoString: string): string {
-  const d = new Date(isoString);
+  const d = parseTimetableDateTime(isoString);
   return d.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", hour12: false });
 }
 
 function formatEndTime(isoString: string, durationMinutes: number): string {
-  const d = new Date(isoString);
+  const d = parseTimetableDateTime(isoString);
   d.setMinutes(d.getMinutes() + durationMinutes);
   return d.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", hour12: false });
 }
@@ -63,7 +68,7 @@ interface WeeklyTimetableProps {
 }
 
 function isTodaySession(isoString: string): boolean {
-  const d = new Date(isoString);
+  const d = parseTimetableDateTime(isoString);
   const now = new Date();
   return (
     d.getFullYear() === now.getFullYear() &&
@@ -239,8 +244,9 @@ const WeeklyTimetable: React.FC<WeeklyTimetableProps> = ({
                 {/* Stack of sessions for this day */}
                 <div className="flex-1 min-w-0 flex flex-col divide-y divide-gray-100">
                   {daySessions.map((session, idx) => {
-                    const startTime = formatTime(session.plannedDatetime);
-                    const endTime = formatEndTime(session.plannedDatetime, session.durationMinutes);
+                    const sessionDatetime = getSessionDisplayDatetime(session);
+                    const startTime = formatTime(sessionDatetime);
+                    const endTime = formatEndTime(sessionDatetime, session.durationMinutes);
                     const badge = STATUS_BADGE[session.status] ?? { label: String(session.status), cls: "bg-gray-500 text-white" };
                     const roomDisplay = session.plannedRoomName ?? null;
                     const teacherDisplay = session.plannedTeacherName ?? null;
@@ -297,7 +303,7 @@ const WeeklyTimetable: React.FC<WeeklyTimetableProps> = ({
                                 onClick={() => session.meetUrl && window.open(session.meetUrl, "_blank")}
                               >
                                 Meet URL
-                              </button> */}                              {role === "teacher" && isTodaySession(session.plannedDatetime) && onSessionAttendance && (
+                              </button> */}                              {role === "teacher" && isTodaySession(sessionDatetime) && onSessionAttendance && (
                                 <button
                                   className="text-[10px] px-2 py-1 rounded-md bg-red-600 text-white font-semibold whitespace-nowrap active:opacity-70"
                                   onClick={() => onSessionAttendance(session)}

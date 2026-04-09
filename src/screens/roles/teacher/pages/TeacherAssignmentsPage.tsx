@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Page, Spinner } from "zmp-ui";
 import { homeworkService } from "@/services/homeworkService";
 import { HomeworkAssignmentListItem } from "@/types/homework";
-import TeacherHomeworkFilters from "@/components/homework/TeacherHomeworkFilters";
-import TeacherHomeworkCard from "@/components/homework/TeacherHomeworkCard";
+import TeacherHomeworkFilters from "@/components/homework/teacher/TeacherHomeworkFilters";
+import TeacherHomeworkCard from "@/components/homework/teacher/TeacherHomeworkCard";
 
 function TeacherAssignmentsPage() {
   const navigate = useNavigate();

@@ -3,6 +3,7 @@ import { api } from "../api/api";
 import { AxiosRequestConfig } from "axios";
 import { API_ENDPOINTS } from "../constants/apiURL";
 import {
+  AttendanceCheckInResult,
   StudentClass,
   SubmitHomeworkRequest,
   SubmitMultipleChoiceHomeworkRequest,
@@ -15,6 +16,7 @@ import {
   RewardRedemption,
   RequestRewardRedemptionRequest,
   StarTransaction,
+  MissionProgressItem,
   Exam,
   ExamSubmission,
   StartExamSubmissionRequest,
@@ -335,9 +337,19 @@ export const gamificationService = {
   },
 
   // Check in attendance
-  checkInAttendance: async (): Promise<ApiResponse<void>> => {
-    return await api.post<ApiResponse<void>>(
+  checkInAttendance: async (): Promise<ApiResponse<AttendanceCheckInResult>> => {
+    return await api.post<ApiResponse<AttendanceCheckInResult>>(
       API_ENDPOINTS.GAMIFICATION.ATTENDANCE_CHECKIN
+    );
+  },
+
+  // Get my mission progress list
+  getMyMissionProgress: async (
+    params?: BaseQueryParams
+  ): Promise<ApiResponse<PaginatedResponse<MissionProgressItem>>> => {
+    return await api.get<ApiResponse<PaginatedResponse<MissionProgressItem>>>(
+      API_ENDPOINTS.GAMIFICATION.MISSIONS_ME_PROGRESS,
+      { params }
     );
   },
 
