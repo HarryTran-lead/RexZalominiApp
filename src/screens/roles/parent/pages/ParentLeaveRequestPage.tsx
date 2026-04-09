@@ -6,14 +6,24 @@ import { parentService } from "@/services/parentService";
 import { authService } from "@/services/authService";
 import { studentService } from "@/services/studentService";
 import { timetableService } from "@/services/timetableService";
-import { ParentLeaveRequest, ParentLeaveRequestsResponse } from "@/types/parent";
+import {
+  CreatePauseRequestPayload,
+  ParentLeaveRequest,
+  ParentLeaveRequestsResponse,
+  PauseEnrollmentRequest,
+} from "@/types/parent";
 import { UserProfile } from "@/types/auth";
 import { StudentClass } from "@/services";
 import { TimetableSession } from "@/types/timetable";
-import { toLocalDateKey } from "@/utils/timetableHelper";
+import {
+  getSessionDisplayDatetime,
+  parseTimetableDateTime,
+  toLocalDateKey,
+} from "@/utils/timetableHelper";
 import { storage } from "@/utils/storage";
 
 type ViewMode = "list" | "create";
+type RequestKind = "leave" | "pause";
 
 const DAY_LABELS = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
 
@@ -59,8 +69,8 @@ function formatDate(dateStr?: string): string {
 }
 
 function formatSessionTime(isoString: string, durationMinutes: number): string {
-  const start = new Date(isoString);
-  const end = new Date(isoString);
+  const start = parseTimetableDateTime(isoString);
+  const end = parseTimetableDateTime(isoString);
   end.setMinutes(end.getMinutes() + durationMinutes);
 
   const format = (d: Date) =>
@@ -73,11 +83,20 @@ function formatSessionTime(isoString: string, durationMinutes: number): string {
   return `${format(start)} - ${format(end)}`;
 }
 
+function toDateInputValue(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function ParentLeaveRequestPage() {
   const navigate = useNavigate();
   const { openSnackbar } = useSnackbar();
   const [viewMode, setViewMode] = useState<ViewMode>("list");
-  const [requests, setRequests] = useState<ParentLeaveRequestsResponse[]>([]);
+  const [requestKind, setRequestKind] = useState<RequestKind>("leave");
+  const [leaveRequests, setLeaveRequests] = useState<ParentLeaveRequestsResponse[]>([]);
+  const [pauseRequests, setPauseRequests] = useState<PauseEnrollmentRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -101,14 +120,44 @@ function ParentLeaveRequestPage() {
     reason: "",
   });
 
-  const fetchRequests = useCallback(async () => {
+  const [pauseForm, setPauseForm] = useState<CreatePauseRequestPayload>({
+    studentProfileId: "",
+    pauseFrom: toDateInputValue(new Date()),
+    pauseTo: toDateInputValue(new Date()),
+    reason: "",
+  });
+
+  const fetchLeaveRequests = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const data = await parentService.getLeaveRequests({ pageSize: 50 });
-      setRequests(data);
+      setLeaveRequests(data);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Không thể tải danh sách đơn xin nghỉ";
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const fetchPauseRequests = useCallback(async (studentProfileId: string) => {
+    if (!studentProfileId) {
+      setPauseRequests([]);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await parentService.getPauseRequests({
+        studentProfileId,
+        pageNumber: 1,
+        pageSize: 50,
+      });
+      setPauseRequests(data.items ?? []);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Không thể tải danh sách đơn bảo lưu";
       setError(message);
     } finally {
       setLoading(false);
@@ -128,6 +177,10 @@ function ParentLeaveRequestPage() {
           : studentsList[0];
 
         setForm((prev) => ({
+          ...prev,
+          studentProfileId: prev.studentProfileId || preferredStudent.id,
+        }));
+        setPauseForm((prev) => ({
           ...prev,
           studentProfileId: prev.studentProfileId || preferredStudent.id,
         }));
@@ -209,11 +262,31 @@ function ParentLeaveRequestPage() {
   );
 
   useEffect(() => {
-    fetchRequests();
+    fetchLeaveRequests();
     fetchStudents();
     // Run once on mount to avoid repeated bootstrap requests.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (viewMode !== "list") return;
+    if (requestKind === "leave") {
+      fetchLeaveRequests();
+      return;
+    }
+
+    const targetStudentId = pauseForm.studentProfileId || form.studentProfileId;
+    if (targetStudentId) {
+      fetchPauseRequests(targetStudentId);
+    }
+  }, [
+    requestKind,
+    viewMode,
+    pauseForm.studentProfileId,
+    form.studentProfileId,
+    fetchLeaveRequests,
+    fetchPauseRequests,
+  ]);
 
   useEffect(() => {
     if (viewMode !== "create" || !form.studentProfileId) return;
@@ -265,14 +338,17 @@ function ParentLeaveRequestPage() {
     const grouped: Record<string, TimetableSession[]> = {};
 
     classSessions.forEach((session) => {
-      const key = toLocalDateKey(new Date(session.plannedDatetime));
+      const sessionDatetime = getSessionDisplayDatetime(session);
+      const key = toLocalDateKey(parseTimetableDateTime(sessionDatetime));
       if (!grouped[key]) grouped[key] = [];
       grouped[key].push(session);
     });
 
     Object.keys(grouped).forEach((key) => {
       grouped[key].sort(
-        (a, b) => new Date(a.plannedDatetime).getTime() - new Date(b.plannedDatetime).getTime()
+        (a, b) =>
+          parseTimetableDateTime(getSessionDisplayDatetime(a)).getTime() -
+          parseTimetableDateTime(getSessionDisplayDatetime(b)).getTime()
       );
     });
 
@@ -312,9 +388,56 @@ function ParentLeaveRequestPage() {
         reason: "",
       }));
       setViewMode("list");
-      fetchRequests();
+      fetchLeaveRequests();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Gửi đơn thất bại";
+      openSnackbar({ text: message, type: "error" });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handlePauseSubmit = async () => {
+    const pauseFrom = pauseForm.pauseFrom;
+    const pauseTo = pauseForm.pauseTo;
+
+    if (!pauseForm.studentProfileId || !pauseFrom || !pauseTo) {
+      openSnackbar({ text: "Vui lòng chọn học sinh và khoảng thời gian bảo lưu", type: "error" });
+      return;
+    }
+
+    if (pauseFrom > pauseTo) {
+      openSnackbar({ text: "Ngày bắt đầu bảo lưu phải nhỏ hơn hoặc bằng ngày kết thúc", type: "error" });
+      return;
+    }
+
+    const todayKey = toDateInputValue(new Date());
+    if (pauseFrom < todayKey) {
+      openSnackbar({ text: "Không thể tạo bảo lưu trong quá khứ", type: "error" });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await parentService.createPauseRequest({
+        studentProfileId: pauseForm.studentProfileId,
+        pauseFrom,
+        pauseTo,
+        reason: pauseForm.reason?.trim() || undefined,
+      });
+      openSnackbar({ text: "Gửi đơn bảo lưu thành công", type: "success" });
+
+      setPauseForm((prev) => ({
+        ...prev,
+        pauseFrom: toDateInputValue(new Date()),
+        pauseTo: toDateInputValue(new Date()),
+        reason: "",
+      }));
+      setViewMode("list");
+      setRequestKind("pause");
+      await fetchPauseRequests(pauseForm.studentProfileId);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Gửi đơn bảo lưu thất bại";
       openSnackbar({ text: message, type: "error" });
     } finally {
       setSubmitting(false);
@@ -337,6 +460,7 @@ function ParentLeaveRequestPage() {
   };
 
   const calendarDays = useMemo(() => buildCalendarDays(calendarMonth), [calendarMonth]);
+  const todayKey = toLocalDateKey(new Date());
   const selectedDateSessions = form.sessionDate ? sessionsByDate[form.sessionDate] ?? [] : [];
 
   const openCreateView = () => {
@@ -359,7 +483,11 @@ function ParentLeaveRequestPage() {
           </svg>
         </button>
         <h1 className="text-white font-bold text-lg flex-1">
-          {viewMode === "create" ? "Tạo đơn xin nghỉ" : "Đơn xin nghỉ"}
+          {viewMode === "create"
+            ? requestKind === "pause"
+              ? "Tạo đơn bảo lưu"
+              : "Tạo đơn xin nghỉ"
+            : "Đơn xin nghỉ"}
         </h1>
         {viewMode === "list" && (
           <button
@@ -372,10 +500,34 @@ function ParentLeaveRequestPage() {
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto pb-24">
+        <div className="px-4 pt-3">
+          <div className="grid grid-cols-2 rounded-xl border border-red-100 bg-white p-1">
+            <button
+              type="button"
+              onClick={() => setRequestKind("leave")}
+              className={`rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
+                requestKind === "leave" ? "bg-red-600 text-white" : "text-gray-600"
+              }`}
+            >
+              Nghỉ buổi
+            </button>
+            <button
+              type="button"
+              onClick={() => setRequestKind("pause")}
+              className={`rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
+                requestKind === "pause" ? "bg-red-600 text-white" : "text-gray-600"
+              }`}
+            >
+              Bảo lưu dài hạn
+            </button>
+          </div>
+        </div>
+
         {viewMode === "create" ? (
+          requestKind === "leave" ? (
           <div className="px-4 pt-4 space-y-4">
             <div className="rounded-2xl border border-red-100 bg-red-50/70 px-3.5 py-3 text-xs text-red-700">
-              Chỉ chọn được ngày có buổi học trong lịch lớp. Hệ thống sẽ gửi đơn theo đúng ngày học đã chọn.
+              Chỉ chọn được ngày có buổi học từ hôm nay trở đi. Các buổi quá khứ sẽ bị khóa.
             </div>
 
             <div>
@@ -527,25 +679,33 @@ function ParentLeaveRequestPage() {
                     const isCurrentMonth = day.getMonth() === calendarMonth.getMonth();
                     const daySessions = isCurrentMonth ? sessionsByDate[dateKey] ?? [] : [];
                     const hasClassSession = daySessions.length > 0;
+                    const isPastDay = dateKey < todayKey;
+                    const canSelectDay = isCurrentMonth && hasClassSession && !isPastDay;
                     const isSelected = form.sessionDate === dateKey;
 
                     return (
                       <button
                         key={dateKey}
                         type="button"
-                        disabled={!hasClassSession}
+                        disabled={!canSelectDay}
                         onClick={() => setForm((prev) => ({ ...prev, sessionDate: dateKey, endDate: dateKey }))}
                         className={`min-h-[78px] rounded-xl border px-1.5 py-1.5 text-left transition-colors ${
                           !isCurrentMonth
                             ? "border-transparent bg-transparent"
-                            : hasClassSession
+                            : canSelectDay
                             ? isSelected
                               ? "border-red-500 bg-red-50"
                               : "border-red-100 bg-white active:bg-red-50"
+                            : isPastDay
+                            ? "border-gray-200 bg-gray-100 text-gray-300"
                             : "border-gray-200 bg-gray-100 text-gray-400"
                         } disabled:cursor-not-allowed`}
                       >
-                        <p className={`text-lg font-bold leading-none ${isSelected ? "text-red-600" : "text-gray-700"}`}>
+                        <p
+                          className={`text-lg font-bold leading-none ${
+                            isSelected ? "text-red-600" : isPastDay ? "text-gray-400" : "text-gray-700"
+                          }`}
+                        >
                           {day.getDate()}
                         </p>
                         {hasClassSession ? (
@@ -587,7 +747,7 @@ function ParentLeaveRequestPage() {
                   {selectedDateSessions.map((session) => (
                     <div key={session.id} className="rounded-lg bg-red-50 px-2.5 py-2 text-xs text-gray-700">
                       <p className="font-semibold text-red-600">
-                        {formatSessionTime(session.plannedDatetime, session.durationMinutes)}
+                        {formatSessionTime(getSessionDisplayDatetime(session), session.durationMinutes)}
                       </p>
                       <p className="mt-0.5">{session.classTitle || "Lớp học"}</p>
                     </div>
@@ -621,6 +781,101 @@ function ParentLeaveRequestPage() {
               {submitting ? "Đang gửi..." : "Gửi đơn xin nghỉ"}
             </button>
           </div>
+          ) : (
+            <div className="px-4 pt-4 space-y-4">
+              <div className="rounded-2xl border border-red-100 bg-red-50/70 px-3.5 py-3 text-xs text-red-700">
+                Đơn bảo lưu áp dụng cho toàn bộ lớp học của bé trong khoảng thời gian đã chọn.
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Tên học sinh *</label>
+                <Listbox
+                  value={pauseForm.studentProfileId}
+                  onChange={(value) => setPauseForm((prev) => ({ ...prev, studentProfileId: value }))}
+                >
+                  <div className="relative">
+                    <ListboxButton className="w-full bg-white rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-left focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent flex items-center justify-between">
+                      <span className="block truncate text-gray-800">
+                        {pauseForm.studentProfileId
+                          ? students.find((s) => s.id === pauseForm.studentProfileId)?.displayName || "-- Chọn học sinh --"
+                          : "-- Chọn học sinh --"}
+                      </span>
+                      <svg className="w-5 h-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </ListboxButton>
+
+                    <ListboxOptions
+                      portal
+                      anchor="bottom start"
+                      className="z-[80] mt-2 max-h-60 overflow-auto rounded-xl border border-gray-200 bg-white p-1 shadow-lg focus:outline-none text-sm [--anchor-gap:8px] w-[var(--button-width)]"
+                    >
+                      {students.length === 0 ? (
+                        <div className="px-3 py-2 text-gray-400">Không có học sinh</div>
+                      ) : (
+                        students.map((student) => (
+                          <ListboxOption
+                            key={student.id}
+                            value={student.id}
+                            className="cursor-pointer select-none rounded-lg px-3 py-2.5 text-gray-800 data-[focus]:bg-red-50 data-[focus]:text-red-600 data-[selected]:font-semibold"
+                          >
+                            {student.displayName}
+                          </ListboxOption>
+                        ))
+                      )}
+                    </ListboxOptions>
+                  </div>
+                </Listbox>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Từ ngày *</label>
+                  <input
+                    type="date"
+                    min={toDateInputValue(new Date())}
+                    value={pauseForm.pauseFrom}
+                    onChange={(e) => setPauseForm((prev) => ({ ...prev, pauseFrom: e.target.value }))}
+                    className="w-full bg-white rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Đến ngày *</label>
+                  <input
+                    type="date"
+                    min={pauseForm.pauseFrom || toDateInputValue(new Date())}
+                    value={pauseForm.pauseTo}
+                    onChange={(e) => setPauseForm((prev) => ({ ...prev, pauseTo: e.target.value }))}
+                    className="w-full bg-white rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Lý do</label>
+                <textarea
+                  value={pauseForm.reason || ""}
+                  onChange={(e) => setPauseForm((prev) => ({ ...prev, reason: e.target.value }))}
+                  placeholder="Nhập lý do bảo lưu..."
+                  rows={4}
+                  className="w-full bg-white rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                />
+              </div>
+
+              <button
+                onClick={handlePauseSubmit}
+                disabled={
+                  submitting ||
+                  !pauseForm.studentProfileId ||
+                  !pauseForm.pauseFrom ||
+                  !pauseForm.pauseTo
+                }
+                className="w-full bg-red-600 text-white py-3 rounded-xl font-semibold text-sm disabled:opacity-50 active:bg-red-700 transition-colors"
+              >
+                {submitting ? "Đang gửi..." : "Gửi đơn bảo lưu"}
+              </button>
+            </div>
+          )
         ) : (
           <div className="px-4 pt-3">
             {loading ? (
@@ -633,11 +888,23 @@ function ParentLeaveRequestPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <p className="text-sm mb-3">{error}</p>
-                <button onClick={fetchRequests} className="text-red-600 text-sm font-semibold">
+                <button
+                  onClick={() => {
+                    if (requestKind === "pause") {
+                      const targetStudentId = pauseForm.studentProfileId || form.studentProfileId;
+                      if (targetStudentId) {
+                        fetchPauseRequests(targetStudentId);
+                      }
+                    } else {
+                      fetchLeaveRequests();
+                    }
+                  }}
+                  className="text-red-600 text-sm font-semibold"
+                >
                   Thử lại
                 </button>
               </div>
-            ) : requests.length === 0 ? (
+            ) : requestKind === "leave" && leaveRequests.length === 0 ? (
               <div className="flex flex-col items-center py-16 text-gray-400">
                 <svg className="w-16 h-16 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -647,42 +914,86 @@ function ParentLeaveRequestPage() {
                   Tạo đơn ngay
                 </button>
               </div>
+            ) : requestKind === "pause" && pauseRequests.length === 0 ? (
+              <div className="flex flex-col items-center py-16 text-gray-400">
+                <svg className="w-16 h-16 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p className="text-sm mb-3">Chưa có đơn bảo lưu nào</p>
+                <button onClick={openCreateView} className="text-red-600 text-sm font-semibold">
+                  Tạo đơn ngay
+                </button>
+              </div>
             ) : (
               <div className="space-y-3">
-                {requests.map((item) => {
-                  const badge = getStatusBadge(item.status);
-                  const studentName = students.find((s) => s.id === item.studentProfileId)?.displayName || "Học sinh";
-                  return (
-                    <div key={item.id} className="bg-white rounded-2xl shadow-sm p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1 mr-2">
-                          <h3 className="font-bold text-gray-800 text-sm">{studentName}</h3>
-                          <p className="text-xs text-gray-500 mt-0.5">ID: {item.classId}</p>
-                        </div>
-                        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${badge.className}`}>
-                          {badge.label}
-                        </span>
-                      </div>
+                {requestKind === "leave"
+                  ? leaveRequests.map((item) => {
+                      const badge = getStatusBadge(item.status);
+                      const studentName = students.find((s) => s.id === item.studentProfileId)?.displayName || "Học sinh";
+                      return (
+                        <div key={item.id} className="bg-white rounded-2xl shadow-sm p-4">
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex-1 mr-2">
+                              <h3 className="font-bold text-gray-800 text-sm">{studentName}</h3>
+                              <p className="text-xs text-gray-500 mt-0.5">ID: {item.classId}</p>
+                            </div>
+                            <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${badge.className}`}>
+                              {badge.label}
+                            </span>
+                          </div>
 
-                      <div className="flex items-center gap-1.5 mb-1.5">
-                        <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <span className="text-xs text-gray-500">
-                          {formatDate(item.sessionDate)}
-                          {item.endDate && item.endDate !== item.sessionDate && ` - ${formatDate(item.endDate)}`}
-                        </span>
-                      </div>
+                          <div className="flex items-center gap-1.5 mb-1.5">
+                            <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <span className="text-xs text-gray-500">
+                              {formatDate(item.sessionDate)}
+                              {item.endDate && item.endDate !== item.sessionDate && ` - ${formatDate(item.endDate)}`}
+                            </span>
+                          </div>
 
-                      {item.reason && (
-                        <div className="bg-gray-50 rounded-lg p-2 mt-2">
-                          <p className="text-[11px] text-gray-500 font-semibold mb-0.5">Lý do:</p>
-                          <p className="text-xs text-gray-700">{item.reason}</p>
+                          {item.reason && (
+                            <div className="bg-gray-50 rounded-lg p-2 mt-2">
+                              <p className="text-[11px] text-gray-500 font-semibold mb-0.5">Lý do:</p>
+                              <p className="text-xs text-gray-700">{item.reason}</p>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
+                      );
+                    })
+                  : pauseRequests.map((item) => {
+                      const badge = getStatusBadge(item.status);
+                      const studentName = students.find((s) => s.id === item.studentProfileId)?.displayName || "Học sinh";
+                      return (
+                        <div key={item.id} className="bg-white rounded-2xl shadow-sm p-4">
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex-1 mr-2">
+                              <h3 className="font-bold text-gray-800 text-sm">{studentName}</h3>
+                              <p className="text-xs text-gray-500 mt-0.5">Bảo lưu toàn bộ lớp</p>
+                            </div>
+                            <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${badge.className}`}>
+                              {badge.label}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 mb-1.5">
+                            <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <span className="text-xs text-gray-500">
+                              {formatDate(item.pauseFrom)} - {formatDate(item.pauseTo)}
+                            </span>
+                          </div>
+
+                          {item.reason && (
+                            <div className="bg-gray-50 rounded-lg p-2 mt-2">
+                              <p className="text-[11px] text-gray-500 font-semibold mb-0.5">Lý do:</p>
+                              <p className="text-xs text-gray-700">{item.reason}</p>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
               </div>
             )}
           </div>

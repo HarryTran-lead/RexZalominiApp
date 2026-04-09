@@ -92,6 +92,8 @@ export const PARENT_ENDPOINTS = {
   STUDENTS_MAKEUP_OR_LEAVE: "/parent/students-with-makeup-or-leave",
   INVOICES: "/parent/invoices",
   MEDIA: "/parent/media",
+  PAUSE_ENROLLMENT_REQUESTS: "/pause-enrollment-requests",
+  PAUSE_ENROLLMENT_REQUEST_DETAIL: (id: string) => `/pause-enrollment-requests/${id}`,
 };
 
 // Leave Request Endpoints
