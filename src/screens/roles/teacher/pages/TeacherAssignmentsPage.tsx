@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Page, Spinner } from "zmp-ui";
+import { AlertCircle, FileText } from "lucide-react";
 import { homeworkService } from "@/services/homeworkService";
 import { HomeworkAssignmentListItem } from "@/types/homework";
 import TeacherHomeworkFilters from "@/components/homework/teacher/TeacherHomeworkFilters";
@@ -72,13 +73,8 @@ function TeacherAssignmentsPage() {
 
   return (
     <Page className="flex h-full min-h-0 flex-col bg-gray-100">
-      <div className="sticky top-0 z-20 shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
-        <button onClick={() => navigate(-1)} className="text-white mr-3">
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h1 className="text-white font-bold text-lg">Bài tập & nộp bài</h1>
+      <div className="sticky top-0 z-20 shrink-0 bg-[#BB0000] px-4 py-4 flex items-center">
+        <h1 className="text-white font-bold text-lg w-full text-center">Bài tập & nộp bài</h1>
       </div>
 
       {!loading && !error && assignments.length > 0 && (
@@ -99,9 +95,7 @@ function TeacherAssignmentsPage() {
 
         {!loading && error && (
           <div className="flex flex-col items-center py-16 text-center">
-            <svg className="w-14 h-14 text-red-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-            </svg>
+            <AlertCircle className="mb-3 h-14 w-14 text-red-400" strokeWidth={1.5} />
             <p className="text-red-500 text-sm font-medium mb-3">{error}</p>
             <button
               onClick={fetchAssignments}
@@ -125,9 +119,7 @@ function TeacherAssignmentsPage() {
 
         {!loading && !error && filteredAssignments.length === 0 && (
           <div className="flex flex-col items-center py-16 text-gray-400">
-            <svg className="w-16 h-16 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
+            <FileText className="mb-3 h-16 w-16" strokeWidth={1.2} />
             <p className="text-sm">Không có bài tập phù hợp bộ lọc</p>
           </div>
         )}

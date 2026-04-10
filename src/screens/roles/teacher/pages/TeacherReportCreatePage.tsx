@@ -290,10 +290,7 @@ const TeacherReportCreatePage: React.FC = () => {
 
   return (
     <Page className="flex h-full min-h-0 flex-col bg-gray-100">
-      <ReportPageHeader
-        title="Gửi báo cáo buổi học"
-        onBack={() => navigate("/teacher/reports")}
-      />
+      <ReportPageHeader title="Gửi báo cáo buổi học" />
 
       <div className="flex-1 min-h-0 overflow-y-auto px-4 pt-4 pb-24">
         {loading && (

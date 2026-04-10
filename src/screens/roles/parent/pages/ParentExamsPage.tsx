@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Page, Spinner } from "zmp-ui";
+import { AlertCircle, CalendarDays, FileText, School } from "lucide-react";
 import { parentService } from "@/services/parentService";
 import { ParentExamResult } from "@/types/parent";
 
@@ -14,7 +14,6 @@ const EXAM_TYPES = [
 ];
 
 function ParentExamsPage() {
-  const navigate = useNavigate();
   const [results, setResults] = useState<ParentExamResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -79,13 +78,8 @@ function ParentExamsPage() {
   return (
     <Page className="flex h-full min-h-0 flex-col bg-gray-100">
       {/* Header */}
-      <div className="shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
-        <button onClick={() => navigate(-1)} className="text-white mr-3">
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h1 className="text-white font-bold text-lg">Kiểm tra</h1>
+      <div className="shrink-0 bg-[#BB0000] px-4 py-4 flex items-center">
+        <h1 className="text-white font-bold text-lg w-full text-center">Kiểm tra</h1>
       </div>
 
       {/* Filter */}
@@ -116,9 +110,7 @@ function ParentExamsPage() {
           </div>
         ) : error ? (
           <div className="flex flex-col items-center py-16 text-gray-400">
-            <svg className="w-16 h-16 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <AlertCircle className="mb-3 h-16 w-16" strokeWidth={1.2} />
             <p className="text-sm mb-3">{error}</p>
             <button onClick={fetchResults} className="text-red-600 text-sm font-semibold">
               Thử lại
@@ -126,9 +118,7 @@ function ParentExamsPage() {
           </div>
         ) : results.length === 0 ? (
           <div className="flex flex-col items-center py-16 text-gray-400">
-            <svg className="w-16 h-16 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-            </svg>
+            <FileText className="mb-3 h-16 w-16" strokeWidth={1.2} />
             <p className="text-sm">Không có kết quả kiểm tra nào</p>
           </div>
         ) : (
@@ -146,18 +136,14 @@ function ParentExamsPage() {
 
                 {item.classTitle && (
                   <div className="flex items-center gap-1.5 mb-1.5">
-                    <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
+                    <School className="h-3.5 w-3.5 text-gray-400" strokeWidth={2} />
                     <span className="text-xs text-gray-500">{item.classCode ? `${item.classCode} - ` : ""}{item.classTitle}</span>
                   </div>
                 )}
 
                 {item.date && (
                   <div className="flex items-center gap-1.5 mb-2">
-                    <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
+                    <CalendarDays className="h-3.5 w-3.5 text-gray-400" strokeWidth={2} />
                     <span className="text-xs text-gray-500">{formatDate(item.date)}</span>
                   </div>
                 )}

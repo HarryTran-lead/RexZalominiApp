@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { Page, Spinner, useSnackbar } from "zmp-ui";
+import { AlertTriangle, Users } from "lucide-react";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import { attendanceService } from "@/services/attendanceService";
 import {
@@ -89,7 +90,6 @@ function isSubmitStatus(
 
 function TeacherAttendancePage() {
   const { sessionId } = useParams<{ sessionId: string }>();
-  const navigate = useNavigate();
   const location = useLocation();
   const { openSnackbar } = useSnackbar();
 
@@ -203,14 +203,9 @@ function TeacherAttendancePage() {
       {/* Sticky header + summary */}
       <div className="sticky top-0 shrink-0 z-20">
         {/* Header */}
-        <div className="bg-gradient-to-r from-red-600 to-red-700 px-4 py-4">
-        <div className="flex items-center gap-3 mb-2">
-          <button onClick={() => navigate(-1)} className="text-white">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <h1 className="text-white font-bold text-lg flex-1 text-center pr-6">Điểm danh</h1>
+        <div className="bg-[#BB0000] px-4 py-4">
+        <div className="flex items-center mb-2">
+          <h1 className="text-white font-bold text-lg w-full text-center">Điểm danh</h1>
         </div>
         {/* Session info */}
         {sessionInfo.classCode && (
@@ -265,9 +260,7 @@ function TeacherAttendancePage() {
 
         {error && !loading && (
           <div className="mx-4 mt-6 bg-red-50 rounded-2xl p-5 text-center">
-            <svg className="w-10 h-10 text-red-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
+            <AlertTriangle className="mx-auto mb-2 h-10 w-10 text-red-400" strokeWidth={1.7} />
             <p className="text-sm text-red-600">{error}</p>
             <button
               onClick={loadAttendance}
@@ -280,9 +273,7 @@ function TeacherAttendancePage() {
 
         {!loading && !error && students.length === 0 && (
           <div className="mx-4 mt-8 flex flex-col items-center text-gray-400">
-            <svg className="w-14 h-14 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
+            <Users className="mb-3 h-14 w-14" strokeWidth={1.2} />
             <p className="text-sm">Không có học sinh trong buổi học này</p>
           </div>
         )}

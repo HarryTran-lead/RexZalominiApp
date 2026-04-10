@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Page } from "zmp-ui";
+import { AlertCircle, Gift, History } from "lucide-react";
 import { gamificationService } from "@/services";
 import { 
   StarBalance, 
@@ -16,7 +16,6 @@ import {
 } from "@/utils";
 
 function StudentRewardsPage() {
-  const navigate = useNavigate();
   const [starBalance, setStarBalance] = useState<StarBalance | null>(null);
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [redemptions, setRedemptions] = useState<RewardRedemption[]>([]);
@@ -197,13 +196,8 @@ function StudentRewardsPage() {
   if (loading) {
     return (
       <Page className="flex h-full min-h-0 flex-col bg-gray-100">
-        <div className="shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
-          <button onClick={() => navigate(-1)} className="text-white mr-3">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <h1 className="text-white font-bold text-lg">Đổi thưởng</h1>
+        <div className="shrink-0 bg-[#BB0000] px-4 py-4 flex items-center">
+          <h1 className="text-white font-bold text-lg w-full text-center">Đổi thưởng</h1>
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 pb-24 space-y-4">
           {[1, 2, 3].map((i) => (
@@ -221,18 +215,11 @@ function StudentRewardsPage() {
   if (error) {
     return (
       <Page className="flex h-full min-h-0 flex-col bg-gray-100">
-        <div className="shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
-          <button onClick={() => navigate(-1)} className="text-white mr-3">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <h1 className="text-white font-bold text-lg">Đổi thưởng</h1>
+        <div className="shrink-0 bg-[#BB0000] px-4 py-4 flex items-center">
+          <h1 className="text-white font-bold text-lg w-full text-center">Đổi thưởng</h1>
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto px-4 pt-8 pb-24 flex flex-col items-center text-gray-400">
-          <svg className="w-16 h-16 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          <AlertCircle className="mb-3 h-16 w-16" strokeWidth={1.2} />
           <p className="text-sm mb-4">{error}</p>
           <button 
             onClick={fetchData}
@@ -247,13 +234,8 @@ function StudentRewardsPage() {
 
   return (
     <Page className="flex h-full min-h-0 flex-col bg-gray-100">
-      <div className="shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
-        <button onClick={() => navigate(-1)} className="text-white mr-3">
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h1 className="text-white font-bold text-lg">Đổi thưởng</h1>
+      <div className="shrink-0 bg-[#BB0000] px-4 py-4 flex items-center">
+        <h1 className="text-white font-bold text-lg w-full text-center">Đổi thưởng</h1>
       </div>
 
       {/* Star Balance Header */}
@@ -301,9 +283,7 @@ function StudentRewardsPage() {
           <>
             {rewards.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-gray-500">
-                <svg className="w-16 h-16 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
-                </svg>
+                <Gift className="mb-3 h-16 w-16" strokeWidth={1.2} />
                 <p className="text-sm">Chưa có phần thưởng nào</p>
               </div>
             ) : (
@@ -316,9 +296,7 @@ function StudentRewardsPage() {
           <>
             {redemptions.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-gray-500">
-                <svg className="w-16 h-16 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
-                </svg>
+                <History className="mb-3 h-16 w-16" strokeWidth={1.2} />
                 <p className="text-sm">Chưa có lịch sử đổi thưởng</p>
               </div>
             ) : (

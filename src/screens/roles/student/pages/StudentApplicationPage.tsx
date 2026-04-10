@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Page, useSnackbar } from "zmp-ui";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "@headlessui/react";
+import { ChevronsUpDown } from "lucide-react";
 import { studentService } from "@/services";
 import { storage } from "@/utils/storage";
 import { formatDateTime } from "@/utils";
@@ -123,7 +123,6 @@ const extractTicketResponses = (payload: unknown): TicketResponseItem[] => {
 };
 
 function StudentApplicationPage() {
-  const navigate = useNavigate();
   const { openSnackbar } = useSnackbar();
 
   const [activeTab, setActiveTab] = useState<ApplicationTab>("create");
@@ -349,13 +348,8 @@ function StudentApplicationPage() {
 
   return (
     <Page className="flex h-full min-h-0 flex-col bg-gray-100">
-      <div className="sticky top-0 z-20 shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center shadow-md">
-        <button onClick={() => navigate(-1)} className="text-white mr-3" aria-label="Quay lại">
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h1 className="text-white font-bold text-lg">Đơn yêu cầu hỗ trợ</h1>
+      <div className="sticky top-0 z-20 shrink-0 bg-[#BB0000] px-4 py-4 flex items-center shadow-md">
+        <h1 className="text-white font-bold text-lg w-full text-center">Đơn yêu cầu hỗ trợ</h1>
       </div>
 
       <div className="shrink-0 bg-white border-b border-gray-200 px-3 pt-3 pb-2">
@@ -406,9 +400,7 @@ function StudentApplicationPage() {
                     <div className="relative mt-1">
                       <ListboxButton className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-left text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent flex items-center justify-between">
                         <span className="block truncate">{getCategoryLabel(form.category)}</span>
-                        <svg className="w-5 h-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <ChevronsUpDown className="h-5 w-5 shrink-0 text-gray-400" />
                       </ListboxButton>
 
                       <ListboxOptions
@@ -445,9 +437,7 @@ function StudentApplicationPage() {
                     <div className="relative mt-1">
                       <ListboxButton className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-left text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent flex items-center justify-between">
                         <span className="block truncate">{getSupportTypeLabel(form.type)}</span>
-                        <svg className="w-5 h-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <ChevronsUpDown className="h-5 w-5 shrink-0 text-gray-400" />
                       </ListboxButton>
 
                       <ListboxOptions
@@ -488,9 +478,7 @@ function StudentApplicationPage() {
                             ? classes.find((item) => item.id === form.classId)?.title || "-- Chọn lớp học --"
                             : "-- Chọn lớp học --"}
                         </span>
-                        <svg className="w-5 h-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <ChevronsUpDown className="h-5 w-5 shrink-0 text-gray-400" />
                       </ListboxButton>
 
                       <ListboxOptions
@@ -530,9 +518,7 @@ function StudentApplicationPage() {
                               ? teacherOptions.find((teacher) => teacher.id === form.assignedToUserId)?.name || "-- Chọn giáo viên --"
                               : "-- Chọn giáo viên --"}
                           </span>
-                          <svg className="w-5 h-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
+                          <ChevronsUpDown className="h-5 w-5 shrink-0 text-gray-400" />
                         </ListboxButton>
 
                         <ListboxOptions

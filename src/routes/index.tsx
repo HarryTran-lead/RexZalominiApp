@@ -25,6 +25,7 @@ import StudentApplicationPage from "@/screens/roles/student/pages/StudentApplica
 import StudentRewardsPage from "@/screens/roles/student/pages/StudentRewardsPage";
 import StudentDocumentsPage from "@/screens/roles/student/pages/StudentDocumentsPage";
 import StudentExamsPage from "@/screens/roles/student/pages/StudentExamsPage";
+import StudentNotificationsPage from "@/screens/roles/student/pages/StudentNotificationsPage";
 
 // Parent pages
 import ParentHomeworkPage from "@/screens/roles/parent/pages/ParentHomeworkPage";
@@ -43,6 +44,7 @@ import TeacherAttendancePage from "@/screens/roles/teacher/pages/TeacherAttendan
 import TeacherReportCreatePage from "@/screens/roles/teacher/pages/TeacherReportCreatePage";
 import TeacherReportListPage from "@/screens/roles/teacher/pages/TeacherReportListPage";
 import TeacherReportsPage from "../screens/roles/teacher/pages/TeacherReportsPage";
+import TeacherNotificationsPage from "@/screens/roles/teacher/pages/TeacherNotificationsPage";
 import ProfilePage from "@/screens/ProfilePage";
 
 const isWeb = window.location.hostname.includes("vercel.app") || window.location.hostname === "localhost";
@@ -172,6 +174,14 @@ const MainRoutes: React.FC = () => {
           </StudentLayout>
         }
       />
+      <AppRoute
+        path="/student/notifications"
+        element={
+          <StudentLayout>
+            <StudentNotificationsPage />
+          </StudentLayout>
+        }
+      />
 
       {/* Teacher AppRoutes */}
       <AppRoute
@@ -267,6 +277,14 @@ const MainRoutes: React.FC = () => {
         element={
           <TeacherLayout>
             <ProfilePage />
+          </TeacherLayout>
+        }
+      />
+      <AppRoute
+        path="/teacher/notifications"
+        element={
+          <TeacherLayout>
+            <TeacherNotificationsPage />
           </TeacherLayout>
         }
       />

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Page, Spinner } from "zmp-ui";
+import { FileText } from "lucide-react";
 import StudentHomeworkCard from "@/components/homework/student/StudentHomeworkCard";
 import StudentHomeworkClassFilter from "@/components/homework/student/StudentHomeworkClassFilter";
 import StudentHomeworkTabs, { HomeworkTab } from "@/components/homework/student/StudentHomeworkTabs";
@@ -128,13 +129,8 @@ const StudentHomeworkPage: React.FC = () => {
 
   return (
     <Page className="flex h-full min-h-0 flex-col bg-gray-100">
-      <div className="sticky top-0 z-20 shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
-        <button onClick={() => navigate(-1)} className="text-white mr-3">
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h1 className="text-white font-bold text-lg">Bài tập</h1>
+      <div className="sticky top-0 z-20 shrink-0 bg-[#BB0000] px-4 py-4 flex items-center">
+        <h1 className="text-white font-bold text-lg w-full text-center">Bài tập</h1>
       </div>
 
       <StudentHomeworkTabs activeTab={activeTab} counts={counts} onChange={setActiveTab} />
@@ -166,9 +162,7 @@ const StudentHomeworkPage: React.FC = () => {
 
         {!loading && !error && filteredHomework.length === 0 && (
           <div className="pt-8 flex flex-col items-center text-gray-400">
-            <svg className="w-16 h-16 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
+            <FileText className="mb-3 h-16 w-16" strokeWidth={1.2} />
             <p className="text-sm">Không có bài tập nào</p>
           </div>
         )}

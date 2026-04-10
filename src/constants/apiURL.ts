@@ -96,6 +96,11 @@ export const PARENT_ENDPOINTS = {
   PAUSE_ENROLLMENT_REQUEST_DETAIL: (id: string) => `/pause-enrollment-requests/${id}`,
 };
 
+export const NOTIFICATION_ENDPOINTS = {
+  LIST: "/notifications",
+  MARK_AS_READ: (id: string) => `/notifications/${id}/read`,
+};
+
 // Leave Request Endpoints
 export const LEAVE_REQUEST_ENDPOINTS = {
   LIST: "/leave-requests",
@@ -164,5 +169,6 @@ export const API_ENDPOINTS = {
   GAMIFICATION: GAMIFICATION_ENDPOINTS,
   EXAM: EXAM_ENDPOINTS,
   HOMEWORK: HOMEWORK_ENDPOINTS,
+  NOTIFICATION: NOTIFICATION_ENDPOINTS,
   TICKET: TICKET_ENDPOINTS,
 };

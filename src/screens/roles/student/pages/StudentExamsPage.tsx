@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Page } from "zmp-ui";
+import { AlertCircle, FileText } from "lucide-react";
 import { examService } from "@/services";
 import { Exam } from "@/types/student";
 import { 
@@ -139,13 +140,8 @@ function StudentExamsPage() {
   if (loading) {
     return (
       <Page className="flex h-full min-h-0 flex-col bg-gray-100">
-        <div className="shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
-          <button onClick={() => navigate(-1)} className="text-white mr-3">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <h1 className="text-white font-bold text-lg">Bài kiểm tra</h1>
+        <div className="shrink-0 bg-[#BB0000] px-4 py-4 flex items-center">
+          <h1 className="text-white font-bold text-lg w-full text-center">Bài kiểm tra</h1>
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 pb-24 space-y-4">
           {[1, 2, 3].map((i) => (
@@ -167,18 +163,11 @@ function StudentExamsPage() {
   if (error) {
     return (
       <Page className="flex h-full min-h-0 flex-col bg-gray-100">
-        <div className="shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
-          <button onClick={() => navigate(-1)} className="text-white mr-3">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <h1 className="text-white font-bold text-lg">Bài kiểm tra</h1>
+        <div className="shrink-0 bg-[#BB0000] px-4 py-4 flex items-center">
+          <h1 className="text-white font-bold text-lg w-full text-center">Bài kiểm tra</h1>
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto px-4 pt-8 pb-24 flex flex-col items-center text-gray-400">
-          <svg className="w-16 h-16 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          <AlertCircle className="mb-3 h-16 w-16" strokeWidth={1.2} />
           <p className="text-sm mb-4">{error}</p>
           <button 
             onClick={fetchExams}
@@ -193,13 +182,8 @@ function StudentExamsPage() {
 
   return (
     <Page className="flex h-full min-h-0 flex-col bg-gray-100">
-      <div className="shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
-        <button onClick={() => navigate(-1)} className="text-white mr-3">
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h1 className="text-white font-bold text-lg">Bài kiểm tra</h1>
+      <div className="shrink-0 bg-[#BB0000] px-4 py-4 flex items-center">
+        <h1 className="text-white font-bold text-lg w-full text-center">Bài kiểm tra</h1>
       </div>
 
       {/* Filter Tabs */}
@@ -229,9 +213,7 @@ function StudentExamsPage() {
       <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 pb-24">
         {filteredExams().length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-gray-500">
-            <svg className="w-16 h-16 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-            </svg>
+            <FileText className="mb-3 h-16 w-16" strokeWidth={1.2} />
             <p className="text-sm">
               {activeTab === 'all' 
                 ? 'Chưa có bài kiểm tra nào'

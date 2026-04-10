@@ -1,6 +1,8 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useAtomValue } from "jotai";
 import { Bell, House, UserRound } from "lucide-react";
+import { unreadCountAtom } from "@/store/notificationStore";
 
 interface NavItem {
   path: string;
@@ -11,6 +13,7 @@ interface NavItem {
 const ParentBottomNav: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const unreadCount = useAtomValue(unreadCountAtom);
 
   const navItems: NavItem[] = [
     {
@@ -57,11 +60,16 @@ const ParentBottomNav: React.FC = () => {
               }`}
             >
               <div
-                className={`rounded-xl p-1.5 transition-all ${
+                className={`relative rounded-xl p-1.5 transition-all ${
                   active ? "bg-red-50 scale-105" : "scale-100"
                 }`}
               >
                 {item.icon}
+                {item.path === "/parent/notifications" && unreadCount > 0 && (
+                  <span className="absolute -right-1 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[9px] font-bold leading-none text-white">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
               </div>
               <span className={`mt-0.5 text-[10px] font-medium ${active ? "font-bold" : ""}`}>
                 {item.label}

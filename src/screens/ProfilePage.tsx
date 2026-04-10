@@ -377,7 +377,7 @@ const ProfilePage: React.FC = () => {
         className="hidden"
       />
 
-      <header className="sticky top-0 z-20 border-b border-red-700 bg-red-600 px-4 py-3 text-white">
+      <header className="sticky top-0 z-20 border-b border-red-700 bg-[#BB0000] px-4 py-3 text-white">
         <div className="relative flex items-center justify-center">
           <div>
             <h1 className="text-lg font-bold">Hồ sơ cá nhân</h1>

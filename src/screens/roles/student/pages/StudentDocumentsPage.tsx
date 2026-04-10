@@ -1,25 +1,16 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
 import { Page } from "zmp-ui";
+import { BookOpenText } from "lucide-react";
 
 function StudentDocumentsPage() {
-  const navigate = useNavigate();
-
   return (
     <Page className="flex h-full min-h-0 flex-col bg-gray-100">
-      <div className="shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
-        <button onClick={() => navigate(-1)} className="text-white mr-3">
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h1 className="text-white font-bold text-lg">Tài liệu</h1>
+      <div className="shrink-0 bg-[#BB0000] px-4 py-4 flex items-center">
+        <h1 className="text-white font-bold text-lg w-full text-center">Tài liệu</h1>
       </div>
       <div className="flex-1 min-h-0 overflow-y-auto pb-24">
         <div className="px-4 pt-8 flex flex-col items-center text-gray-400">
-          <svg className="w-16 h-16 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-          </svg>
+          <BookOpenText className="mb-3 h-16 w-16" strokeWidth={1.2} />
           <p className="text-sm">Chức năng đang được phát triển</p>
         </div>
       </div>
