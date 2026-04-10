@@ -23,7 +23,7 @@ const TeacherHomeworkFilters: React.FC<TeacherHomeworkFiltersProps> = ({
   onSessionChange,
 }) => {
   return (
-    <div className="mb-4 grid grid-cols-2 gap-2 rounded-xl border border-gray-100 bg-white p-3 shadow-sm">
+    <div className="mb-4  rounded-xl border border-gray-100 bg-white p-3 shadow-sm">
       <div>
         <label className="text-xs font-semibold text-gray-600">Lớp</label>
         <select
@@ -40,8 +40,8 @@ const TeacherHomeworkFilters: React.FC<TeacherHomeworkFiltersProps> = ({
         </select>
       </div>
 
-      <div>
-        <label className="text-xs font-semibold text-gray-600">Buổi học</label>
+      {/* <div>
+        <label className="text-xs grid grid-cols-2 gap-2 font-semibold text-gray-600">Buổi học</label>
         <select
           value={selectedSessionId}
           onChange={(event) => onSessionChange(event.target.value)}
@@ -54,7 +54,7 @@ const TeacherHomeworkFilters: React.FC<TeacherHomeworkFiltersProps> = ({
             </option>
           ))}
         </select>
-      </div>
+      </div> */}
     </div>
   );
 };
