@@ -1,11 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Page, Spinner } from "zmp-ui";
 import { parentService } from "@/services/parentService";
 import { ParentHomeworkItem } from "@/types/parent";
 
 function ParentHomeworkPage() {
-  const navigate = useNavigate();
   const [homework, setHomework] = useState<ParentHomeworkItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -68,12 +66,7 @@ function ParentHomeworkPage() {
     <Page className="flex h-full min-h-0 flex-col bg-gray-100">
       {/* Header */}
       <div className="shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
-        <button onClick={() => navigate(-1)} className="text-white mr-3">
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h1 className="text-white font-bold text-lg">Bài tập</h1>
+        <h1 className="text-white font-bold text-lg w-full text-center">Bài tập</h1>
       </div>
 
       {/* Content */}

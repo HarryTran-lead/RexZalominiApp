@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Page, Spinner, useSnackbar } from "zmp-ui";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "@headlessui/react";
 import { parentService } from "@/services/parentService";
@@ -91,7 +90,6 @@ function toDateInputValue(date: Date): string {
 }
 
 function ParentLeaveRequestPage() {
-  const navigate = useNavigate();
   const { openSnackbar } = useSnackbar();
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [requestKind, setRequestKind] = useState<RequestKind>("leave");
@@ -473,30 +471,24 @@ function ParentLeaveRequestPage() {
 
   return (
     <Page className="flex h-full min-h-0 flex-col bg-gray-100">
-      <div className="sticky top-0 z-20 shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
-        <button
-          onClick={() => (viewMode === "create" ? setViewMode("list") : navigate(-1))}
-          className="text-white mr-3"
-        >
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h1 className="text-white font-bold text-lg flex-1">
-          {viewMode === "create"
-            ? requestKind === "pause"
-              ? "Tạo đơn bảo lưu"
-              : "Tạo đơn xin nghỉ"
-            : "Đơn xin nghỉ"}
-        </h1>
-        {viewMode === "list" && (
-          <button
-            onClick={openCreateView}
-            className="bg-white/20 text-white px-3 py-1.5 rounded-full text-xs font-semibold"
-          >
-            + Tạo đơn
-          </button>
-        )}
+      <div className="sticky top-0 z-20 shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4">
+        <div className="relative">
+          <h1 className="text-white font-bold text-lg text-center">
+            {viewMode === "create"
+              ? requestKind === "pause"
+                ? "Tạo đơn bảo lưu"
+                : "Tạo đơn xin nghỉ"
+              : "Đơn xin nghỉ"}
+          </h1>
+          {viewMode === "list" && (
+            <button
+              onClick={openCreateView}
+              className="absolute right-0 top-1/2 -translate-y-1/2 bg-white/20 text-white px-3 py-1.5 rounded-full text-xs font-semibold"
+            >
+              + Tạo đơn
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto pb-24">

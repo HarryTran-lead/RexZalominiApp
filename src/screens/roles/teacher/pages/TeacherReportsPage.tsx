@@ -8,10 +8,7 @@ const TeacherReportsPage: React.FC = () => {
 
   return (
     <Page className="flex h-full min-h-0 flex-col bg-gray-100">
-      <ReportPageHeader
-        title="Báo cáo buổi học"
-        onBack={() => navigate(-1)}
-      />
+      <ReportPageHeader title="Báo cáo buổi học" />
 
       <div className="flex-1 min-h-0 overflow-y-auto px-4 pt-5 pb-24">
         <div className="rounded-2xl border border-red-100 bg-white p-4 shadow-sm">

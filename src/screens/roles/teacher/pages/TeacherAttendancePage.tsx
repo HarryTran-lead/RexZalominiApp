@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { Page, Spinner, useSnackbar } from "zmp-ui";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import { attendanceService } from "@/services/attendanceService";
@@ -89,7 +89,6 @@ function isSubmitStatus(
 
 function TeacherAttendancePage() {
   const { sessionId } = useParams<{ sessionId: string }>();
-  const navigate = useNavigate();
   const location = useLocation();
   const { openSnackbar } = useSnackbar();
 
@@ -204,13 +203,8 @@ function TeacherAttendancePage() {
       <div className="sticky top-0 shrink-0 z-20">
         {/* Header */}
         <div className="bg-gradient-to-r from-red-600 to-red-700 px-4 py-4">
-        <div className="flex items-center gap-3 mb-2">
-          <button onClick={() => navigate(-1)} className="text-white">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <h1 className="text-white font-bold text-lg flex-1 text-center pr-6">Điểm danh</h1>
+        <div className="flex items-center mb-2">
+          <h1 className="text-white font-bold text-lg w-full text-center">Điểm danh</h1>
         </div>
         {/* Session info */}
         {sessionInfo.classCode && (

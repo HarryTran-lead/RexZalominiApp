@@ -108,18 +108,15 @@ const RoleNotificationsPage: React.FC<RoleNotificationsPageProps> = ({ role }) =
 
   return (
     <Page className="flex h-full min-h-0 flex-col bg-gray-100">
-      <div className="sticky top-0 z-20 shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
-        <button onClick={() => navigate(-1)} className="text-white mr-3" aria-label="Quay lại">
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h1 className="text-white font-bold text-lg flex-1">Thông báo</h1>
-        {unreadCount > 0 && (
-          <span className="ml-3 rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-semibold text-white">
-            {unreadCount}
-          </span>
-        )}
+      <div className="sticky top-0 z-20 shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4">
+        <div className="relative">
+          <h1 className="text-center text-white font-bold text-lg">Thông báo</h1>
+          {unreadCount > 0 && (
+            <span className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-semibold text-white">
+              {unreadCount}
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto pb-24">
@@ -207,7 +204,9 @@ const RoleNotificationsPage: React.FC<RoleNotificationsPageProps> = ({ role }) =
                   {!item.isRead && !markingIds[item.id] && (
                     <span className="w-2.5 h-2.5 bg-red-500 rounded-full shrink-0 mt-1.5" />
                   )}
-                  {markingIds[item.id] && <Spinner size="small" />}
+                  {markingIds[item.id] && (
+                    <span className="text-[11px] font-semibold text-red-500">...</span>
+                  )}
                 </button>
               ))}
             </div>

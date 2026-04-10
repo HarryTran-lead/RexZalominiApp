@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Page, Spinner, useSnackbar } from "zmp-ui";
 import { gamificationService } from "@/services";
 import {
@@ -34,7 +33,6 @@ const TABS: Array<{ key: GamificationTab; label: string }> = [
 ];
 
 function StudentGamificationPage() {
-  const navigate = useNavigate();
   const { openSnackbar } = useSnackbar();
 
   const [activeTab, setActiveTab] = useState<GamificationTab>("missions");
@@ -219,12 +217,7 @@ function StudentGamificationPage() {
     return (
       <Page className="flex h-full min-h-0 flex-col bg-gray-100">
         <div className="sticky top-0 z-20 shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
-          <button onClick={() => navigate(-1)} className="text-white mr-3" aria-label="Quay lại">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <h1 className="text-white font-bold text-lg">Gamification</h1>
+          <h1 className="text-white font-bold text-lg w-full text-center">Gamification</h1>
         </div>
         <div className="flex flex-1 items-center justify-center">
           <Spinner />
@@ -237,12 +230,7 @@ function StudentGamificationPage() {
     return (
       <Page className="flex h-full min-h-0 flex-col bg-gray-100">
         <div className="sticky top-0 z-20 shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
-          <button onClick={() => navigate(-1)} className="text-white mr-3" aria-label="Quay lại">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <h1 className="text-white font-bold text-lg">Gamification</h1>
+          <h1 className="text-white font-bold text-lg w-full text-center">Gamification</h1>
         </div>
         <div className="flex-1 px-4 py-8 text-center">
           <p className="text-sm text-gray-500">{error}</p>
@@ -257,12 +245,7 @@ function StudentGamificationPage() {
   return (
     <Page className="flex h-full min-h-0 flex-col bg-gray-100">
       <div className="sticky top-0 z-20 shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
-        <button onClick={() => navigate(-1)} className="text-white mr-3" aria-label="Quay lại">
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h1 className="text-white font-bold text-lg">Gamification</h1>
+        <h1 className="text-white font-bold text-lg w-full text-center">Gamification</h1>
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 pb-24">

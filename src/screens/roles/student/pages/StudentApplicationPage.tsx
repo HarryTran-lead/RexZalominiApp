@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Page, useSnackbar } from "zmp-ui";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "@headlessui/react";
 import { studentService } from "@/services";
@@ -123,7 +122,6 @@ const extractTicketResponses = (payload: unknown): TicketResponseItem[] => {
 };
 
 function StudentApplicationPage() {
-  const navigate = useNavigate();
   const { openSnackbar } = useSnackbar();
 
   const [activeTab, setActiveTab] = useState<ApplicationTab>("create");
@@ -350,12 +348,7 @@ function StudentApplicationPage() {
   return (
     <Page className="flex h-full min-h-0 flex-col bg-gray-100">
       <div className="sticky top-0 z-20 shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center shadow-md">
-        <button onClick={() => navigate(-1)} className="text-white mr-3" aria-label="Quay lại">
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h1 className="text-white font-bold text-lg">Đơn yêu cầu hỗ trợ</h1>
+        <h1 className="text-white font-bold text-lg w-full text-center">Đơn yêu cầu hỗ trợ</h1>
       </div>
 
       <div className="shrink-0 bg-white border-b border-gray-200 px-3 pt-3 pb-2">

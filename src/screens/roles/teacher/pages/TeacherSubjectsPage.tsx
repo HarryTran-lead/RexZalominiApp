@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import { Page, Spinner } from "zmp-ui";
 import { teacherService } from "@/services/teacherService";
 import { TeacherClass } from "@/types/teacher";
@@ -11,7 +10,6 @@ interface SubjectGroup {
 }
 
 function TeacherSubjectsPage() {
-  const navigate = useNavigate();
   const [subjects, setSubjects] = useState<SubjectGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -67,12 +65,7 @@ function TeacherSubjectsPage() {
     <Page className="flex h-full min-h-0 flex-col bg-gray-100">
       {/* Header */}
       <div className="shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
-        <button onClick={() => navigate(-1)} className="text-white mr-3">
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h1 className="text-white font-bold text-lg">Môn học & tài liệu</h1>
+        <h1 className="text-white font-bold text-lg w-full text-center">Môn học & tài liệu</h1>
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto px-4 pt-4 pb-24">

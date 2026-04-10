@@ -85,7 +85,6 @@ const TeacherReportListPage: React.FC = () => {
       <ReportPageHeader
         title="Danh sách báo cáo"
         subtitle="Theo dõi trạng thái duyệt và publish của báo cáo buổi học."
-        onBack={() => navigate("/teacher/reports")}
       />
 
       <div className="flex-1 min-h-0 overflow-y-auto px-4 pt-4 pb-24">
