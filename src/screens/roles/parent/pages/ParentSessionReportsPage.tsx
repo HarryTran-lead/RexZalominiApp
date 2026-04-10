@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Page, Spinner } from "zmp-ui";
+import { FileText } from "lucide-react";
 import { parentService } from "@/services/parentService";
 import { ParentSessionReport } from "@/types/parent";
 
@@ -48,7 +49,7 @@ const ParentSessionReportsPage: React.FC = () => {
 
   return (
     <Page className="flex h-full min-h-0 flex-col bg-gray-100">
-      <div className="sticky top-0 z-20 shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
+      <div className="sticky top-0 z-20 shrink-0 bg-[#BB0000] px-4 py-4 flex items-center">
         <h1 className="text-white font-bold text-lg w-full text-center">Báo cáo buổi học</h1>
       </div>
 
@@ -74,9 +75,7 @@ const ParentSessionReportsPage: React.FC = () => {
 
         {!loading && !error && reports.length === 0 && (
           <div className="flex flex-col items-center py-16 text-gray-400">
-            <svg className="w-14 h-14 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+            <FileText className="mb-2 h-14 w-14" strokeWidth={1.2} />
             <p className="text-sm">Chưa có báo cáo buổi học</p>
           </div>
         )}

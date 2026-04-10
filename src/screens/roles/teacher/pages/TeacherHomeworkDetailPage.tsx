@@ -96,7 +96,7 @@ const TeacherHomeworkDetailPage: React.FC = () => {
 
   return (
     <Page className="flex h-full min-h-0 flex-col bg-gray-100">
-      <div className="sticky top-0 z-20 shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
+      <div className="sticky top-0 z-20 shrink-0 bg-[#BB0000] px-4 py-4 flex items-center">
         <h1 className="text-white font-bold text-lg w-full text-center">Chi tiết bài tập</h1>
       </div>
 

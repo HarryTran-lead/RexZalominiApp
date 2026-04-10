@@ -69,7 +69,7 @@ const StudentTimetablePage: React.FC = () => {
 
   return (
     <Page className="flex h-full min-h-0 flex-col bg-slate-50">
-      <div className="shrink-0 bg-red-600 text-white px-4 py-3">
+      <div className="shrink-0 bg-[#BB0000] text-white px-4 py-3">
         <h1 className="text-lg font-bold text-center">Thời khóa biểu</h1>
       </div>
       <div className="flex-1 min-h-0 overflow-hidden">

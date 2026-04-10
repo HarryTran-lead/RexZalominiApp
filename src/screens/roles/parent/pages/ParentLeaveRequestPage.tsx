@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Page, Spinner, useSnackbar } from "zmp-ui";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "@headlessui/react";
+import { AlertCircle, CalendarDays, ChevronsUpDown, FileText } from "lucide-react";
 import { parentService } from "@/services/parentService";
 import { authService } from "@/services/authService";
 import { studentService } from "@/services/studentService";
@@ -471,7 +472,7 @@ function ParentLeaveRequestPage() {
 
   return (
     <Page className="flex h-full min-h-0 flex-col bg-gray-100">
-      <div className="sticky top-0 z-20 shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4">
+      <div className="sticky top-0 z-20 shrink-0 bg-[#BB0000] px-4 py-4">
         <div className="relative">
           <h1 className="text-white font-bold text-lg text-center">
             {viewMode === "create"
@@ -548,9 +549,7 @@ function ParentLeaveRequestPage() {
                         ? students.find((s) => s.id === form.studentProfileId)?.displayName || "-- Chọn học sinh --"
                         : "-- Chọn học sinh --"}
                     </span>
-                    <svg className="w-5 h-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
+                    <ChevronsUpDown className="h-5 w-5 shrink-0 text-gray-400" />
                   </ListboxButton>
 
                   <ListboxOptions
@@ -604,9 +603,7 @@ function ParentLeaveRequestPage() {
                           ? "-- Không có lớp --"
                           : "-- Chọn lớp --"}
                       </span>
-                      <svg className="w-5 h-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
+                      <ChevronsUpDown className="h-5 w-5 shrink-0 text-gray-400" />
                     </ListboxButton>
 
                     <ListboxOptions
@@ -792,9 +789,7 @@ function ParentLeaveRequestPage() {
                           ? students.find((s) => s.id === pauseForm.studentProfileId)?.displayName || "-- Chọn học sinh --"
                           : "-- Chọn học sinh --"}
                       </span>
-                      <svg className="w-5 h-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
+                      <ChevronsUpDown className="h-5 w-5 shrink-0 text-gray-400" />
                     </ListboxButton>
 
                     <ListboxOptions
@@ -876,9 +871,7 @@ function ParentLeaveRequestPage() {
               </div>
             ) : error ? (
               <div className="flex flex-col items-center py-16 text-gray-400">
-                <svg className="w-16 h-16 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <AlertCircle className="mb-3 h-16 w-16" strokeWidth={1.2} />
                 <p className="text-sm mb-3">{error}</p>
                 <button
                   onClick={() => {
@@ -898,9 +891,7 @@ function ParentLeaveRequestPage() {
               </div>
             ) : requestKind === "leave" && leaveRequests.length === 0 ? (
               <div className="flex flex-col items-center py-16 text-gray-400">
-                <svg className="w-16 h-16 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
+                <FileText className="mb-3 h-16 w-16" strokeWidth={1.2} />
                 <p className="text-sm mb-3">Chưa có đơn xin nghỉ nào</p>
                 <button onClick={openCreateView} className="text-red-600 text-sm font-semibold">
                   Tạo đơn ngay
@@ -908,9 +899,7 @@ function ParentLeaveRequestPage() {
               </div>
             ) : requestKind === "pause" && pauseRequests.length === 0 ? (
               <div className="flex flex-col items-center py-16 text-gray-400">
-                <svg className="w-16 h-16 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
+                <FileText className="mb-3 h-16 w-16" strokeWidth={1.2} />
                 <p className="text-sm mb-3">Chưa có đơn bảo lưu nào</p>
                 <button onClick={openCreateView} className="text-red-600 text-sm font-semibold">
                   Tạo đơn ngay
@@ -934,9 +923,7 @@ function ParentLeaveRequestPage() {
                           </div>
 
                           <div className="flex items-center gap-1.5 mb-1.5">
-                            <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
+                            <CalendarDays className="h-3.5 w-3.5 text-gray-400" />
                             <span className="text-xs text-gray-500">
                               {formatDate(item.sessionDate)}
                               {item.endDate && item.endDate !== item.sessionDate && ` - ${formatDate(item.endDate)}`}
@@ -968,9 +955,7 @@ function ParentLeaveRequestPage() {
                           </div>
 
                           <div className="flex items-center gap-1.5 mb-1.5">
-                            <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
+                            <CalendarDays className="h-3.5 w-3.5 text-gray-400" />
                             <span className="text-xs text-gray-500">
                               {formatDate(item.pauseFrom)} - {formatDate(item.pauseTo)}
                             </span>

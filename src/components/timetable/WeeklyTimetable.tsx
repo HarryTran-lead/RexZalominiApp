@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { Spinner, Text } from "zmp-ui";
+import { AlertTriangle, CalendarDays } from "lucide-react";
 import { TimetableSession } from "@/types/timetable";
 import {
   getSessionDisplayDatetime,
@@ -186,18 +187,14 @@ const WeeklyTimetable: React.FC<WeeklyTimetableProps> = ({
 
         {error && !loading && (
           <div className="bg-red-50 p-4 text-center">
-            <svg className="w-8 h-8 text-red-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
+            <AlertTriangle className="mx-auto mb-2 h-8 w-8 text-red-400" strokeWidth={1.8} />
             <Text className="text-sm text-red-600">{error}</Text>
           </div>
         )}
 
         {!loading && !error && sessions.length === 0 && (
           <div className="text-center py-12">
-            <svg className="w-14 h-14 text-gray-200 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
+            <CalendarDays className="mx-auto mb-3 h-14 w-14 text-gray-200" strokeWidth={1.5} />
             <Text className="text-sm text-gray-400">Không có buổi học nào trong tuần này</Text>
           </div>
         )}

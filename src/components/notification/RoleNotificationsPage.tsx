@@ -2,6 +2,7 @@ import React, { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Page, Spinner } from "zmp-ui";
+import { AlertCircle, Bell, BellOff } from "lucide-react";
 import { notificationsAtom, unreadCountAtom } from "@/store/notificationStore";
 import { notificationService, NotificationRole } from "@/services/notificationService";
 import { NotificationItem } from "@/types/notification";
@@ -108,7 +109,7 @@ const RoleNotificationsPage: React.FC<RoleNotificationsPageProps> = ({ role }) =
 
   return (
     <Page className="flex h-full min-h-0 flex-col bg-gray-100">
-      <div className="sticky top-0 z-20 shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4">
+      <div className="sticky top-0 z-20 shrink-0 bg-[#BB0000] px-4 py-4">
         <div className="relative">
           <h1 className="text-center text-white font-bold text-lg">Thông báo</h1>
           {unreadCount > 0 && (
@@ -146,9 +147,7 @@ const RoleNotificationsPage: React.FC<RoleNotificationsPageProps> = ({ role }) =
             </div>
           ) : error ? (
             <div className="flex flex-col items-center py-16 text-gray-400">
-              <svg className="w-16 h-16 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+              <AlertCircle className="mb-3 h-16 w-16" strokeWidth={1.2} />
               <p className="text-sm mb-3">{error}</p>
               <button onClick={fetchNotifications} className="text-red-600 text-sm font-semibold">
                 Thử lại
@@ -156,9 +155,7 @@ const RoleNotificationsPage: React.FC<RoleNotificationsPageProps> = ({ role }) =
             </div>
           ) : visibleItems.length === 0 ? (
             <div className="flex flex-col items-center py-16 text-gray-400">
-              <svg className="w-16 h-16 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
+              <BellOff className="mb-3 h-16 w-16" strokeWidth={1.2} />
               <p className="text-sm">{unreadOnly ? "Không có thông báo chưa đọc" : "Không có thông báo nào"}</p>
             </div>
           ) : (
@@ -176,19 +173,7 @@ const RoleNotificationsPage: React.FC<RoleNotificationsPageProps> = ({ role }) =
                       !item.isRead ? "bg-red-100" : "bg-gray-100"
                     }`}
                   >
-                    <svg
-                      className={`w-5 h-5 ${!item.isRead ? "text-red-600" : "text-gray-400"}`}
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                      />
-                    </svg>
+                    <Bell className={`h-5 w-5 ${!item.isRead ? "text-red-600" : "text-gray-400"}`} strokeWidth={2} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3

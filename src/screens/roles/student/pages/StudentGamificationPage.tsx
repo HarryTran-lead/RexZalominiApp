@@ -216,7 +216,7 @@ function StudentGamificationPage() {
   if (loading) {
     return (
       <Page className="flex h-full min-h-0 flex-col bg-gray-100">
-        <div className="sticky top-0 z-20 shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
+        <div className="sticky top-0 z-20 shrink-0 bg-[#BB0000] px-4 py-4 flex items-center">
           <h1 className="text-white font-bold text-lg w-full text-center">Gamification</h1>
         </div>
         <div className="flex flex-1 items-center justify-center">
@@ -229,7 +229,7 @@ function StudentGamificationPage() {
   if (error) {
     return (
       <Page className="flex h-full min-h-0 flex-col bg-gray-100">
-        <div className="sticky top-0 z-20 shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
+        <div className="sticky top-0 z-20 shrink-0 bg-[#BB0000] px-4 py-4 flex items-center">
           <h1 className="text-white font-bold text-lg w-full text-center">Gamification</h1>
         </div>
         <div className="flex-1 px-4 py-8 text-center">
@@ -244,7 +244,7 @@ function StudentGamificationPage() {
 
   return (
     <Page className="flex h-full min-h-0 flex-col bg-gray-100">
-      <div className="sticky top-0 z-20 shrink-0 bg-gradient-to-r from-red-600 to-red-700 px-4 py-4 flex items-center">
+      <div className="sticky top-0 z-20 shrink-0 bg-[#BB0000] px-4 py-4 flex items-center">
         <h1 className="text-white font-bold text-lg w-full text-center">Gamification</h1>
       </div>
 
