@@ -52,6 +52,7 @@ export const TEACHER_ENDPOINTS = {
   TIMETABLE: "/teacher/timetable",
   CLASSES: "/teacher/classes",
   TEACHER_CLASSES: "/teacher/classes",
+  CLASS_STUDENTS: (classId: string) => `/classes/${classId}/students`,
   TEACHER_CLASS_STUDENTS: (classId: string) =>
     `/teacher/classes/${classId}/students`,
   HOMEWORK_LIST: "/homework",
@@ -99,6 +100,7 @@ export const PARENT_ENDPOINTS = {
 export const NOTIFICATION_ENDPOINTS = {
   LIST: "/notifications",
   MARK_AS_READ: (id: string) => `/notifications/${id}/read`,
+  MARK_ALL_AS_READ: "/notifications/read",
 };
 
 // Leave Request Endpoints

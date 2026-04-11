@@ -29,6 +29,7 @@ import StudentNotificationsPage from "@/screens/roles/student/pages/StudentNotif
 
 // Parent pages
 import ParentHomeworkPage from "@/screens/roles/parent/pages/ParentHomeworkPage";
+import ParentHomeworkDetailPage from "@/screens/roles/parent/pages/ParentHomeworkDetailPage";
 import ParentExamsPage from "@/screens/roles/parent/pages/ParentExamsPage";
 import ParentSessionReportsPage from "@/screens/roles/parent/pages/ParentSessionReportsPage";
 import ParentNotificationsPage from "@/screens/roles/parent/pages/ParentNotificationsPage";
@@ -37,6 +38,7 @@ import LandingPage from "@/features/landing/LandingPage";
 
 // Teacher pages
 import TeacherMyClassesPage from "@/screens/roles/teacher/pages/TeacherMyClassesPage";
+import TeacherClassStudentsPage from "@/screens/roles/teacher/pages/TeacherClassStudentsPage";
 import TeacherSubjectsPage from "@/screens/roles/teacher/pages/TeacherSubjectsPage";
 import TeacherAssignmentsPage from "@/screens/roles/teacher/pages/TeacherAssignmentsPage";
 import TeacherHomeworkDetailPage from "@/screens/roles/teacher/pages/TeacherHomeworkDetailPage";
@@ -217,6 +219,14 @@ const MainRoutes: React.FC = () => {
         }
       />
       <AppRoute
+        path="/teacher/my-classes/:classId/students"
+        element={
+          <TeacherLayout>
+            <TeacherClassStudentsPage />
+          </TeacherLayout>
+        }
+      />
+      <AppRoute
         path="/teacher/subjects"
         element={
           <TeacherLayout>
@@ -319,6 +329,14 @@ const MainRoutes: React.FC = () => {
         element={
           <ParentLayout>
             <ParentHomeworkPage />
+          </ParentLayout>
+        }
+      />
+      <AppRoute
+        path="/parent/homework/:homeworkStudentId"
+        element={
+          <ParentLayout>
+            <ParentHomeworkDetailPage />
           </ParentLayout>
         }
       />

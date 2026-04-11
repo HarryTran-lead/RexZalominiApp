@@ -16,6 +16,7 @@ import StudentGamificationOverviewCard from "@/components/gamification/student/S
 import StudentMissionList from "@/components/gamification/student/StudentMissionList";
 import StudentRewardHistoryList from "@/components/gamification/student/StudentRewardHistoryList";
 import StudentRewardStoreList from "@/components/gamification/student/StudentRewardStoreList";
+import StudentRedeemConfirmModal from "@/components/gamification/student/StudentRedeemConfirmModal";
 import {
   isApiSuccess,
   isToday,
@@ -49,6 +50,7 @@ function StudentGamificationPage() {
   const [loading, setLoading] = useState(true);
   const [checkingIn, setCheckingIn] = useState(false);
   const [redeemingItemId, setRedeemingItemId] = useState<string | null>(null);
+  const [redeemConfirmItem, setRedeemConfirmItem] = useState<RewardStoreItem | null>(null);
   const [confirmingRedemptionId, setConfirmingRedemptionId] = useState<string | null>(null);
   const [showCheckInModal, setShowCheckInModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -140,9 +142,49 @@ function StudentGamificationPage() {
     }
   };
 
+  const getInsufficientStarsMessage = (detailText: string): string => {
+    const normalized = detailText.toLowerCase();
+    if (!normalized.includes("insufficient") || !normalized.includes("star")) {
+      return "Bạn không đủ sao để đổi quà";
+    }
+
+    const currentMatch = detailText.match(/current\s*balance\s*:\s*(\d+)/i);
+    const requiredMatch = detailText.match(/required\s*:\s*(\d+)/i);
+    const current = currentMatch ? Number(currentMatch[1]) : null;
+    const required = requiredMatch ? Number(requiredMatch[1]) : null;
+
+    if (current != null && required != null) {
+      return `Bạn không đủ sao. Hiện tại: ${current}, cần: ${required}`;
+    }
+
+    return "Bạn không đủ sao để đổi quà";
+  };
+
+  const handleOpenRedeemConfirm = (item: RewardStoreItem) => {
+    if (redeemingItemId) return;
+
+    const quantity = Math.max(1, Number(quantityByItemId[item.id] ?? 1));
+    const currentStars = Number(starBalance?.balance ?? 0);
+    const requiredStars = Number(item.costStars ?? 0) * quantity;
+
+    if (requiredStars > currentStars) {
+      openSnackbar({ text: `Bạn không đủ sao. Hiện tại: ${currentStars}, cần: ${requiredStars}`, type: "error" });
+      return;
+    }
+
+    setRedeemConfirmItem(item);
+  };
+
   const handleRedeem = async (item: RewardStoreItem) => {
     if (redeemingItemId) return;
     const quantity = Math.max(1, Number(quantityByItemId[item.id] ?? 1));
+
+    const currentStars = Number(starBalance?.balance ?? 0);
+    const requiredStars = Number(item.costStars ?? 0) * quantity;
+    if (requiredStars > currentStars) {
+      openSnackbar({ text: `Bạn không đủ sao. Hiện tại: ${currentStars}, cần: ${requiredStars}`, type: "error" });
+      return;
+    }
 
     setRedeemingItemId(item.id);
     try {
@@ -151,23 +193,25 @@ function StudentGamificationPage() {
       await fetchGamificationData();
     } catch (err: unknown) {
       const raw =
-        (err as { response?: { data?: { message?: string; error?: unknown } } })?.response?.data;
+        (err as { response?: { data?: { message?: string; error?: unknown; detail?: string } } })?.response?.data;
       const message = String(raw?.message || "");
+      const detail = String(raw?.detail || "");
       const errorCode = typeof raw?.error === "string" ? raw.error : "";
-      const combined = `${message} ${errorCode}`.toLowerCase();
+      const combined = `${message} ${detail} ${errorCode}`.toLowerCase();
       const statusCode = (err as { response?: { status?: number } })?.response?.status;
 
-      if (statusCode === 409 && combined.includes("insufficientstars")) {
-        openSnackbar({ text: "Bạn không đủ sao", type: "error" });
+      if ((statusCode === 409 || statusCode === 400) && (combined.includes("insufficientstars") || (combined.includes("insufficient") && combined.includes("star")))) {
+        openSnackbar({ text: getInsufficientStarsMessage(detail || message), type: "error" });
       } else if (statusCode === 409 && combined.includes("insufficientquantity")) {
         openSnackbar({ text: "Món quà này đã hết hàng", type: "error" });
       } else if (statusCode === 400 && combined.includes("itemnotactive")) {
         openSnackbar({ text: "Món quà này đang bị khóa", type: "warning" });
       } else {
-        openSnackbar({ text: message || "Đổi quà thất bại", type: "error" });
+        openSnackbar({ text: message || detail || "Đổi quà thất bại", type: "error" });
       }
     } finally {
       setRedeemingItemId(null);
+      setRedeemConfirmItem(null);
     }
   };
 
@@ -199,7 +243,7 @@ function StudentGamificationPage() {
           onQuantityChange={(itemId, quantity) => {
             setQuantityByItemId((prev) => ({ ...prev, [itemId]: quantity }));
           }}
-          onRedeem={handleRedeem}
+          onRedeem={handleOpenRedeemConfirm}
         />
       );
     }
@@ -286,6 +330,22 @@ function StudentGamificationPage() {
         checkingIn={checkingIn}
         onClose={() => setShowCheckInModal(false)}
         onCheckIn={handleCheckIn}
+      />
+
+      <StudentRedeemConfirmModal
+        isOpen={Boolean(redeemConfirmItem)}
+        item={redeemConfirmItem}
+        quantity={redeemConfirmItem ? Number(quantityByItemId[redeemConfirmItem.id] ?? 1) : 1}
+        currentStars={Number(starBalance?.balance ?? 0)}
+        isLoading={Boolean(redeemingItemId)}
+        onCancel={() => {
+          if (redeemingItemId) return;
+          setRedeemConfirmItem(null);
+        }}
+        onConfirm={() => {
+          if (!redeemConfirmItem) return;
+          handleRedeem(redeemConfirmItem);
+        }}
       />
     </Page>
   );

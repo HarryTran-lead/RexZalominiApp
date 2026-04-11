@@ -1,5 +1,6 @@
 import React from "react";
 import { MyHomeworkListItem } from "@/types/homework";
+import { translateTeacherFeedback } from "@/utils";
 
 interface StudentHomeworkCardProps {
   item: MyHomeworkListItem;
@@ -45,6 +46,8 @@ function getSubmissionTypeLabel(type?: string): string {
 }
 
 const StudentHomeworkCard: React.FC<StudentHomeworkCardProps> = ({ item, onClick }) => {
+  const translatedFeedback = translateTeacherFeedback(item.teacherFeedback);
+
   return (
     <button
       type="button"
@@ -77,9 +80,15 @@ const StudentHomeworkCard: React.FC<StudentHomeworkCardProps> = ({ item, onClick
         Hình thức: <span className="font-semibold text-gray-700">{getSubmissionTypeLabel(item.submissionType)}</span>
       </p>
 
-      {item.teacherFeedback && (
+      {typeof item.maxAttempts === "number" && item.maxAttempts > 0 && (
+        <p className="mt-1 text-xs text-gray-600">
+          Số lần nộp tối đa: <span className="font-semibold text-gray-700">{item.maxAttempts}</span>
+        </p>
+      )}
+
+      {translatedFeedback && (
         <p className="mt-2 line-clamp-2 rounded-lg bg-emerald-50 px-2.5 py-2 text-xs text-emerald-800">
-          Nhận xét: {item.teacherFeedback}
+          Nhận xét: {translatedFeedback}
         </p>
       )}
     </button>

@@ -4,6 +4,7 @@ import { Page, Spinner, useSnackbar } from "zmp-ui";
 import { AlertTriangle, Users } from "lucide-react";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import { attendanceService } from "@/services/attendanceService";
+import { API_CONFIG } from "@/constants/apiURL";
 import {
   AttendanceListPayload,
   AttendanceMarkStatus,
@@ -68,6 +69,21 @@ function formatDate(isoString?: string): string {
     month: "2-digit",
     year: "numeric",
   });
+}
+
+function resolveAvatarUrl(avatarUrl?: string | null): string {
+  if (!avatarUrl) return "";
+  if (/^https?:\/\//i.test(avatarUrl)) return avatarUrl;
+
+  const base = API_CONFIG.BASE_URL || "";
+  if (!base) return avatarUrl;
+
+  try {
+    const origin = new URL(base).origin;
+    return `${origin}${avatarUrl.startsWith("/") ? avatarUrl : `/${avatarUrl}`}`;
+  } catch {
+    return avatarUrl;
+  }
 }
 
 function extractAttendanceList(payload: AttendanceListPayload | undefined): AttendanceStudent[] {
@@ -282,6 +298,7 @@ function TeacherAttendancePage() {
           <div className="px-4 pt-4 flex flex-col gap-3">
             {students.map((student, idx) => {
               const currentStatus = statusMap[student.studentProfileId] ?? "NotMarked";
+              const avatarUrl = resolveAvatarUrl(student.studentAvatarUrl);
 
               return (
                 <div
@@ -290,9 +307,17 @@ function TeacherAttendancePage() {
                 >
                   {/* Student info row */}
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
-                      {idx + 1}
-                    </div>
+                    {avatarUrl ? (
+                      <img
+                        src={avatarUrl}
+                        alt={student.studentName}
+                        className="h-9 w-9 shrink-0 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                        {idx + 1}
+                      </div>
+                    )}
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-gray-800 text-sm leading-tight truncate">
                         {student.studentName}

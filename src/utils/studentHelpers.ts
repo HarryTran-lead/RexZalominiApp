@@ -177,8 +177,9 @@ export const getRewardStatusText = (status?: string): string => {
 };
 
 export const calculateLevelProgress = (currentXp: number, xpForNextLevel: number): number => {
-  if (xpForNextLevel <= 0) return 100;
-  return Math.min((currentXp / xpForNextLevel) * 100, 100);
+  const normalizedXp = Math.max(0, Number(currentXp || 0));
+  const xpInCurrentLevel = normalizedXp % 100;
+  return Math.min(Math.max((xpInCurrentLevel / 100) * 100, 0), 100);
 };
 
 // Exam helpers

@@ -10,6 +10,10 @@ export interface NotificationQueryParams {
   pageSize?: number;
 }
 
+interface MarkNotificationsReadRequest {
+  notificationIds: string[];
+}
+
 const VALID_CHANNELS: NotificationChannel[] = ["InApp", "ZaloOa", "Push", "Email"];
 const VALID_STATUSES: NotificationStatus[] = ["Pending", "Sent", "Failed"];
 
@@ -137,5 +141,16 @@ export const notificationService = {
 
   async markAsRead(notificationId: string): Promise<void> {
     await api.patch(NOTIFICATION_ENDPOINTS.MARK_AS_READ(notificationId));
+  },
+
+  async markAllAsRead(notificationIds: string[]): Promise<void> {
+    const uniqueIds = Array.from(new Set(notificationIds.map((id) => String(id).trim()).filter(Boolean)));
+    if (uniqueIds.length === 0) return;
+
+    const payload: MarkNotificationsReadRequest = {
+      notificationIds: uniqueIds,
+    };
+
+    await api.patch(NOTIFICATION_ENDPOINTS.MARK_ALL_AS_READ, payload);
   },
 };

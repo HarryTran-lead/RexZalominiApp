@@ -1,5 +1,4 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Page, Spinner } from "zmp-ui";
 import { AlertCircle, Bell, BellOff } from "lucide-react";
@@ -32,11 +31,11 @@ function formatDate(dateStr?: string | null): string {
 }
 
 const RoleNotificationsPage: React.FC<RoleNotificationsPageProps> = ({ role }) => {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [markingIds, setMarkingIds] = useState<Record<string, boolean>>({});
+  const [markingAll, setMarkingAll] = useState(false);
 
   const [notifications, setNotifications] = useAtom(notificationsAtom);
   const unreadCount = useAtomValue(unreadCountAtom);
@@ -93,18 +92,33 @@ const RoleNotificationsPage: React.FC<RoleNotificationsPageProps> = ({ role }) =
     [markingIds, setNotifications, setUnreadCount]
   );
 
+  const markAllAsRead = useCallback(async () => {
+    if (markingAll) return;
+
+    const unreadIds = notifications.filter((item) => !item.isRead).map((item) => item.id);
+    if (unreadIds.length === 0) return;
+
+    setMarkingAll(true);
+    try {
+      await notificationService.markAllAsRead(unreadIds);
+      setNotifications((prev) => prev.map((item) => ({ ...item, isRead: true })));
+      setUnreadCount(0);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Không thể đánh dấu đã đọc tất cả";
+      setError(message);
+    } finally {
+      setMarkingAll(false);
+    }
+  }, [markingAll, notifications, setNotifications, setUnreadCount]);
+
   const handleNotificationClick = useCallback(
     async (item: NotificationItem) => {
       const marked = await markItemAsRead(item);
       if (!marked && !item.isRead) {
         return;
       }
-
-      if (item.deeplink?.startsWith("/")) {
-        navigate(item.deeplink);
-      }
     },
-    [markItemAsRead, navigate]
+    [markItemAsRead]
   );
 
   return (
@@ -112,6 +126,16 @@ const RoleNotificationsPage: React.FC<RoleNotificationsPageProps> = ({ role }) =
       <div className="sticky top-0 z-20 shrink-0 bg-[#BB0000] px-4 py-4">
         <div className="relative">
           <h1 className="text-center text-white font-bold text-lg">Thông báo</h1>
+          {unreadCount > 0 && (
+            <button
+              type="button"
+              onClick={markAllAsRead}
+              disabled={markingAll}
+              className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-semibold text-white disabled:opacity-60"
+            >
+              {markingAll ? "Đang xử lý..." : "Đọc tất cả"}
+            </button>
+          )}
           {unreadCount > 0 && (
             <span className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-semibold text-white">
               {unreadCount}

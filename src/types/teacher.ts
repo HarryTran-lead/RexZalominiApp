@@ -14,6 +14,7 @@ export interface TeacherClass {
   endDate?: string;
   status?: string;
   capacity?: number;
+  currentEnrollmentCount?: number;
 }
 
 export interface ClassStudent {
@@ -21,12 +22,20 @@ export interface ClassStudent {
   studentProfileId: string;
   studentName: string;
   avatarUrl?: string;
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  enrollmentDate?: string;
+  attendanceRate?: number;
+  progressPercent?: number;
+  lastActiveAt?: string;
   gender?: string;
   dateOfBirth?: string;
   parentName?: string;
   parentPhone?: string;
   status?: string;
   enrolledAt?: string;
+  detailFields?: Record<string, string | number | boolean | null>;
 }
 
 export interface SessionReport {
