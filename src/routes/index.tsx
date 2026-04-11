@@ -38,6 +38,7 @@ import LandingPage from "@/features/landing/LandingPage";
 
 // Teacher pages
 import TeacherMyClassesPage from "@/screens/roles/teacher/pages/TeacherMyClassesPage";
+import TeacherClassStudentsPage from "@/screens/roles/teacher/pages/TeacherClassStudentsPage";
 import TeacherSubjectsPage from "@/screens/roles/teacher/pages/TeacherSubjectsPage";
 import TeacherAssignmentsPage from "@/screens/roles/teacher/pages/TeacherAssignmentsPage";
 import TeacherHomeworkDetailPage from "@/screens/roles/teacher/pages/TeacherHomeworkDetailPage";
@@ -214,6 +215,14 @@ const MainRoutes: React.FC = () => {
         element={
           <TeacherLayout>
             <TeacherMyClassesPage />
+          </TeacherLayout>
+        }
+      />
+      <AppRoute
+        path="/teacher/my-classes/:classId/students"
+        element={
+          <TeacherLayout>
+            <TeacherClassStudentsPage />
           </TeacherLayout>
         }
       />

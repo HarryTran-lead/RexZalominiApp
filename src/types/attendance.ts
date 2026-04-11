@@ -2,6 +2,7 @@ export interface AttendanceStudent {
     id: string;
     studentProfileId: string;
     studentName: string;
+    studentAvatarUrl?: string | null;
     attendanceStatus: "NotMarked" | "Present" | "Absent" | "Makeup";
     absenceType: string | null;
     hasMakeupCredit: boolean;

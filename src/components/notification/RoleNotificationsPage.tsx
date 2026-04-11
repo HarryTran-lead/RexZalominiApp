@@ -1,5 +1,4 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Page, Spinner } from "zmp-ui";
 import { AlertCircle, Bell, BellOff } from "lucide-react";
@@ -32,7 +31,6 @@ function formatDate(dateStr?: string | null): string {
 }
 
 const RoleNotificationsPage: React.FC<RoleNotificationsPageProps> = ({ role }) => {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [unreadOnly, setUnreadOnly] = useState(false);
@@ -119,12 +117,8 @@ const RoleNotificationsPage: React.FC<RoleNotificationsPageProps> = ({ role }) =
       if (!marked && !item.isRead) {
         return;
       }
-
-      if (item.deeplink?.startsWith("/")) {
-        navigate(item.deeplink);
-      }
     },
-    [markItemAsRead, navigate]
+    [markItemAsRead]
   );
 
   return (
