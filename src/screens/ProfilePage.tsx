@@ -262,13 +262,8 @@ const ProfilePage: React.FC = () => {
 
       const avatarUrl = resolveBackendAssetUrl(rawUrl);
       setAccountForm((prev) => ({ ...prev, avatarUrl }));
-
-      await persistProfile(
-        {
-          avatarUrl,
-        },
-        "Đã cập nhật avatar thành công."
-      );
+      setUser((prev) => (prev ? { ...prev, avatarUrl } : prev));
+      openSnackbar({ text: "Đã cập nhật avatar thành công.", type: "success" });
     } catch (error: any) {
       const message =
         error?.response?.data?.message ||

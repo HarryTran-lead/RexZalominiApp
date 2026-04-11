@@ -99,6 +99,7 @@ export const PARENT_ENDPOINTS = {
 export const NOTIFICATION_ENDPOINTS = {
   LIST: "/notifications",
   MARK_AS_READ: (id: string) => `/notifications/${id}/read`,
+  MARK_ALL_AS_READ: "/notifications/read",
 };
 
 // Leave Request Endpoints
