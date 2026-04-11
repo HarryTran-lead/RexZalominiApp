@@ -29,6 +29,7 @@ import StudentNotificationsPage from "@/screens/roles/student/pages/StudentNotif
 
 // Parent pages
 import ParentHomeworkPage from "@/screens/roles/parent/pages/ParentHomeworkPage";
+import ParentHomeworkDetailPage from "@/screens/roles/parent/pages/ParentHomeworkDetailPage";
 import ParentExamsPage from "@/screens/roles/parent/pages/ParentExamsPage";
 import ParentSessionReportsPage from "@/screens/roles/parent/pages/ParentSessionReportsPage";
 import ParentNotificationsPage from "@/screens/roles/parent/pages/ParentNotificationsPage";
@@ -319,6 +320,14 @@ const MainRoutes: React.FC = () => {
         element={
           <ParentLayout>
             <ParentHomeworkPage />
+          </ParentLayout>
+        }
+      />
+      <AppRoute
+        path="/parent/homework/:homeworkStudentId"
+        element={
+          <ParentLayout>
+            <ParentHomeworkDetailPage />
           </ParentLayout>
         }
       />

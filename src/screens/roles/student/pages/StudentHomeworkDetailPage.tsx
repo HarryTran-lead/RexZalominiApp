@@ -13,6 +13,7 @@ import {
   SubmitMultipleChoiceRequest,
 } from "@/types/homework";
 import { UploadFileApiResponse } from "@/types/file";
+import { translateTeacherFeedback } from "@/utils";
 
 type UploadResponseLike =
   | UploadFileApiResponse
@@ -276,6 +277,16 @@ const StudentHomeworkDetailPage: React.FC = () => {
     try {
       const data = await homeworkService.getMyHomeworkDetail(homeworkStudentId);
       setDetail(data);
+      const initialMcqAnswers = (data?.review?.answerResults ?? []).reduce<Record<string, string>>(
+        (accumulator, result) => {
+          if (result.questionId && result.selectedOptionId) {
+            accumulator[result.questionId] = result.selectedOptionId;
+          }
+          return accumulator;
+        },
+        {}
+      );
+      setMcqAnswers(initialMcqAnswers);
       const submission = data?.submission;
       setTextAnswer(data?.textAnswer ?? submission?.textAnswer ?? "");
       setLinkUrl(data?.linkUrl ?? (submission?.links?.[0] ?? ""));
@@ -325,11 +336,42 @@ const StudentHomeworkDetailPage: React.FC = () => {
 
   const canSubmit = useMemo(() => {
     if (!detail) return false;
+    const maxAttempts = Number(detail.maxAttempts ?? 0);
+    const attemptsUsedFromHistory = attemptHistory.reduce(
+      (maxAttemptNumber, attempt) => Math.max(maxAttemptNumber, Number(attempt.attemptNumber ?? 0)),
+      0
+    );
+    const attemptsUsed = Math.max(
+      Number(detail.attemptCount ?? 0),
+      attemptsUsedFromHistory,
+      normalizedStatus === "submitted" || normalizedStatus === "graded" ? 1 : 0
+    );
+
+    if (maxAttempts > 0 && attemptsUsed >= maxAttempts) {
+      return false;
+    }
+
     const alreadySubmitted =
       normalizedStatus === "submitted" || normalizedStatus === "graded";
     if (alreadySubmitted && !detail.allowResubmit) return false;
     return true;
-  }, [detail, normalizedStatus]);
+  }, [detail, normalizedStatus, attemptHistory]);
+
+  const maxAttempts = Number(detail?.maxAttempts ?? 0);
+  const translatedTeacherFeedback = translateTeacherFeedback(detail?.teacherFeedback);
+  const attemptsUsed = useMemo(() => {
+    if (!detail) return 0;
+    const attemptsUsedFromHistory = attemptHistory.reduce(
+      (maxAttemptNumber, attempt) => Math.max(maxAttemptNumber, Number(attempt.attemptNumber ?? 0)),
+      0
+    );
+    return Math.max(
+      Number(detail.attemptCount ?? 0),
+      attemptsUsedFromHistory,
+      normalizedStatus === "submitted" || normalizedStatus === "graded" ? 1 : 0
+    );
+  }, [detail, attemptHistory, normalizedStatus]);
+  const reachedMaxAttempts = maxAttempts > 0 && attemptsUsed >= maxAttempts;
 
   const isGraded = normalizedStatus === "graded";
   const isSubmitted = normalizedStatus === "submitted";
@@ -547,6 +589,13 @@ const StudentHomeworkDetailPage: React.FC = () => {
               <p className="mt-2 text-xs text-gray-500 ">
                 Hạn nộp: {formatDateTime(detail.dueAt)}
               </p>
+              {maxAttempts > 0 && (
+                <p className="mt-1 text-xs text-gray-500">
+                  Số lần nộp tối đa: <span className="font-semibold text-gray-700">{maxAttempts}</span>
+                  <span className="mx-1">•</span>
+                  Đã nộp: <span className="font-semibold text-gray-700">{Math.min(attemptsUsed, maxAttempts)}</span>
+                </p>
+              )}
             </div>
             
 
@@ -555,9 +604,9 @@ const StudentHomeworkDetailPage: React.FC = () => {
                 <p className="text-sm font-semibold text-emerald-800">
                   Điểm: {detail.score ?? 0}/{detail.maxScore ?? 0}
                 </p>
-                {detail.teacherFeedback && (
+                {translatedTeacherFeedback && (
                   <p className="mt-2 text-sm text-emerald-900">
-                    Nhận xét: {detail.teacherFeedback}
+                    Nhận xét: {translatedTeacherFeedback}
                   </p>
                 )}
                 {detail.gradedAt && (
@@ -774,22 +823,24 @@ const StudentHomeworkDetailPage: React.FC = () => {
               />
             ) : null}
 
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={!canSubmitNow || submitting || uploading}
-              className="w-full rounded-xl bg-red-600 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {submitting
-                ? "Đang nộp..."
-                : uploading
-                  ? "Đang upload file..."
-                  : canSubmitNow
-                    ? "Nộp bài"
-                    : isMultipleChoice && requiresStartForMcq && !mcqStarted && !timeExpired
-                      ? "Bắt đầu làm bài để nộp"
-                    : "Đã nộp"}
-            </button>
+            {!reachedMaxAttempts && (
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={!canSubmitNow || submitting || uploading}
+                className="w-full rounded-xl bg-red-600 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {submitting
+                  ? "Đang nộp..."
+                  : uploading
+                    ? "Đang upload file..."
+                    : canSubmitNow
+                      ? "Nộp bài"
+                      : isMultipleChoice && requiresStartForMcq && !mcqStarted && !timeExpired
+                        ? "Bắt đầu làm bài để nộp"
+                      : "Đã nộp"}
+              </button>
+            )}
           </div>
         )}
       </div>

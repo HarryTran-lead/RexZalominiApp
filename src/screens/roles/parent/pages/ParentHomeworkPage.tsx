@@ -1,22 +1,37 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Page, Spinner } from "zmp-ui";
-import { AlertCircle, CalendarDays, FileText, School } from "lucide-react";
-import { parentService } from "@/services/parentService";
-import { ParentHomeworkItem } from "@/types/parent";
+import { FileText } from "lucide-react";
+import StudentHomeworkCard from "@/components/homework/student/StudentHomeworkCard";
+import StudentHomeworkClassFilter from "@/components/homework/student/StudentHomeworkClassFilter";
+import StudentHomeworkTabs, { HomeworkTab } from "@/components/homework/student/StudentHomeworkTabs";
+import { homeworkService } from "@/services/homeworkService";
+import { MyHomeworkListItem } from "@/types/homework";
+
+function normalizeStatus(status?: string): string {
+  return (status || "").toLowerCase();
+}
 
 function ParentHomeworkPage() {
-  const [homework, setHomework] = useState<ParentHomeworkItem[]>([]);
+  const navigate = useNavigate();
+  const [homework, setHomework] = useState<MyHomeworkListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<HomeworkTab>("all");
+  const [selectedClassName, setSelectedClassName] = useState("");
 
   const fetchHomework = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await parentService.getHomework();
+      const data = await homeworkService.getMyHomeworkList({
+        pageNumber: 1,
+        pageSize: 100,
+      });
       setHomework(data);
-    } catch (err: any) {
-      setError(err?.message || "Không thể tải danh sách bài tập");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Không thể tải danh sách bài tập";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -26,131 +41,106 @@ function ParentHomeworkPage() {
     fetchHomework();
   }, [fetchHomework]);
 
-  const getStatusColor = (status?: string) => {
-    switch (status?.toLowerCase()) {
-      case "submitted":
-      case "graded":
-        return "bg-green-100 text-green-700";
-      case "late":
-      case "missing":
-        return "bg-red-100 text-red-700";
-      case "pending":
-      default:
-        return "bg-yellow-100 text-yellow-700";
-    }
-  };
+  const classOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          homework
+            .map((item) => item.className || item.classTitle || item.classCode || "")
+            .map((value) => value.trim())
+            .filter(Boolean)
+        )
+      ).sort((a, b) => a.localeCompare(b, "vi")),
+    [homework]
+  );
 
-  const getStatusLabel = (status?: string) => {
-    switch (status?.toLowerCase()) {
-      case "submitted":
-        return "Đã nộp";
-      case "graded":
-        return "Đã chấm";
-      case "late":
-        return "Trễ hạn";
-      case "missing":
-        return "Thiếu";
-      case "pending":
-        return "Chưa nộp";
-      default:
-        return status || "Chưa nộp";
-    }
-  };
+  const classFilteredHomework = useMemo(() => {
+    if (!selectedClassName) return homework;
+    return homework.filter(
+      (item) => (item.className || item.classTitle || item.classCode || "") === selectedClassName
+    );
+  }, [homework, selectedClassName]);
 
-  const formatDate = (dateStr?: string | null) => {
-    if (!dateStr) return "Không có hạn";
-    const d = new Date(dateStr);
-    return d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
-  };
+  const counts = useMemo(() => {
+    const missing = classFilteredHomework.filter((item) => {
+      const status = normalizeStatus(item.status);
+      return status === "missing" || status === "assigned" || status === "late";
+    }).length;
+
+    const submitted = classFilteredHomework.filter((item) => normalizeStatus(item.status) === "submitted").length;
+    const graded = classFilteredHomework.filter((item) => normalizeStatus(item.status) === "graded").length;
+
+    return {
+      all: classFilteredHomework.length,
+      missing,
+      submitted,
+      graded,
+    };
+  }, [classFilteredHomework]);
+
+  const filteredHomework = useMemo(() => {
+    if (activeTab === "all") return classFilteredHomework;
+
+    return classFilteredHomework.filter((item) => {
+      const status = normalizeStatus(item.status);
+      if (activeTab === "missing") {
+        return status === "missing" || status === "assigned" || status === "late";
+      }
+      if (activeTab === "submitted") {
+        return status === "submitted";
+      }
+      return status === "graded";
+    });
+  }, [classFilteredHomework, activeTab]);
 
   return (
     <Page className="flex h-full min-h-0 flex-col bg-gray-100">
-      {/* Header */}
-      <div className="shrink-0 bg-[#BB0000] px-4 py-4 flex items-center">
+      <div className="sticky top-0 z-20 shrink-0 bg-[#BB0000] px-4 py-4 flex items-center">
         <h1 className="text-white font-bold text-lg w-full text-center">Bài tập</h1>
       </div>
 
-      {/* Content */}
+      <StudentHomeworkTabs activeTab={activeTab} counts={counts} onChange={setActiveTab} />
+      <StudentHomeworkClassFilter
+        classes={classOptions}
+        value={selectedClassName}
+        onChange={setSelectedClassName}
+      />
+
       <div className="flex-1 min-h-0 overflow-y-auto px-4 pt-4 pb-24">
-        {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <Spinner />
+        {loading && (
+          <div className="flex flex-col items-center justify-center py-16">
+            <Spinner visible />
+            <p className="mt-3 text-sm text-gray-400">Đang tải dữ liệu...</p>
           </div>
-        ) : error ? (
-          <div className="flex flex-col items-center py-16 text-gray-400">
-            <AlertCircle className="mb-3 h-16 w-16" strokeWidth={1.2} />
-            <p className="text-sm mb-3">{error}</p>
-            <button onClick={fetchHomework} className="text-red-600 text-sm font-semibold">
+        )}
+
+        {!loading && error && (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-center">
+            <p className="text-sm text-red-600">{error}</p>
+            <button
+              onClick={fetchHomework}
+              className="mt-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white"
+            >
               Thử lại
             </button>
           </div>
-        ) : homework.length === 0 ? (
-          <div className="flex flex-col items-center py-16 text-gray-400">
+        )}
+
+        {!loading && !error && filteredHomework.length === 0 && (
+          <div className="pt-8 flex flex-col items-center text-gray-400">
             <FileText className="mb-3 h-16 w-16" strokeWidth={1.2} />
             <p className="text-sm">Không có bài tập nào</p>
           </div>
-        ) : (
-          <div className="space-y-3">
-            {homework.map((item) => (
-              <div key={item.id} className="bg-white rounded-2xl shadow-sm p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-bold text-gray-800 text-sm flex-1 mr-2">{item.title}</h3>
-                  <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${getStatusColor(item.status)}`}>
-                    {getStatusLabel(item.status)}
-                  </span>
-                </div>
+        )}
 
-                {item.classTitle && (
-                  <div className="flex items-center gap-1.5 mb-1.5">
-                    <School className="h-3.5 w-3.5 text-gray-400" strokeWidth={2} />
-                    <span className="text-xs text-gray-500">{item.classCode ? `${item.classCode} - ` : ""}{item.classTitle}</span>
-                  </div>
-                )}
-
-                <div className="flex items-center gap-1.5 mb-1.5">
-                  <CalendarDays className="h-3.5 w-3.5 text-gray-400" strokeWidth={2} />
-                  <span className="text-xs text-gray-500">Hạn nộp: {formatDate(item.dueAt)}</span>
-                </div>
-
-                {item.description && (
-                  <p className="text-xs text-gray-500 mt-2 line-clamp-2">{item.description}</p>
-                )}
-
-                {(item.book || item.pages || item.skills) && (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {item.book && (
-                      <span className="text-[11px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">
-                        📖 {item.book}
-                      </span>
-                    )}
-                    {item.pages && (
-                      <span className="text-[11px] bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full">
-                        📄 Trang {item.pages}
-                      </span>
-                    )}
-                    {item.skills && (
-                      <span className="text-[11px] bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full">
-                        🎯 {item.skills}
-                      </span>
-                    )}
-                  </div>
-                )}
-
-                {item.score != null && item.maxScore != null && (
-                  <div className="mt-2 flex items-center gap-1.5">
-                    <span className="text-xs font-semibold text-red-600">
-                      Điểm: {item.score}/{item.maxScore}
-                    </span>
-                  </div>
-                )}
-
-                {item.teacherFeedback && (
-                  <div className="mt-2 bg-gray-50 rounded-lg p-2">
-                    <p className="text-[11px] text-gray-500 font-semibold mb-0.5">Nhận xét:</p>
-                    <p className="text-xs text-gray-700">{item.teacherFeedback}</p>
-                  </div>
-                )}
-              </div>
+        {!loading && !error && filteredHomework.length > 0 && (
+          <div className="space-y-2">
+            {filteredHomework.map((item) => (
+              <StudentHomeworkCard
+                key={item.id}
+                item={item}
+                onClick={() => navigate(`/parent/homework/${item.id}`)}
+              />
             ))}
           </div>
         )}

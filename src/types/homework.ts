@@ -208,6 +208,7 @@ export interface MyHomeworkListItem {
   attachmentUrl?: string;
   isOverdue?: boolean;
   isLate: boolean;
+  maxAttempts?: number;
 }
 
 export interface MySubmittedHomeworkListItem {
@@ -241,6 +242,7 @@ export interface MyHomeworkSubmissionDetail {
   speakingExpectedText?: string;
   timeLimitMinutes?: number;
   allowResubmit: boolean;
+  maxAttempts?: number;
   startedAt?: string;
   submittedAt?: string;
   gradedAt?: string;
