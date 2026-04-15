@@ -197,6 +197,27 @@ export interface ParentSessionReport {
   updatedAt?: string;
 }
 
+export interface ParentMonthlyReport {
+  id: string;
+  studentProfileId?: string;
+  studentName?: string;
+  classId?: string;
+  classCode?: string;
+  className?: string;
+  classTitle?: string;
+  programId?: string;
+  programName?: string;
+  jobId?: string;
+  month?: number;
+  year?: number;
+  status?: string;
+  summary?: string;
+  feedback?: string;
+  publishedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export enum PauseEnrollmentRequestStatus {
   PENDING = 'Pending',
   APPROVED = 'Approved',

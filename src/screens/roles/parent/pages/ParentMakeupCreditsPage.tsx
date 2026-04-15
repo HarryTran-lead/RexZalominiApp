@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Page, Spinner, useSnackbar } from "zmp-ui";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "@headlessui/react";
 import { CalendarClock, ChevronsUpDown, RefreshCw } from "lucide-react";
+import UserAvatar from "@/components/common/UserAvatar";
 import { authService } from "@/services/authService";
 import { parentService } from "@/services/parentService";
 import {
@@ -231,9 +232,17 @@ function ParentMakeupCreditsPage() {
           <Listbox value={selectedStudentId} onChange={setSelectedStudentId}>
             <div className="relative">
               <ListboxButton className="flex w-full items-center justify-between rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-left text-sm">
-                <span className="block truncate text-gray-800">
-                  {selectedStudent?.displayName || "-- Chọn học sinh --"}
-                </span>
+                <div className="flex min-w-0 items-center gap-2">
+                  <UserAvatar
+                    name={selectedStudent?.displayName}
+                    avatarUrl={selectedStudent?.avatarUrl}
+                    containerClassName="h-8 w-8 shrink-0"
+                    textClassName="text-xs font-bold"
+                  />
+                  <span className="block truncate text-gray-800">
+                    {selectedStudent?.displayName || "-- Chọn học sinh --"}
+                  </span>
+                </div>
                 <ChevronsUpDown className="h-5 w-5 shrink-0 text-gray-400" />
               </ListboxButton>
               <ListboxOptions
@@ -245,9 +254,17 @@ function ParentMakeupCreditsPage() {
                   <ListboxOption
                     key={student.id}
                     value={student.id}
-                    className="cursor-pointer select-none rounded-lg px-3 py-2.5 text-gray-800 data-[focus]:bg-red-50 data-[focus]:text-red-600 data-[selected]:font-semibold"
+                    className="cursor-pointer select-none rounded-lg px-3 py-2.5 text-gray-800 data-[focus]:bg-red-50 data-[selected]:font-semibold"
                   >
-                    {student.displayName}
+                    <div className="flex items-center gap-2">
+                      <UserAvatar
+                        name={student.displayName}
+                        avatarUrl={student.avatarUrl}
+                        containerClassName="h-8 w-8 shrink-0"
+                        textClassName="text-xs font-bold"
+                      />
+                      <span className="truncate">{student.displayName}</span>
+                    </div>
                   </ListboxOption>
                 ))}
               </ListboxOptions>

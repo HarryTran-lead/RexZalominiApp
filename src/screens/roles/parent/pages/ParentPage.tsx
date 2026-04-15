@@ -22,6 +22,7 @@ import { Spinner, useSnackbar } from "zmp-ui";
 import RoleDashboardScaffold, {
   RoleDashboardSection,
 } from "@/components/role/RoleDashboardScaffold";
+import UserAvatar from "@/components/common/UserAvatar";
 import { authService } from "@/services/authService";
 import { storage } from "@/utils/storage";
 import { UserProfile } from "@/types/auth";
@@ -109,7 +110,13 @@ function ParentPage() {
           icon: <FileText className="w-10 h-10" strokeWidth={1.5} />,
           label: "Báo cáo buổi học",
           path: "/parent/session-reports",
-          helper: "Nhận xét giáo viên theo từng buổi",
+          helper: "Nhận xét giáo viên theo từng buổi học",
+        },
+        {
+          icon: <FileText className="w-10 h-10" strokeWidth={1.5} />,
+          label: "Báo cáo tháng",
+          path: "/parent/monthly-reports",
+          helper: "Tổng hợp tiến độ học tập theo tháng",
         },
       ],
     },
@@ -165,9 +172,12 @@ function ParentPage() {
         <div className="relative">
           <ListboxButton className="w-full rounded-xl px-2 py-1 text-left active:bg-gray-50">
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-red-600 text-base font-bold text-white">
-                {selectedChild ? selectedChild.displayName.charAt(0).toUpperCase() : "?"}
-              </div>
+              <UserAvatar
+                name={selectedChild?.displayName}
+                avatarUrl={selectedChild?.avatarUrl}
+                containerClassName="h-11 w-11 shrink-0"
+                textClassName="text-base font-bold"
+              />
               <div className="flex-1 text-left">
                 <p className="text-sm font-bold leading-tight text-gray-800">
                   {selectedChild?.displayName ?? "Chọn con"}
@@ -176,11 +186,7 @@ function ParentPage() {
                   Hồ sơ đang theo dõi
                 </span>
               </div>
-              {switching ? (
-                <Spinner />
-              ) : (
-                <ChevronDown className="h-5 w-5 text-gray-400" />
-              )}
+              {switching ? <Spinner /> : <ChevronDown className="h-5 w-5 text-gray-400" />}
             </div>
           </ListboxButton>
 
@@ -197,9 +203,11 @@ function ParentPage() {
                       active || selected ? "bg-red-50" : ""
                     }`}
                   >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-red-600 font-bold text-white">
-                      {child.displayName.charAt(0).toUpperCase()}
-                    </div>
+                    <UserAvatar
+                      name={child.displayName}
+                      avatarUrl={child.avatarUrl}
+                      containerClassName="h-10 w-10 shrink-0"
+                    />
                     <div className="flex-1 text-left">
                       <p className="text-sm font-semibold text-gray-800">{child.displayName}</p>
                     </div>

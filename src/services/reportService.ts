@@ -11,6 +11,53 @@ import {
   UpdateSessionReportRequest,
 } from "@/types/teacher";
 
+function extractItems<T>(payload: unknown, depth = 0): T[] {
+  if (depth > 5) return [];
+
+  if (Array.isArray(payload)) return payload as T[];
+  if (!payload || typeof payload !== "object") return [];
+
+  const record = payload as Record<string, unknown>;
+  if (Array.isArray(record.items)) return record.items as T[];
+
+  for (const value of Object.values(record)) {
+    const nested = extractItems<T>(value, depth + 1);
+    if (nested.length > 0) return nested;
+  }
+
+  return [];
+}
+
+function extractObject(payload: unknown): Record<string, unknown> | null {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
+
+  const record = payload as Record<string, unknown>;
+  const data = record.data;
+  if (data && typeof data === "object" && !Array.isArray(data)) {
+    const dataRecord = data as Record<string, unknown>;
+    if (dataRecord.report && typeof dataRecord.report === "object" && !Array.isArray(dataRecord.report)) {
+      return dataRecord.report as Record<string, unknown>;
+    }
+    if (
+      dataRecord.monthlyReport &&
+      typeof dataRecord.monthlyReport === "object" &&
+      !Array.isArray(dataRecord.monthlyReport)
+    ) {
+      return dataRecord.monthlyReport as Record<string, unknown>;
+    }
+    return dataRecord;
+  }
+
+  if (record.report && typeof record.report === "object" && !Array.isArray(record.report)) {
+    return record.report as Record<string, unknown>;
+  }
+  if (record.monthlyReport && typeof record.monthlyReport === "object" && !Array.isArray(record.monthlyReport)) {
+    return record.monthlyReport as Record<string, unknown>;
+  }
+
+  return record;
+}
+
 /**
  * GET /api/session-reports
  * Returns all session reports visible to the authenticated user.
@@ -113,11 +160,12 @@ export const getTeacherMonthlySessionReports = async (
  * GET /api/monthly-reports
  * Returns all monthly reports visible to the authenticated user.
  */
-export const getMonthlyReports = async (): Promise<MonthlyReport[]> => {
-  const res = await api.get<ApiResponse<MonthlyReport[]>>(
-    TEACHER_ENDPOINTS.MONTHLY_REPORTS
-  );
-  return Array.isArray(res?.data) ? res.data : (res?.data as any)?.items ?? [];
+export const getMonthlyReports = async (params?: {
+  pageNumber?: number;
+  pageSize?: number;
+}): Promise<MonthlyReport[]> => {
+  const res = await api.get<unknown>(TEACHER_ENDPOINTS.MONTHLY_REPORTS, { params });
+  return extractItems<MonthlyReport>(res);
 };
 
 /**
@@ -127,10 +175,12 @@ export const getMonthlyReports = async (): Promise<MonthlyReport[]> => {
 export const getMonthlyReportById = async (
   reportId: string
 ): Promise<MonthlyReport | null> => {
-  const res = await api.get<ApiResponse<MonthlyReport>>(
+  const res = await api.get<unknown>(
     TEACHER_ENDPOINTS.MONTHLY_REPORT_DETAIL(reportId)
   );
-  return res?.data ?? null;
+  const data = extractObject(res);
+  if (!data) return null;
+  return data as MonthlyReport;
 };
 
 export const reportService = {

@@ -2,12 +2,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Page, Spinner, useSnackbar } from "zmp-ui";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "@headlessui/react";
 import { ImageIcon, PlayCircle, ChevronsUpDown } from "lucide-react";
+import UserAvatar from "@/components/common/UserAvatar";
 import { authService } from "@/services/authService";
 import { parentService } from "@/services/parentService";
 import { ParentMediaItem } from "@/types/parent";
 import { UserProfile } from "@/types/auth";
 import { storage } from "@/utils/storage";
 import { firstResolvedAssetUrl } from "@/utils/assetUrl";
+
+const MEDIA_PLACEHOLDER = "https://placehold.co/600x380/F3F4F6/9CA3AF?text=Media";
 
 function formatDate(value?: string): string {
   if (!value) return "";
@@ -20,18 +23,15 @@ function formatDate(value?: string): string {
   });
 }
 
-function imageUrl(item: ParentMediaItem): string {
+function mediaPosterUrl(item: ParentMediaItem): string {
   const record = item as ParentMediaItem & Record<string, unknown>;
   return (
     firstResolvedAssetUrl(
       item.thumbnailUrl,
-      item.mediaUrl,
       typeof record.imageUrl === "string" ? record.imageUrl : undefined,
       typeof record.attachmentImageUrl === "string" ? record.attachmentImageUrl : undefined,
-      typeof record.attachmentFileUrl === "string" ? record.attachmentFileUrl : undefined,
-      typeof record.fileUrl === "string" ? record.fileUrl : undefined,
-      typeof record.url === "string" ? record.url : undefined
-    ) || "https://placehold.co/600x380/F3F4F6/9CA3AF?text=Media"
+      typeof record.posterUrl === "string" ? record.posterUrl : undefined
+    ) || MEDIA_PLACEHOLDER
   );
 }
 
@@ -44,6 +44,21 @@ function mediaFileUrl(item: ParentMediaItem): string {
     typeof record.url === "string" ? record.url : undefined,
     typeof record.attachmentImageUrl === "string" ? record.attachmentImageUrl : undefined,
     typeof record.imageUrl === "string" ? record.imageUrl : undefined
+  );
+}
+
+function imageUrl(item: ParentMediaItem): string {
+  const record = item as ParentMediaItem & Record<string, unknown>;
+  return (
+    firstResolvedAssetUrl(
+      item.thumbnailUrl,
+      typeof record.imageUrl === "string" ? record.imageUrl : undefined,
+      typeof record.attachmentImageUrl === "string" ? record.attachmentImageUrl : undefined,
+      item.mediaUrl,
+      typeof record.attachmentFileUrl === "string" ? record.attachmentFileUrl : undefined,
+      typeof record.fileUrl === "string" ? record.fileUrl : undefined,
+      typeof record.url === "string" ? record.url : undefined
+    ) || MEDIA_PLACEHOLDER
   );
 }
 
@@ -150,9 +165,17 @@ function ParentMediaPage() {
           <Listbox value={selectedStudentId} onChange={setSelectedStudentId}>
             <div className="relative">
               <ListboxButton className="flex w-full items-center justify-between rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-left text-sm">
-                <span className="block truncate text-gray-800">
-                  {selectedStudent?.displayName || "-- Chọn học sinh --"}
-                </span>
+                <div className="flex min-w-0 items-center gap-2">
+                  <UserAvatar
+                    name={selectedStudent?.displayName}
+                    avatarUrl={selectedStudent?.avatarUrl}
+                    containerClassName="h-8 w-8 shrink-0"
+                    textClassName="text-xs font-bold"
+                  />
+                  <span className="block truncate text-gray-800">
+                    {selectedStudent?.displayName || "-- Chọn học sinh --"}
+                  </span>
+                </div>
                 <ChevronsUpDown className="h-5 w-5 shrink-0 text-gray-400" />
               </ListboxButton>
               <ListboxOptions
@@ -164,9 +187,17 @@ function ParentMediaPage() {
                   <ListboxOption
                     key={student.id}
                     value={student.id}
-                    className="cursor-pointer select-none rounded-lg px-3 py-2.5 text-gray-800 data-[focus]:bg-red-50 data-[focus]:text-red-600 data-[selected]:font-semibold"
+                    className="cursor-pointer select-none rounded-lg px-3 py-2.5 text-gray-800 data-[focus]:bg-red-50 data-[selected]:font-semibold"
                   >
-                    {student.displayName}
+                    <div className="flex items-center gap-2">
+                      <UserAvatar
+                        name={student.displayName}
+                        avatarUrl={student.avatarUrl}
+                        containerClassName="h-8 w-8 shrink-0"
+                        textClassName="text-xs font-bold"
+                      />
+                      <span className="truncate">{student.displayName}</span>
+                    </div>
                   </ListboxOption>
                 ))}
               </ListboxOptions>
@@ -211,7 +242,18 @@ function ParentMediaPage() {
                 className="overflow-hidden rounded-2xl bg-white text-left shadow-sm"
               >
                 <div className="relative h-32 w-full overflow-hidden bg-gray-100">
-                  <img src={imageUrl(item)} alt={item.title || "Media"} className="h-full w-full object-cover" />
+                  {isVideo(item) && mediaFileUrl(item) ? (
+                    <video
+                      className="h-full w-full object-cover"
+                      muted
+                      playsInline
+                      preload="metadata"
+                      poster={mediaPosterUrl(item) || MEDIA_PLACEHOLDER}
+                      src={mediaFileUrl(item)}
+                    />
+                  ) : (
+                    <img src={imageUrl(item)} alt={item.title || "Media"} className="h-full w-full object-cover" />
+                  )}
                   <div className="absolute right-2 top-2 rounded-full bg-black/55 px-1.5 py-1 text-white">
                     {isVideo(item) ? <PlayCircle className="h-3.5 w-3.5" /> : <ImageIcon className="h-3.5 w-3.5" />}
                   </div>
@@ -252,7 +294,12 @@ function ParentMediaPage() {
               <div>
                 <div className="overflow-hidden rounded-2xl bg-gray-100">
                   {isVideo(selectedItem) && mediaFileUrl(selectedItem) ? (
-                    <video controls className="h-56 w-full object-cover" src={mediaFileUrl(selectedItem)} />
+                    <video
+                      controls
+                      className="h-56 w-full object-cover"
+                      poster={mediaPosterUrl(selectedItem) || MEDIA_PLACEHOLDER}
+                      src={mediaFileUrl(selectedItem)}
+                    />
                   ) : (
                     <img
                       src={imageUrl(selectedItem)}

@@ -13,16 +13,6 @@ function formatDate(iso?: string): string {
   });
 }
 
-function getStatusMeta(status?: string): { label: string; className: string } {
-  const normalized = (status || "").toLowerCase();
-  if (normalized === "published") return { label: "Đã publish", className: "bg-blue-100 text-blue-700" };
-  if (normalized === "approved") return { label: "Đã duyệt", className: "bg-emerald-100 text-emerald-700" };
-  if (normalized === "review") return { label: "Chờ duyệt", className: "bg-amber-100 text-amber-700" };
-  if (normalized === "rejected") return { label: "Từ chối", className: "bg-rose-100 text-rose-700" };
-  if (normalized === "draft") return { label: "Nháp", className: "bg-gray-100 text-gray-700" };
-  return { label: status || "Không xác định", className: "bg-gray-100 text-gray-700" };
-}
-
 const ParentSessionReportsPage: React.FC = () => {
   const [reports, setReports] = useState<ParentSessionReport[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,7 +73,6 @@ const ParentSessionReportsPage: React.FC = () => {
         {!loading && !error && reports.length > 0 && (
           <div className="space-y-3">
             {reports.map((report) => {
-              const status = getStatusMeta(report.status);
               return (
                 <button
                   key={report.id}
@@ -91,18 +80,13 @@ const ParentSessionReportsPage: React.FC = () => {
                   onClick={() => setSelectedReport(report)}
                   className="w-full rounded-xl border border-gray-100 bg-white p-4 text-left shadow-sm"
                 >
-                  <div className="mb-2 flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <h3 className="truncate text-sm font-bold text-gray-900">
-                        {report.classTitle || report.classCode || "Báo cáo buổi học"}
-                      </h3>
-                      <p className="mt-0.5 text-xs text-gray-500">
-                        {report.studentName || "Học viên"} • {formatDate(report.sessionDate || report.reportDate)}
-                      </p>
-                    </div>
-                    <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${status.className}`}>
-                      {status.label}
-                    </span>
+                  <div className="mb-2 min-w-0">
+                    <h3 className="truncate text-sm font-bold text-gray-900">
+                      {report.classTitle || report.classCode || "Báo cáo buổi học"}
+                    </h3>
+                    <p className="mt-0.5 text-xs text-gray-500">
+                      {report.studentName || "Học viên"} • {formatDate(report.sessionDate || report.reportDate)}
+                    </p>
                   </div>
 
                   {report.feedback && (

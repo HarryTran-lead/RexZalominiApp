@@ -41,6 +41,11 @@ export const MEDIA_ENDPOINTS = {
   DETAIL: (id: string) => `/media/${id}`,
 };
 
+export const MONTHLY_REPORT_ENDPOINTS = {
+  LIST: "/monthly-reports",
+  DETAIL: (reportId: string) => `/monthly-reports/${reportId}`,
+};
+
 // Student Endpoints
 export const STUDENT_ENDPOINTS = {
   TIMETABLE: "/students/timetable",
@@ -78,9 +83,9 @@ export const TEACHER_ENDPOINTS = {
   SESSION_REPORT_AI_ENHANCE: "/session-reports/ai/enhance-feedback",
   TEACHER_MONTHLY_SESSION_REPORT: (teacherUserId: string) =>
     `/session-reports/teachers/${teacherUserId}/monthly`,
-  MONTHLY_REPORTS: "/monthly-reports",
+  MONTHLY_REPORTS: MONTHLY_REPORT_ENDPOINTS.LIST,
   MONTHLY_REPORT_DETAIL: (reportId: string) =>
-    `/monthly-reports/${reportId}`,
+    MONTHLY_REPORT_ENDPOINTS.DETAIL(reportId),
 };
 
 // Attendance Endpoints
@@ -179,6 +184,7 @@ export const API_ENDPOINTS = {
   FILE: FILE_ENDPOINTS,
   BLOG: BLOG_ENDPOINTS,
   MEDIA: MEDIA_ENDPOINTS,
+  MONTHLY_REPORT: MONTHLY_REPORT_ENDPOINTS,
   STUDENT: STUDENT_ENDPOINTS,
   TEACHER: TEACHER_ENDPOINTS,
   PARENT: PARENT_ENDPOINTS,

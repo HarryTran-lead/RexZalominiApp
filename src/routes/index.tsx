@@ -32,6 +32,7 @@ import ParentHomeworkPage from "@/screens/roles/parent/pages/ParentHomeworkPage"
 import ParentHomeworkDetailPage from "@/screens/roles/parent/pages/ParentHomeworkDetailPage";
 import ParentExamsPage from "@/screens/roles/parent/pages/ParentExamsPage";
 import ParentSessionReportsPage from "@/screens/roles/parent/pages/ParentSessionReportsPage";
+import ParentMonthlyReportsPage from "@/screens/roles/parent/pages/ParentMonthlyReportsPage";
 import ParentNotificationsPage from "@/screens/roles/parent/pages/ParentNotificationsPage";
 import ParentLeaveRequestPage from "@/screens/roles/parent/pages/ParentLeaveRequestPage";
 import ParentPauseRequestPage from "@/screens/roles/parent/pages/ParentPauseRequestPage";
@@ -48,6 +49,7 @@ import TeacherHomeworkDetailPage from "@/screens/roles/teacher/pages/TeacherHome
 import TeacherAttendancePage from "@/screens/roles/teacher/pages/TeacherAttendancePage";
 import TeacherReportCreatePage from "@/screens/roles/teacher/pages/TeacherReportCreatePage";
 import TeacherReportListPage from "@/screens/roles/teacher/pages/TeacherReportListPage";
+import TeacherMonthlyReportsPage from "@/screens/roles/teacher/pages/TeacherMonthlyReportsPage";
 import TeacherReportsPage from "../screens/roles/teacher/pages/TeacherReportsPage";
 import TeacherNotificationsPage from "@/screens/roles/teacher/pages/TeacherNotificationsPage";
 import ProfilePage from "@/screens/ProfilePage";
@@ -286,6 +288,22 @@ const MainRoutes: React.FC = () => {
         }
       />
       <AppRoute
+        path="/teacher/reports/monthly"
+        element={
+          <TeacherLayout>
+            <TeacherMonthlyReportsPage />
+          </TeacherLayout>
+        }
+      />
+      <AppRoute
+        path="/teacher/monthly-reports"
+        element={
+          <TeacherLayout>
+            <TeacherMonthlyReportsPage />
+          </TeacherLayout>
+        }
+      />
+      <AppRoute
         path="/teacher/profile"
         element={
           <TeacherLayout>
@@ -356,6 +374,14 @@ const MainRoutes: React.FC = () => {
         element={
           <ParentLayout>
             <ParentSessionReportsPage />
+          </ParentLayout>
+        }
+      />
+      <AppRoute
+        path="/parent/monthly-reports"
+        element={
+          <ParentLayout>
+            <ParentMonthlyReportsPage />
           </ParentLayout>
         }
       />

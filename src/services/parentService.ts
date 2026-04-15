@@ -5,6 +5,7 @@ import {
   LEAVE_REQUEST_ENDPOINTS,
   STUDENT_ENDPOINTS,
   MEDIA_ENDPOINTS,
+  MONTHLY_REPORT_ENDPOINTS,
 } from "@/constants/apiURL";
 import {
   CreatePauseRequestPayload,
@@ -23,6 +24,7 @@ import {
   ParentMakeupSuggestion,
   ParentUseMakeupCreditPayload,
   ParentMediaItem,
+  ParentMonthlyReport,
 } from "@/types/parent";
 
 /**
@@ -38,10 +40,12 @@ function extractItems<T>(res: any): T[] {
     const inner = res.data;
     if (Array.isArray(inner)) return inner;
     if (inner?.items && Array.isArray(inner.items)) return inner.items;
-    
-    for (const key of Object.keys(inner)) {
-      if (inner[key]?.items && Array.isArray(inner[key].items)) {
-        return inner[key].items;
+
+    if (inner && typeof inner === "object") {
+      for (const key of Object.keys(inner)) {
+        if (inner[key]?.items && Array.isArray(inner[key].items)) {
+          return inner[key].items;
+        }
       }
     }
   }
@@ -110,6 +114,34 @@ export const parentService = {
   }): Promise<ParentSessionReport[]> => {
     const res = await api.get<any>(PARENT_ENDPOINTS.SESSION_REPORTS, { params });
     return extractItems<ParentSessionReport>(res);
+  },
+
+  /** GET /api/monthly-reports */
+  getMonthlyReports: async (params?: {
+    pageNumber?: number;
+    pageSize?: number;
+    studentProfileId?: string;
+  }): Promise<ParentMonthlyReport[]> => {
+    const res = await api.get<any>(MONTHLY_REPORT_ENDPOINTS.LIST, { params });
+    return extractItems<ParentMonthlyReport>(res);
+  },
+
+  /** GET /api/monthly-reports/{reportId} */
+  getMonthlyReportById: async (reportId: string): Promise<ParentMonthlyReport | null> => {
+    const res = await api.get<any>(MONTHLY_REPORT_ENDPOINTS.DETAIL(reportId));
+    const data = res?.data ?? res;
+
+    if (!data || Array.isArray(data)) return null;
+
+    if (data?.report && typeof data.report === "object" && !Array.isArray(data.report)) {
+      return data.report as ParentMonthlyReport;
+    }
+
+    if (data?.monthlyReport && typeof data.monthlyReport === "object" && !Array.isArray(data.monthlyReport)) {
+      return data.monthlyReport as ParentMonthlyReport;
+    }
+
+    return data as ParentMonthlyReport;
   },
 
   /** GET /api/leave-requests — list leave requests */

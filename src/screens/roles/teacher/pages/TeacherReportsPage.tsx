@@ -12,7 +12,7 @@ const TeacherReportsPage: React.FC = () => {
 
       <div className="flex-1 min-h-0 overflow-y-auto px-4 pt-5 pb-24">
         <div className="rounded-2xl border border-red-100 bg-white p-4 shadow-sm">
-          <h2 className="text-base font-bold text-gray-800">Chức năng báo cáo</h2>
+          <h2 className="text-base font-bold text-gray-800">Báo cáo buổi học</h2>
           <div className="mt-4 space-y-3">
             <button
               type="button"
