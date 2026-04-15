@@ -4,7 +4,7 @@ import { Page } from "zmp-ui";
 import WeeklyTimetable from "@/components/timetable/WeeklyTimetable";
 import { TimetableSession } from "@/types/timetable";
 import { timetableService } from "@/services/timetableService";
-import { getWeekRange } from "@/utils/timetableHelper";
+import { getSessionDisplayDatetime, getWeekRange, parseTimetableDateTime, toLocalDateKey } from "@/utils/timetableHelper";
 
 const TeacherTimetablePage: React.FC = () => {
   const navigate = useNavigate();
@@ -70,12 +70,17 @@ const TeacherTimetablePage: React.FC = () => {
   };
 
   const handleSessionAttendance = (session: TimetableSession) => {
+    const sessionDateKey = toLocalDateKey(parseTimetableDateTime(getSessionDisplayDatetime(session)));
+    const todayKey = toLocalDateKey(new Date());
+    const isReadOnly = sessionDateKey < todayKey;
+
     navigate(`/teacher/attendance/${session.id}`, {
       state: {
         classCode: session.classCode,
         classTitle: session.classTitle,
         plannedDatetime: session.plannedDatetime,
         durationMinutes: session.durationMinutes,
+        readOnly: isReadOnly,
       },
     });
   };

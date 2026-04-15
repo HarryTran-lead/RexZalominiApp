@@ -430,7 +430,7 @@ const ProfilePage: React.FC = () => {
               className="flex items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50 px-3 py-3 text-sm font-semibold text-red-700 active:scale-[0.98]"
             >
               <Users className="h-4 w-4" />
-              Chuyển profile
+              Chuyển hồ sơ
             </button>
             <button
               type="button"

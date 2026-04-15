@@ -5,6 +5,7 @@ import { AlertTriangle, Users } from "lucide-react";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import { attendanceService } from "@/services/attendanceService";
 import { API_CONFIG } from "@/constants/apiURL";
+import { parseTimetableDateTime, toLocalDateKey } from "@/utils/timetableHelper";
 import {
   AttendanceListPayload,
   AttendanceMarkStatus,
@@ -48,11 +49,12 @@ interface SessionInfo {
   classTitle?: string;
   plannedDatetime?: string;
   durationMinutes?: number;
+  readOnly?: boolean;
 }
 
 function formatSessionTime(isoString?: string, durationMinutes?: number): string {
   if (!isoString) return "";
-  const start = new Date(isoString);
+  const start = parseTimetableDateTime(isoString);
   const end = new Date(start);
   if (durationMinutes) end.setMinutes(end.getMinutes() + durationMinutes);
   const fmt = (d: Date) =>
@@ -62,7 +64,7 @@ function formatSessionTime(isoString?: string, durationMinutes?: number): string
 
 function formatDate(isoString?: string): string {
   if (!isoString) return "";
-  const d = new Date(isoString);
+  const d = parseTimetableDateTime(isoString);
   return d.toLocaleDateString("vi-VN", {
     weekday: "long",
     day: "2-digit",
@@ -121,6 +123,14 @@ function TeacherAttendancePage() {
   const [submitting, setSubmitting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [readOnlyFromPayload, setReadOnlyFromPayload] = useState(false);
+
+  const readOnlyFromState = Boolean(sessionInfo.readOnly);
+  const plannedDateKey = sessionInfo.plannedDatetime
+    ? toLocalDateKey(parseTimetableDateTime(sessionInfo.plannedDatetime))
+    : "";
+  const inferredPastSession = Boolean(plannedDateKey && plannedDateKey < toLocalDateKey(new Date()));
+  const isReadOnlySession = readOnlyFromState || inferredPastSession || readOnlyFromPayload;
 
   const loadAttendance = useCallback(async () => {
     if (!sessionId) return;
@@ -128,6 +138,17 @@ function TeacherAttendancePage() {
     setError(null);
     try {
       const res = await attendanceService.getAttendance(sessionId);
+      const dataRecord =
+        res?.data && typeof res.data === "object" && !Array.isArray(res.data)
+          ? (res.data as Record<string, unknown>)
+          : null;
+
+      const payloadDate = typeof dataRecord?.date === "string" ? dataRecord.date : undefined;
+      if (payloadDate) {
+        const payloadDateKey = toLocalDateKey(parseTimetableDateTime(payloadDate));
+        setReadOnlyFromPayload(payloadDateKey < toLocalDateKey(new Date()));
+      }
+
       const list = extractAttendanceList(res?.data);
 
       setStudents(list);
@@ -150,6 +171,7 @@ function TeacherAttendancePage() {
   }, [loadAttendance]);
 
   const handleStatusChange = (student: AttendanceStudent, newStatus: AttendanceStatusValue) => {
+    if (isReadOnlySession) return;
     setStatusMap((prev) => ({ ...prev, [student.studentProfileId]: newStatus }));
   };
 
@@ -165,6 +187,10 @@ function TeacherAttendancePage() {
 
   const handleOpenConfirm = () => {
     if (students.length === 0) return;
+    if (isReadOnlySession) {
+      openSnackbar({ text: "Buổi cũ chỉ xem, không thể điểm danh lại", type: "warning" });
+      return;
+    }
     if (changedCount === 0) {
       openSnackbar({ text: "Bạn chưa thay đổi dữ liệu điểm danh", type: "warning" });
       return;
@@ -177,7 +203,7 @@ function TeacherAttendancePage() {
   };
 
   const handleSubmitAttendance = async () => {
-    if (!sessionId || submitting) return;
+    if (!sessionId || submitting || isReadOnlySession) return;
 
     const attendances = students
       .map((student) => {
@@ -221,7 +247,9 @@ function TeacherAttendancePage() {
         {/* Header */}
         <div className="bg-[#BB0000] px-4 py-4">
         <div className="flex items-center mb-2">
-          <h1 className="text-white font-bold text-lg w-full text-center">Điểm danh</h1>
+          <h1 className="text-white font-bold text-lg w-full text-center">
+            {isReadOnlySession ? "Xem điểm danh" : "Điểm danh"}
+          </h1>
         </div>
         {/* Session info */}
         {sessionInfo.classCode && (
@@ -261,6 +289,11 @@ function TeacherAttendancePage() {
               <p className="text-xl font-bold text-gray-400">{totalNotMarked}</p>
               <p className="text-[11px] text-gray-500">Chưa</p>
             </div>
+          </div>
+        )}
+        {!loading && isReadOnlySession && (
+          <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-xs font-semibold text-amber-700">
+            Buổi học cũ chỉ xem lại kết quả điểm danh, không thể cập nhật lại.
           </div>
         )}
       </div> {/* end fixed wrapper */}
@@ -330,11 +363,11 @@ function TeacherAttendancePage() {
                     {STATUS_CONFIG.map((cfg) => (
                       <button
                         key={cfg.value}
-                        disabled={submitting}
+                        disabled={submitting || isReadOnlySession}
                         onClick={() => handleStatusChange(student, cfg.value)}
                         className={`py-1.5 rounded-lg border text-xs font-semibold transition-all active:scale-95 ${
                           currentStatus === cfg.value ? cfg.activeClass : cfg.inactiveClass
-                        } ${submitting ? "opacity-50 cursor-not-allowed" : ""}`}
+                        } ${submitting || isReadOnlySession ? "opacity-50 cursor-not-allowed" : ""}`}
                       >
                         {cfg.shortLabel}
                       </button>
@@ -347,7 +380,7 @@ function TeacherAttendancePage() {
         )}
       </div>
 
-      {!loading && !error && students.length > 0 && (
+      {!loading && !error && students.length > 0 && !isReadOnlySession && (
         <div className="shrink-0 border-t border-gray-200 bg-white px-4 py-3">
           <p className="mb-2 text-center text-xs text-gray-500">
             Đã thay đổi {changedCount}/{students.length} học sinh
