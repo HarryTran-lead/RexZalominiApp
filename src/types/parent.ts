@@ -263,3 +263,63 @@ export interface GetPauseRequestsParams {
   pageNumber?: number;
   pageSize?: number;
 }
+
+// ====== Makeup Credits ======
+
+export type MakeupCreditStatus = "Pending" | "Scheduled" | "Used" | "Expired" | string;
+
+export interface ParentMakeupCredit {
+  id: string;
+  studentProfileId?: string;
+  studentName?: string;
+  classId?: string;
+  classCode?: string;
+  classTitle?: string;
+  status?: MakeupCreditStatus;
+  sourceSessionDate?: string;
+  makeupDate?: string;
+  reason?: string | null;
+  expiresAt?: string | null;
+  usedAt?: string | null;
+}
+
+export interface ParentMakeupSuggestion {
+  id: string;
+  classId?: string;
+  classCode?: string;
+  classTitle?: string;
+  teacherName?: string;
+  branchName?: string;
+  level?: string;
+  makeupDate?: string;
+  startTime?: string;
+  endTime?: string;
+  timeOfDay?: string;
+  availableSlots?: number;
+  [key: string]: unknown;
+}
+
+export interface ParentUseMakeupCreditPayload {
+  studentProfileId: string;
+  suggestionId?: string;
+  makeupSlotId?: string;
+  sessionId?: string;
+  classSessionId?: string;
+}
+
+// ====== Parent Media ======
+
+export interface ParentMediaItem {
+  id: string;
+  title?: string;
+  description?: string;
+  thumbnailUrl?: string;
+  mediaUrl?: string;
+  mediaType?: string;
+  classId?: string;
+  classCode?: string;
+  classTitle?: string;
+  studentProfileId?: string;
+  studentName?: string;
+  createdAt?: string;
+}

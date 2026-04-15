@@ -31,6 +31,16 @@ export const FILE_ENDPOINTS = {
   UPLOAD: "/files/upload",
 };
 
+export const BLOG_ENDPOINTS = {
+  PUBLISHED: "/blogs/published",
+  DETAIL: (id: string) => `/blogs/${id}`,
+};
+
+export const MEDIA_ENDPOINTS = {
+  LIST: "/media",
+  DETAIL: (id: string) => `/media/${id}`,
+};
+
 // Student Endpoints
 export const STUDENT_ENDPOINTS = {
   TIMETABLE: "/students/timetable",
@@ -95,6 +105,9 @@ export const PARENT_ENDPOINTS = {
   MEDIA: "/parent/media",
   PAUSE_ENROLLMENT_REQUESTS: "/pause-enrollment-requests",
   PAUSE_ENROLLMENT_REQUEST_DETAIL: (id: string) => `/pause-enrollment-requests/${id}`,
+  MAKEUP_CREDITS: "/makeup-credits",
+  MAKEUP_CREDIT_SUGGESTIONS: (id: string) => `/makeup-credits/${id}/suggestions`,
+  MAKEUP_CREDIT_USE: (id: string) => `/makeup-credits/${id}/use`,
 };
 
 export const NOTIFICATION_ENDPOINTS = {
@@ -164,6 +177,8 @@ export const API_ENDPOINTS = {
   AUTH: AUTH_ENDPOINTS,
   ME: ME_ENDPOINTS,
   FILE: FILE_ENDPOINTS,
+  BLOG: BLOG_ENDPOINTS,
+  MEDIA: MEDIA_ENDPOINTS,
   STUDENT: STUDENT_ENDPOINTS,
   TEACHER: TEACHER_ENDPOINTS,
   PARENT: PARENT_ENDPOINTS,

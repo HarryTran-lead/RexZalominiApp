@@ -14,6 +14,9 @@ import {
   ChevronDown,
   ClipboardCheck,
   FileText,
+  Images,
+  Repeat,
+  WalletCards,
 } from "lucide-react";
 import { Spinner, useSnackbar } from "zmp-ui";
 import RoleDashboardScaffold, {
@@ -125,6 +128,24 @@ function ParentPage() {
           label: "Đơn xin nghỉ",
           path: "/parent/leave-request",
           helper: "Gửi và theo dõi trạng thái",
+        },
+        {
+          icon: <WalletCards className="w-10 h-10" strokeWidth={1.5} />,
+          label: "Đơn bảo lưu",
+          path: "/parent/pause-request",
+          helper: "Quản lý bảo lưu dài hạn",
+        },
+        {
+          icon: <Repeat className="w-10 h-10" strokeWidth={1.5} />,
+          label: "Học bù",
+          path: "/parent/makeup-credits",
+          helper: "Đăng ký hoặc đổi lịch học bù",
+        },
+        {
+          icon: <Images className="w-10 h-10" strokeWidth={1.5} />,
+          label: "Media",
+          path: "/parent/media",
+          helper: "Xem hình ảnh và video lớp học",
         },
       ],
     },

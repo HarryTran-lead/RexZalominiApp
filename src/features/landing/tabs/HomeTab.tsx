@@ -308,7 +308,7 @@ function HomeTab({ isLinking, onQuickZaloLink }: HomeTabProps) {
           disabled={isLinking}
           className="flex h-12 items-center justify-center rounded-2xl bg-gradient-to-r from-slate-900 to-slate-700 text-xs font-semibold text-white shadow-md active:scale-95 transition-transform disabled:opacity-60"
         >
-          {isLinking ? "Đang xử lý..." : "Liên kết SĐT Zalo"}
+          {isLinking ? "Đang xử lý..." : "Liên kết tài khoản"}
         </button>
       </div>
 

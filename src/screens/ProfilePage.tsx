@@ -1,16 +1,19 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Spinner, useSnackbar } from "zmp-ui";
+import ConfirmModal from "@/components/common/ConfirmModal";
 import ProfileAccordionItem from "@/components/profile/ProfileAccordionItem";
 import ProfileAccountSection from "@/components/profile/ProfileAccountSection";
 import ProfileHeroCard from "@/components/profile/ProfileHeroCard";
 import ProfileInfoSection from "@/components/profile/ProfileInfoSection";
 import ProfileSecuritySection from "@/components/profile/ProfileSecuritySection";
-import { CircleUserRound, FileText, Info, Lock, RotateCw } from "lucide-react";
+import { CircleUserRound, FileText, Info, Lock, LogOut, RotateCw, Users } from "lucide-react";
 import { API_CONFIG } from "@/constants/apiURL";
 import { authService } from "@/services/authService";
 import { fileService } from "@/services/fileService";
 import { meService } from "@/services/meService";
+import { storage } from "@/utils/storage";
 import { UpdateProfileRequest, UserData } from "@/types/me";
 
 type AccountFormState = {
@@ -45,6 +48,7 @@ type SectionKey = "account" | "security" | "terms" | "about";
 
 const ProfilePage: React.FC = () => {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const { openSnackbar } = useSnackbar();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -63,12 +67,19 @@ const ProfilePage: React.FC = () => {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
   const [sendingForgotPassword, setSendingForgotPassword] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const currentRole = useMemo(() => {
     if (pathname.startsWith("/parent")) return "Phụ huynh";
     if (pathname.startsWith("/teacher")) return "Giáo viên";
     return "Học viên";
   }, [pathname]);
+
+  const isParentOrStudent = useMemo(
+    () => pathname.startsWith("/parent") || pathname.startsWith("/student"),
+    [pathname]
+  );
 
   const isResponseSuccess = (
     response: { isSuccess?: boolean; success?: boolean } | null | undefined
@@ -354,6 +365,26 @@ const ProfilePage: React.FC = () => {
     }
   };
 
+  const handleSwitchProfile = () => {
+    navigate("/account-chooser");
+  };
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await storage.clearAuth();
+      await storage.removeItem("selectedProfileId");
+      sessionStorage.removeItem("selectedProfileId");
+      openSnackbar({ text: "Đăng xuất thành công.", type: "success" });
+      navigate("/", { replace: true });
+    } catch {
+      openSnackbar({ text: "Không thể đăng xuất. Vui lòng thử lại.", type: "error" });
+    } finally {
+      setIsLoggingOut(false);
+      setIsLogoutModalOpen(false);
+    }
+  };
+
   if (loadingProfile) {
     return (
       <div className="flex min-h-full items-center justify-center py-20">
@@ -390,6 +421,27 @@ const ProfilePage: React.FC = () => {
           onAvatarClick={handleAvatarClick}
           uploadingAvatar={uploadingAvatar}
         />
+
+        {isParentOrStudent && (
+          <section className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={handleSwitchProfile}
+              className="flex items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50 px-3 py-3 text-sm font-semibold text-red-700 active:scale-[0.98]"
+            >
+              <Users className="h-4 w-4" />
+              Chuyển profile
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsLogoutModalOpen(true)}
+              className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-700 active:scale-[0.98]"
+            >
+              <LogOut className="h-4 w-4" />
+              Đăng xuất
+            </button>
+          </section>
+        )}
 
         <ProfileAccordionItem
           title="Thông tin cá nhân"
@@ -480,6 +532,22 @@ const ProfilePage: React.FC = () => {
           <ProfileInfoSection type="about" />
         </ProfileAccordionItem>
       </div>
+
+      <ConfirmModal
+        isOpen={isLogoutModalOpen}
+        title="Xác nhận đăng xuất"
+        message="Bạn có chắc muốn đăng xuất khỏi tài khoản hiện tại không?"
+        confirmText={isLoggingOut ? "Đang đăng xuất..." : "Đăng xuất"}
+        cancelText="Ở lại"
+        confirmClassName="bg-[#BB0000] hover:bg-red-800"
+        isLoading={isLoggingOut}
+        onConfirm={() => {
+          void handleLogout();
+        }}
+        onCancel={() => {
+          if (!isLoggingOut) setIsLogoutModalOpen(false);
+        }}
+      />
     </div>
   );
 };

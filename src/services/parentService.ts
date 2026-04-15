@@ -1,6 +1,11 @@
 import { api } from "@/api/api";
 import { ApiResponse } from "@/types/apiResponse";
-import { PARENT_ENDPOINTS, LEAVE_REQUEST_ENDPOINTS, STUDENT_ENDPOINTS } from "@/constants/apiURL";
+import {
+  PARENT_ENDPOINTS,
+  LEAVE_REQUEST_ENDPOINTS,
+  STUDENT_ENDPOINTS,
+  MEDIA_ENDPOINTS,
+} from "@/constants/apiURL";
 import {
   CreatePauseRequestPayload,
   GetPauseRequestsParams,
@@ -14,6 +19,10 @@ import {
   ParentAttendanceRecord,
   ParentSessionReport,
   PauseEnrollmentRequest,
+  ParentMakeupCredit,
+  ParentMakeupSuggestion,
+  ParentUseMakeupCreditPayload,
+  ParentMediaItem,
 } from "@/types/parent";
 
 /**
@@ -147,5 +156,58 @@ export const parentService = {
       PARENT_ENDPOINTS.PAUSE_ENROLLMENT_REQUESTS,
       payload
     );
+  },
+
+  /** GET /api/makeup-credits?studentProfileId={id} */
+  getMakeupCredits: async (params: {
+    studentProfileId: string;
+    pageNumber?: number;
+    pageSize?: number;
+  }): Promise<ParentMakeupCredit[]> => {
+    const res = await api.get<any>(PARENT_ENDPOINTS.MAKEUP_CREDITS, { params });
+    return extractItems<ParentMakeupCredit>(res);
+  },
+
+  /** GET /api/makeup-credits/{id}/suggestions */
+  getMakeupSuggestions: async (
+    makeupCreditId: string,
+    params?: {
+      makeupDate?: string;
+      timeOfDay?: string;
+    }
+  ): Promise<ParentMakeupSuggestion[]> => {
+    const res = await api.get<any>(PARENT_ENDPOINTS.MAKEUP_CREDIT_SUGGESTIONS(makeupCreditId), {
+      params,
+    });
+    return extractItems<ParentMakeupSuggestion>(res);
+  },
+
+  /** POST /api/makeup-credits/{id}/use */
+  useMakeupCredit: async (
+    makeupCreditId: string,
+    payload: ParentUseMakeupCreditPayload
+  ): Promise<ApiResponse<unknown>> => {
+    return await api.post<ApiResponse<unknown>>(
+      PARENT_ENDPOINTS.MAKEUP_CREDIT_USE(makeupCreditId),
+      payload
+    );
+  },
+
+  /** GET /api/media for parent gallery */
+  getMedia: async (params?: {
+    studentProfileId?: string;
+    pageNumber?: number;
+    pageSize?: number;
+  }): Promise<ParentMediaItem[]> => {
+    const res = await api.get<any>(MEDIA_ENDPOINTS.LIST, { params });
+    return extractItems<ParentMediaItem>(res);
+  },
+
+  /** GET /api/media/{id} */
+  getMediaDetail: async (id: string): Promise<ParentMediaItem | null> => {
+    const res = await api.get<any>(MEDIA_ENDPOINTS.DETAIL(id));
+    const data = res?.data ?? res;
+    if (!data || Array.isArray(data)) return null;
+    return data as ParentMediaItem;
   },
 };

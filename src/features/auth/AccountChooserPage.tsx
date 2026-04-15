@@ -4,6 +4,16 @@ import { Page, useSnackbar } from "zmp-ui";
 import { authService } from "@/services/authService";
 import { storage } from "@/utils/storage";
 import { UserProfile } from "@/types/auth";
+import { firstResolvedAssetUrl } from "@/utils/assetUrl";
+
+function avatarUrl(profile: UserProfile): string {
+  const record = profile as UserProfile & Record<string, unknown>;
+  return firstResolvedAssetUrl(
+    profile.avatarUrl,
+    typeof record.avatar === "string" ? record.avatar : undefined,
+    typeof record.imageUrl === "string" ? record.imageUrl : undefined
+  );
+}
 
 function AccountChooserPage() {
   const navigate = useNavigate();
@@ -187,7 +197,9 @@ function AccountChooserPage() {
               scrollbarWidth: "none",
             }}
           >
-            {profiles.map((profile, index) => (
+            {profiles.map((profile, index) => {
+              const resolvedAvatar = avatarUrl(profile);
+              return (
               <button
                 key={profile.id}
                 className="group flex w-[146px] shrink-0 flex-col items-center gap-3 pt-1 transition"
@@ -207,9 +219,9 @@ function AccountChooserPage() {
                         : "border-4 border-cyan-400 ring-4 ring-cyan-300/50 shadow-lg shadow-cyan-400/50"
                     }`}
                   >
-                    {profile.avatarUrl ? (
+                    {resolvedAvatar ? (
                       <img
-                        src={profile.avatarUrl}
+                        src={resolvedAvatar}
                         alt={profile.displayName}
                         className="h-full w-full object-cover"
                       />
@@ -266,7 +278,8 @@ function AccountChooserPage() {
                   {profile.profileType === "Parent" ? "Phụ huynh" : "Học sinh"}
                 </span>
               </button>
-            ))}
+              );
+            })}
           </div>
         )}
 

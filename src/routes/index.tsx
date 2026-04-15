@@ -34,6 +34,9 @@ import ParentExamsPage from "@/screens/roles/parent/pages/ParentExamsPage";
 import ParentSessionReportsPage from "@/screens/roles/parent/pages/ParentSessionReportsPage";
 import ParentNotificationsPage from "@/screens/roles/parent/pages/ParentNotificationsPage";
 import ParentLeaveRequestPage from "@/screens/roles/parent/pages/ParentLeaveRequestPage";
+import ParentPauseRequestPage from "@/screens/roles/parent/pages/ParentPauseRequestPage";
+import ParentMakeupCreditsPage from "@/screens/roles/parent/pages/ParentMakeupCreditsPage";
+import ParentMediaPage from "@/screens/roles/parent/pages/ParentMediaPage";
 import LandingPage from "@/features/landing/LandingPage";
 
 // Teacher pages
@@ -369,6 +372,30 @@ const MainRoutes: React.FC = () => {
         element={
           <ParentLayout>
             <ParentLeaveRequestPage />
+          </ParentLayout>
+        }
+      />
+      <AppRoute
+        path="/parent/pause-request"
+        element={
+          <ParentLayout>
+            <ParentPauseRequestPage />
+          </ParentLayout>
+        }
+      />
+      <AppRoute
+        path="/parent/makeup-credits"
+        element={
+          <ParentLayout>
+            <ParentMakeupCreditsPage />
+          </ParentLayout>
+        }
+      />
+      <AppRoute
+        path="/parent/media"
+        element={
+          <ParentLayout>
+            <ParentMediaPage />
           </ParentLayout>
         }
       />
