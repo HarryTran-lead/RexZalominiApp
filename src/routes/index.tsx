@@ -34,6 +34,7 @@ import ParentExamsPage from "@/screens/roles/parent/pages/ParentExamsPage";
 import ParentSessionReportsPage from "@/screens/roles/parent/pages/ParentSessionReportsPage";
 import ParentMonthlyReportsPage from "@/screens/roles/parent/pages/ParentMonthlyReportsPage";
 import ParentNotificationsPage from "@/screens/roles/parent/pages/ParentNotificationsPage";
+import ParentApplicationPage from "@/screens/roles/parent/pages/ParentApplicationPage";
 import ParentLeaveRequestPage from "@/screens/roles/parent/pages/ParentLeaveRequestPage";
 import ParentPauseRequestPage from "@/screens/roles/parent/pages/ParentPauseRequestPage";
 import ParentMakeupCreditsPage from "@/screens/roles/parent/pages/ParentMakeupCreditsPage";
@@ -390,6 +391,14 @@ const MainRoutes: React.FC = () => {
         element={
           <ParentLayout>
             <ParentNotificationsPage />
+          </ParentLayout>
+        }
+      />
+      <AppRoute
+        path="/parent/application"
+        element={
+          <ParentLayout>
+            <ParentApplicationPage />
           </ParentLayout>
         }
       />

@@ -1,7 +1,7 @@
 import SupportTicketPage from "@/components/support/SupportTicketPage";
 
-function StudentApplicationPage() {
+function ParentApplicationPage() {
   return <SupportTicketPage />;
 }
 
-export default StudentApplicationPage;
+export default ParentApplicationPage;

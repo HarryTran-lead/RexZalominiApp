@@ -300,7 +300,7 @@ export interface Ticket{
 }
 
 export type TicketStatus = "Open" | "InProgress" | "Resolved" | "Closed";
-export type TicketCategory = "Homework" | "Finance" | "Schedule" | "Tech";
+export type TicketCategory = "Homework" | "Finance" | "Schedule" | "Tech" | "Other";
 
 
 export interface CreateTicket {

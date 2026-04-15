@@ -132,6 +132,12 @@ function ParentPage() {
         },
         {
           icon: <FileText className="w-10 h-10" strokeWidth={1.5} />,
+          label: "Đơn hỗ trợ",
+          path: "/parent/application",
+          helper: "Gửi yêu cầu hỗ trợ nhanh",
+        },
+        {
+          icon: <FileText className="w-10 h-10" strokeWidth={1.5} />,
           label: "Đơn xin nghỉ",
           path: "/parent/leave-request",
           helper: "Gửi và theo dõi trạng thái",
