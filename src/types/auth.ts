@@ -63,6 +63,30 @@ export interface RequestParentPinResetRequest {
   profileId: string;
 }
 
+export interface RequestPinResetZaloOtpResponse {
+  challengeId?: string;
+  message?: string;
+  [key: string]: unknown;
+}
+
+export interface VerifyPinResetZaloOtpRequest {
+  challengeId: string;
+  otp: string;
+}
+
+export interface VerifyPinResetZaloOtpResponse {
+  token?: string;
+  resetToken?: string;
+  pinResetToken?: string;
+  message?: string;
+  [key: string]: unknown;
+}
+
+export interface ResetPinRequest {
+  token: string;
+  newPin: string;
+}
+
 // ==================== Type Aliases for Compatibility ====================
 
 export type SelectStudentRequest = SelectStudentProfileRequest;
@@ -174,5 +198,8 @@ export type VerifyParentPinApiResponse = ApiResponse<VerifyParentPinResponse>;
 export type SelectStudentApiResponse = ApiResponse<SelectStudentResponse>;
 export type ChangePinApiResponse = ApiResponse<{ message: string }>;
 export type RequestPinResetApiResponse = ApiResponse<{ message: string }>;
+export type RequestPinResetZaloOtpApiResponse = ApiResponse<RequestPinResetZaloOtpResponse>;
+export type VerifyPinResetZaloOtpApiResponse = ApiResponse<VerifyPinResetZaloOtpResponse>;
+export type ResetPinApiResponse = ApiResponse<{ message?: string }>;
 export type UserMeApiResponse = ApiResponse<UserMeResponse>;
 export type LogoutApiResponse = ApiResponse<{ message: string }>;

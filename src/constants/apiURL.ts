@@ -19,6 +19,9 @@ export const AUTH_ENDPOINTS = {
   SELECT_STUDENT: "/auth/profiles/select-student",
   CHANGE_PIN: "/auth/change-pin",
   REQUEST_PIN_RESET: "/auth/profiles/request-pin-reset",
+  REQUEST_PIN_RESET_ZALO_OTP: "/auth/profiles/request-pin-reset-zalo-otp",
+  VERIFY_PIN_RESET_ZALO_OTP: "/auth/profiles/verify-pin-reset-zalo-otp",
+  RESET_PIN: "/auth/reset-pin",
 };
 
 export const ME_ENDPOINTS = {
