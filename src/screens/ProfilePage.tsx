@@ -13,14 +13,20 @@ import { API_CONFIG } from "@/constants/apiURL";
 import { authService } from "@/services/authService";
 import { fileService } from "@/services/fileService";
 import { meService } from "@/services/meService";
+import { firstResolvedAssetUrl } from "@/utils/assetUrl";
 import { storage } from "@/utils/storage";
-import { UpdateProfileRequest, UserData } from "@/types/me";
+import { UpdateProfileDisplayNameItem, UpdateProfileRequest, UserData } from "@/types/me";
 
 type AccountFormState = {
   fullName: string;
   email: string;
   phoneNumber: string;
   avatarUrl: string;
+  profileDisplayNames: Array<{
+    id: string;
+    profileType: string;
+    displayName: string;
+  }>;
 };
 
 type SecurityFormState = {
@@ -35,6 +41,7 @@ const INITIAL_ACCOUNT_FORM: AccountFormState = {
   email: "",
   phoneNumber: "",
   avatarUrl: "",
+  profileDisplayNames: [],
 };
 
 const INITIAL_SECURITY_FORM: SecurityFormState = {
@@ -45,6 +52,14 @@ const INITIAL_SECURITY_FORM: SecurityFormState = {
 };
 
 type SectionKey = "account" | "security" | "terms" | "about";
+
+const MAX_AVATAR_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+const ALLOWED_AVATAR_MIME_TYPES = new Set([
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+]);
 
 const ProfilePage: React.FC = () => {
   const { pathname } = useLocation();
@@ -90,6 +105,35 @@ const ProfilePage: React.FC = () => {
     return true;
   };
 
+  const resolveActiveRoleProfile = (data: UserData) => {
+    const profiles = data.profiles ?? [];
+
+    if (pathname.startsWith("/student")) {
+      if (data.selectedProfileId) {
+        const selectedProfile = profiles.find(
+          (profile) => profile.id === data.selectedProfileId
+        );
+        if (selectedProfile) return selectedProfile;
+      }
+
+      return profiles.find((profile) => profile.profileType === "Student") ?? null;
+    }
+
+    if (pathname.startsWith("/parent")) {
+      return profiles.find((profile) => profile.profileType === "Parent") ?? null;
+    }
+
+    if (pathname.startsWith("/teacher")) {
+      return profiles.find((profile) => profile.profileType === "Teacher") ?? null;
+    }
+
+    if (data.selectedProfileId) {
+      return profiles.find((profile) => profile.id === data.selectedProfileId) ?? null;
+    }
+
+    return profiles[0] ?? null;
+  };
+
   const resolveBackendAssetUrl = (rawUrl?: string | null): string => {
     if (!rawUrl) return "";
 
@@ -108,63 +152,17 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  const extractFileUrl = (uploadResponse: unknown): string | undefined => {
-    if (!uploadResponse) return undefined;
-
-    if (typeof uploadResponse === "string") {
-      return uploadResponse;
-    }
-
-    const root = uploadResponse as Record<string, unknown>;
-    const rootUrl =
-      (root.url as string | undefined) ||
-      (root.fileUrl as string | undefined) ||
-      (root.secureUrl as string | undefined) ||
-      (root.secure_url as string | undefined);
-
-    if (rootUrl) return rootUrl;
-
-    const nested = root.data as Record<string, unknown> | undefined;
-    if (!nested) return undefined;
-
-    return (
-      (nested.url as string | undefined) ||
-      (nested.fileUrl as string | undefined) ||
-      (nested.secureUrl as string | undefined) ||
-      (nested.secure_url as string | undefined)
-    );
-  };
-
-  const normalizeApiResponse = (response: unknown) => {
-    if (!response || typeof response !== "object") {
-      return {
-        success: true,
-        data: response,
-        message: undefined as string | undefined,
-      };
-    }
-
-    const payload = response as Record<string, unknown>;
-    const success =
-      typeof payload.isSuccess === "boolean"
-        ? payload.isSuccess
-        : typeof payload.success === "boolean"
-          ? payload.success
-          : true;
-
-    return {
-      success,
-      data: payload.data,
-      message: typeof payload.message === "string" ? payload.message : undefined,
-    };
-  };
-
   const hydrateAccountForm = (data: UserData) => {
     setAccountForm({
       fullName: data.fullName ?? "",
       email: data.email ?? "",
       phoneNumber: data.phoneNumber ?? "",
       avatarUrl: resolveBackendAssetUrl(data.avatarUrl),
+      profileDisplayNames: (data.profiles ?? []).map((profile) => ({
+        id: profile.id,
+        profileType: profile.profileType,
+        displayName: profile.displayName ?? "",
+      })),
     });
 
     setSecurityForm((prev) => ({
@@ -183,6 +181,19 @@ const ProfilePage: React.FC = () => {
       }
 
       setUser(response.data);
+      const profileContext = meService.extractProfileContext(response.data);
+
+      if (profileContext.studentProfileId) {
+        await storage.setItem("selectedProfileId", profileContext.studentProfileId);
+      } else {
+        await storage.removeItem("selectedProfileId");
+      }
+      if (profileContext.parentProfileId) {
+        await storage.setItem("parentProfileId", profileContext.parentProfileId);
+      } else {
+        await storage.removeItem("parentProfileId");
+      }
+
       hydrateAccountForm(response.data);
     } catch (error: any) {
       const message =
@@ -199,19 +210,38 @@ const ProfilePage: React.FC = () => {
     void loadProfile();
   }, []);
 
-  const persistProfile = async (
-    nextData: Partial<UpdateProfileRequest>,
-    successText: string
-  ) => {
+  const activeRoleProfile = useMemo(() => {
+    if (!user) return null;
+    return resolveActiveRoleProfile(user);
+  }, [user, pathname]);
+
+  const heroFullName = activeRoleProfile?.displayName || accountForm.fullName;
+  const heroAvatarUrl = firstResolvedAssetUrl(
+    activeRoleProfile?.avatarUrl,
+    user?.avatarUrl,
+    accountForm.avatarUrl
+  );
+
+  const persistProfile = async (successText: string) => {
+    const profileDisplayNames: UpdateProfileDisplayNameItem[] =
+      accountForm.profileDisplayNames.map((profile) => ({
+        id: profile.id,
+        displayName: profile.displayName.trim(),
+      }));
+
     const payload: UpdateProfileRequest = {
       fullName: accountForm.fullName.trim(),
       email: accountForm.email.trim(),
       phoneNumber: accountForm.phoneNumber.trim(),
-      avatarUrl: accountForm.avatarUrl.trim() || undefined,
-      ...nextData,
+      profiles: profileDisplayNames,
     };
 
-    if (!payload.fullName || !payload.email || !payload.phoneNumber) {
+    if (
+      !payload.fullName ||
+      !payload.email ||
+      !payload.phoneNumber ||
+      profileDisplayNames.some((profile) => !profile.displayName)
+    ) {
       throw new Error("Vui lòng điền đầy đủ thông tin bắt buộc.");
     }
 
@@ -224,6 +254,8 @@ const ProfilePage: React.FC = () => {
     if (response.data) {
       setUser(response.data);
       hydrateAccountForm(response.data);
+    } else {
+      await loadProfile();
     }
 
     openSnackbar({ text: successText, type: "success" });
@@ -232,7 +264,7 @@ const ProfilePage: React.FC = () => {
   const handleSaveAccount = async () => {
     try {
       setUpdatingAccount(true);
-      await persistProfile({}, "Đã cập nhật thông tin tài khoản.");
+      await persistProfile("Đã cập nhật thông tin tài khoản.");
     } catch (error: any) {
       const message =
         error?.response?.data?.message ||
@@ -254,26 +286,69 @@ const ProfilePage: React.FC = () => {
     const file = event.target.files?.[0] || null;
     if (!file) return;
 
+    if (!ALLOWED_AVATAR_MIME_TYPES.has(file.type)) {
+      openSnackbar({
+        text: "Định dạng ảnh không hợp lệ. Vui lòng dùng JPG, PNG hoặc WEBP.",
+        type: "warning",
+      });
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > MAX_AVATAR_FILE_SIZE_BYTES) {
+      openSnackbar({
+        text: "Dung lượng ảnh vượt quá 10MB. Vui lòng chọn ảnh nhỏ hơn.",
+        type: "warning",
+      });
+      event.target.value = "";
+      return;
+    }
+
     try {
       setUploadingAvatar(true);
 
+      if (!user) {
+        throw new Error("Không thể xác định tài khoản hiện tại.");
+      }
+
+      const profileContext = meService.extractProfileContext(user);
+      const savedStudentProfileId = await storage.getItem("selectedProfileId");
+      const studentProfileId =
+        profileContext.studentProfileId ?? savedStudentProfileId;
+
+      let targetProfileId: string | null = null;
+
+      if (pathname.startsWith("/parent")) {
+        targetProfileId = profileContext.parentProfileId ?? studentProfileId;
+      } else if (pathname.startsWith("/student")) {
+        targetProfileId =
+          studentProfileId ??
+          user.profiles.find((profile) => profile.profileType === "Student")?.id ??
+          null;
+      } else if (pathname.startsWith("/teacher")) {
+        targetProfileId =
+          user.profiles.find((profile) => profile.profileType === "Teacher")?.id ??
+          user.selectedProfileId ??
+          null;
+      } else {
+        targetProfileId =
+          studentProfileId ??
+          profileContext.parentProfileId ??
+          user.profiles[0]?.id ??
+          null;
+      }
+
+      if (!targetProfileId) {
+        throw new Error("Không xác định được profile để cập nhật avatar.");
+      }
+
       // Use dedicated avatar API for profile avatar updates.
-      const uploadResponse = await fileService.uploadAvatar(file);
-      const uploadMeta = normalizeApiResponse(uploadResponse);
-
-      if (!uploadMeta.success) {
-        throw new Error(uploadMeta.message || "Upload avatar thất bại.");
+      const uploadResponse = await fileService.uploadAvatar(file, targetProfileId);
+      if (!isResponseSuccess(uploadResponse as { isSuccess?: boolean; success?: boolean })) {
+        throw new Error("Upload avatar thất bại.");
       }
 
-      // Some BE responses are wrapped ({data: {url}}), some are direct ({url}).
-      const rawUrl = extractFileUrl(uploadMeta.data ?? uploadResponse);
-      if (!rawUrl) {
-        throw new Error("Không đọc được URL avatar từ API upload.");
-      }
-
-      const avatarUrl = resolveBackendAssetUrl(rawUrl);
-      setAccountForm((prev) => ({ ...prev, avatarUrl }));
-      setUser((prev) => (prev ? { ...prev, avatarUrl } : prev));
+      await loadProfile();
       openSnackbar({ text: "Đã cập nhật avatar thành công.", type: "success" });
     } catch (error: any) {
       const message =
@@ -398,7 +473,7 @@ const ProfilePage: React.FC = () => {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
         onChange={handleAvatarFileChange}
         className="hidden"
       />
@@ -413,11 +488,11 @@ const ProfilePage: React.FC = () => {
 
       <div className="space-y-4 px-4 pt-4">
         <ProfileHeroCard
-          fullName={accountForm.fullName}
+          fullName={heroFullName}
           userCode={user?.userName}
           roleLabel={currentRole}
           isActive={Boolean(user?.isActive)}
-          avatarUrl={accountForm.avatarUrl}
+          avatarUrl={heroAvatarUrl}
           onAvatarClick={handleAvatarClick}
           uploadingAvatar={uploadingAvatar}
         />
@@ -457,15 +532,25 @@ const ProfilePage: React.FC = () => {
             fullName={accountForm.fullName}
             email={accountForm.email}
             phoneNumber={accountForm.phoneNumber}
-            avatarUrl={accountForm.avatarUrl}
+            profileDisplayNames={accountForm.profileDisplayNames}
+            onChangeFullName={(value) =>
+              setAccountForm((prev) => ({ ...prev, fullName: value }))
+            }
             onChangeEmail={(value) =>
               setAccountForm((prev) => ({ ...prev, email: value }))
             }
             onChangePhoneNumber={(value) =>
               setAccountForm((prev) => ({ ...prev, phoneNumber: value }))
             }
-            onChangeAvatarUrl={(value) =>
-              setAccountForm((prev) => ({ ...prev, avatarUrl: value }))
+            onChangeProfileDisplayName={(profileId, value) =>
+              setAccountForm((prev) => ({
+                ...prev,
+                profileDisplayNames: prev.profileDisplayNames.map((profile) =>
+                  profile.id === profileId
+                    ? { ...profile, displayName: value }
+                    : profile
+                ),
+              }))
             }
             onSave={() => void handleSaveAccount()}
             loading={updatingAccount}
