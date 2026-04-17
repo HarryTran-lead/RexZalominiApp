@@ -112,15 +112,23 @@ export interface MonthlySessionReport {
 export interface MonthlyReport {
   id: string;
   reportId?: string;
+  studentProfileId?: string;
+  studentName?: string;
   classId?: string;
   classCode?: string;
   className?: string;
+  classTitle?: string;
+  programId?: string;
+  programName?: string;
+  jobId?: string;
   subjectName?: string;
   month?: number;
   year?: number;
   teacherName?: string;
   status?: string;
   summary?: string;
+  feedback?: string;
+  publishedAt?: string;
   totalSessions?: number;
   completedSessions?: number;
   averageGrade?: number;

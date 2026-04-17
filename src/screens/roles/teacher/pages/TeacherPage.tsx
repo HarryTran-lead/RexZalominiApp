@@ -5,6 +5,7 @@ import {
   BookOpenText,
   Building2,
   CalendarDays,
+  CalendarRange,
   ChartColumn,
   ClipboardCheck,
 } from "lucide-react";
@@ -57,9 +58,15 @@ function TeacherPage() {
         },
         {
           icon: <ChartColumn className="w-10 h-10" strokeWidth={1.5} />,
-          label: "Báo cáo & feedback",
+          label: "Báo cáo buổi học",
           path: "/teacher/reports",
           helper: "Đánh giá sau mỗi buổi học",
+        },
+        {
+          icon: <CalendarRange className="w-10 h-10" strokeWidth={1.5} />,
+          label: "Báo cáo tháng",
+          path: "/teacher/monthly-reports",
+          helper: "Xem tổng hợp theo tháng và mở chi tiết",
         },
       ],
     },

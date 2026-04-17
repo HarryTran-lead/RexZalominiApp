@@ -32,8 +32,13 @@ import ParentHomeworkPage from "@/screens/roles/parent/pages/ParentHomeworkPage"
 import ParentHomeworkDetailPage from "@/screens/roles/parent/pages/ParentHomeworkDetailPage";
 import ParentExamsPage from "@/screens/roles/parent/pages/ParentExamsPage";
 import ParentSessionReportsPage from "@/screens/roles/parent/pages/ParentSessionReportsPage";
+import ParentMonthlyReportsPage from "@/screens/roles/parent/pages/ParentMonthlyReportsPage";
 import ParentNotificationsPage from "@/screens/roles/parent/pages/ParentNotificationsPage";
+import ParentApplicationPage from "@/screens/roles/parent/pages/ParentApplicationPage";
 import ParentLeaveRequestPage from "@/screens/roles/parent/pages/ParentLeaveRequestPage";
+import ParentPauseRequestPage from "@/screens/roles/parent/pages/ParentPauseRequestPage";
+import ParentMakeupCreditsPage from "@/screens/roles/parent/pages/ParentMakeupCreditsPage";
+import ParentMediaPage from "@/screens/roles/parent/pages/ParentMediaPage";
 import LandingPage from "@/features/landing/LandingPage";
 
 // Teacher pages
@@ -45,6 +50,7 @@ import TeacherHomeworkDetailPage from "@/screens/roles/teacher/pages/TeacherHome
 import TeacherAttendancePage from "@/screens/roles/teacher/pages/TeacherAttendancePage";
 import TeacherReportCreatePage from "@/screens/roles/teacher/pages/TeacherReportCreatePage";
 import TeacherReportListPage from "@/screens/roles/teacher/pages/TeacherReportListPage";
+import TeacherMonthlyReportsPage from "@/screens/roles/teacher/pages/TeacherMonthlyReportsPage";
 import TeacherReportsPage from "../screens/roles/teacher/pages/TeacherReportsPage";
 import TeacherNotificationsPage from "@/screens/roles/teacher/pages/TeacherNotificationsPage";
 import ProfilePage from "@/screens/ProfilePage";
@@ -283,6 +289,22 @@ const MainRoutes: React.FC = () => {
         }
       />
       <AppRoute
+        path="/teacher/reports/monthly"
+        element={
+          <TeacherLayout>
+            <TeacherMonthlyReportsPage />
+          </TeacherLayout>
+        }
+      />
+      <AppRoute
+        path="/teacher/monthly-reports"
+        element={
+          <TeacherLayout>
+            <TeacherMonthlyReportsPage />
+          </TeacherLayout>
+        }
+      />
+      <AppRoute
         path="/teacher/profile"
         element={
           <TeacherLayout>
@@ -357,6 +379,14 @@ const MainRoutes: React.FC = () => {
         }
       />
       <AppRoute
+        path="/parent/monthly-reports"
+        element={
+          <ParentLayout>
+            <ParentMonthlyReportsPage />
+          </ParentLayout>
+        }
+      />
+      <AppRoute
         path="/parent/notifications"
         element={
           <ParentLayout>
@@ -365,10 +395,42 @@ const MainRoutes: React.FC = () => {
         }
       />
       <AppRoute
+        path="/parent/application"
+        element={
+          <ParentLayout>
+            <ParentApplicationPage />
+          </ParentLayout>
+        }
+      />
+      <AppRoute
         path="/parent/leave-request"
         element={
           <ParentLayout>
             <ParentLeaveRequestPage />
+          </ParentLayout>
+        }
+      />
+      <AppRoute
+        path="/parent/pause-request"
+        element={
+          <ParentLayout>
+            <ParentPauseRequestPage />
+          </ParentLayout>
+        }
+      />
+      <AppRoute
+        path="/parent/makeup-credits"
+        element={
+          <ParentLayout>
+            <ParentMakeupCreditsPage />
+          </ParentLayout>
+        }
+      />
+      <AppRoute
+        path="/parent/media"
+        element={
+          <ParentLayout>
+            <ParentMediaPage />
           </ParentLayout>
         }
       />

@@ -64,18 +64,20 @@ interface WeeklyTimetableProps {
   onNextWeek: () => void;
   onToday: () => void;
   role: "student" | "teacher" | "parent";
-  /** Teacher only: called when pressing the attendance button on a today session */
+  /** Teacher only: called when pressing attendance action (today edit, past view-only). */
   onSessionAttendance?: (session: TimetableSession) => void;
 }
 
-function isTodaySession(isoString: string): boolean {
+function getSessionDayRelation(isoString: string): "past" | "today" | "future" {
   const d = parseTimetableDateTime(isoString);
+  d.setHours(0, 0, 0, 0);
+
   const now = new Date();
-  return (
-    d.getFullYear() === now.getFullYear() &&
-    d.getMonth() === now.getMonth() &&
-    d.getDate() === now.getDate()
-  );
+  now.setHours(0, 0, 0, 0);
+
+  if (d.getTime() < now.getTime()) return "past";
+  if (d.getTime() > now.getTime()) return "future";
+  return "today";
 }
 
 const WeeklyTimetable: React.FC<WeeklyTimetableProps> = ({
@@ -242,6 +244,7 @@ const WeeklyTimetable: React.FC<WeeklyTimetableProps> = ({
                 <div className="flex-1 min-w-0 flex flex-col divide-y divide-gray-100">
                   {daySessions.map((session, idx) => {
                     const sessionDatetime = getSessionDisplayDatetime(session);
+                    const sessionDayRelation = getSessionDayRelation(sessionDatetime);
                     const startTime = formatTime(sessionDatetime);
                     const endTime = formatEndTime(sessionDatetime, session.durationMinutes);
                     const badge = STATUS_BADGE[session.status] ?? { label: String(session.status), cls: "bg-gray-500 text-white" };
@@ -300,36 +303,44 @@ const WeeklyTimetable: React.FC<WeeklyTimetableProps> = ({
                                 onClick={() => session.meetUrl && window.open(session.meetUrl, "_blank")}
                               >
                                 Meet URL
-                              </button> */}                              {role === "teacher" && isTodaySession(sessionDatetime) && onSessionAttendance && (
+                              </button> */}
+                              {role === "teacher" &&
+                                onSessionAttendance &&
+                                (sessionDayRelation === "today" || sessionDayRelation === "past") && (
                                 <button
-                                  className="text-[10px] px-2 py-1 rounded-md bg-red-600 text-white font-semibold whitespace-nowrap active:opacity-70"
+                                  className={`text-[10px] px-2 py-1 rounded-md font-semibold whitespace-nowrap active:opacity-70 ${
+                                    sessionDayRelation === "today"
+                                      ? "bg-red-600 text-white"
+                                      : "border border-gray-300 bg-white text-gray-700"
+                                  }`}
                                   onClick={() => onSessionAttendance(session)}
                                 >
-                                  Điểm danh
+                                  {sessionDayRelation === "today" ? "Điểm danh" : "Xem điểm danh"}
                                 </button>
-                              )}                            </div>
+                              )}
+                            </div>
                           </div>
                         </div>
 
                         {/* Right: session details */}
                         <div className="flex-1 py-3 px-2.5 min-w-0">
                           {roomDisplay && (
-                            <p className="text-xs font-bold text-red-500 mb-0.5">Room: {roomDisplay}</p>
+                            <p className="text-xs font-bold text-red-500 mb-0.5">Phòng: {roomDisplay}</p>
                           )}
                           <p className="text-xs font-bold text-red-700 mb-1">
-                            Subject Code: {session.classCode}
+                            Mã môn học: {session.classCode}
                           </p>
                           {session.classTitle && (
                             <p className="text-xs text-gray-600 mb-0.5">
-                              Group class:{" "}
+                              Tên lớp:{" "}
                               <span className="block pl-2 font-medium text-gray-800">{session.classTitle}</span>
                             </p>
                           )}
                           {teacherDisplay && (
-                            <p className="text-xs text-gray-600">Lecturer: {teacherDisplay}</p>
+                            <p className="text-xs text-gray-600">Giảng viên: {teacherDisplay}</p>
                           )}
                           {role === "parent" && session.studentName && (
-                            <p className="text-xs text-purple-600 mt-0.5">Student: {session.studentName}</p>
+                            <p className="text-xs text-purple-600 mt-0.5">Học sinh: {session.studentName}</p>
                           )}
                         </div>
                       </div>

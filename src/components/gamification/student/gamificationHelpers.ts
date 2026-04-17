@@ -223,7 +223,7 @@ export function getRedemptionStatusLabel(status?: string): string {
   const normalized = String(status || "").toLowerCase();
   if (normalized === "requested" || normalized === "pending") return "Chờ duyệt";
   if (normalized === "approved") return "Đã duyệt";
-  if (normalized === "delivered") return "Đang giao";
+  if (normalized === "delivered") return "Đã giao";
   if (normalized === "received") return "Đã nhận";
   if (normalized === "cancelled") return "Đã hủy";
   return status || "Không xác định";

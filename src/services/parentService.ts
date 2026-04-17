@@ -1,6 +1,12 @@
 import { api } from "@/api/api";
 import { ApiResponse } from "@/types/apiResponse";
-import { PARENT_ENDPOINTS, LEAVE_REQUEST_ENDPOINTS, STUDENT_ENDPOINTS } from "@/constants/apiURL";
+import {
+  PARENT_ENDPOINTS,
+  LEAVE_REQUEST_ENDPOINTS,
+  STUDENT_ENDPOINTS,
+  MEDIA_ENDPOINTS,
+  MONTHLY_REPORT_ENDPOINTS,
+} from "@/constants/apiURL";
 import {
   CreatePauseRequestPayload,
   GetPauseRequestsParams,
@@ -14,6 +20,11 @@ import {
   ParentAttendanceRecord,
   ParentSessionReport,
   PauseEnrollmentRequest,
+  ParentMakeupCredit,
+  ParentMakeupSuggestion,
+  ParentUseMakeupCreditPayload,
+  ParentMediaItem,
+  ParentMonthlyReport,
 } from "@/types/parent";
 
 /**
@@ -29,10 +40,12 @@ function extractItems<T>(res: any): T[] {
     const inner = res.data;
     if (Array.isArray(inner)) return inner;
     if (inner?.items && Array.isArray(inner.items)) return inner.items;
-    
-    for (const key of Object.keys(inner)) {
-      if (inner[key]?.items && Array.isArray(inner[key].items)) {
-        return inner[key].items;
+
+    if (inner && typeof inner === "object") {
+      for (const key of Object.keys(inner)) {
+        if (inner[key]?.items && Array.isArray(inner[key].items)) {
+          return inner[key].items;
+        }
       }
     }
   }
@@ -103,6 +116,34 @@ export const parentService = {
     return extractItems<ParentSessionReport>(res);
   },
 
+  /** GET /api/monthly-reports */
+  getMonthlyReports: async (params?: {
+    pageNumber?: number;
+    pageSize?: number;
+    studentProfileId?: string;
+  }): Promise<ParentMonthlyReport[]> => {
+    const res = await api.get<any>(MONTHLY_REPORT_ENDPOINTS.LIST, { params });
+    return extractItems<ParentMonthlyReport>(res);
+  },
+
+  /** GET /api/monthly-reports/{reportId} */
+  getMonthlyReportById: async (reportId: string): Promise<ParentMonthlyReport | null> => {
+    const res = await api.get<any>(MONTHLY_REPORT_ENDPOINTS.DETAIL(reportId));
+    const data = res?.data ?? res;
+
+    if (!data || Array.isArray(data)) return null;
+
+    if (data?.report && typeof data.report === "object" && !Array.isArray(data.report)) {
+      return data.report as ParentMonthlyReport;
+    }
+
+    if (data?.monthlyReport && typeof data.monthlyReport === "object" && !Array.isArray(data.monthlyReport)) {
+      return data.monthlyReport as ParentMonthlyReport;
+    }
+
+    return data as ParentMonthlyReport;
+  },
+
   /** GET /api/leave-requests — list leave requests */
   getLeaveRequests: async (params?: {
     pageNumber?: number;
@@ -147,5 +188,58 @@ export const parentService = {
       PARENT_ENDPOINTS.PAUSE_ENROLLMENT_REQUESTS,
       payload
     );
+  },
+
+  /** GET /api/makeup-credits?studentProfileId={id} */
+  getMakeupCredits: async (params: {
+    studentProfileId: string;
+    pageNumber?: number;
+    pageSize?: number;
+  }): Promise<ParentMakeupCredit[]> => {
+    const res = await api.get<any>(PARENT_ENDPOINTS.MAKEUP_CREDITS, { params });
+    return extractItems<ParentMakeupCredit>(res);
+  },
+
+  /** GET /api/makeup-credits/{id}/suggestions */
+  getMakeupSuggestions: async (
+    makeupCreditId: string,
+    params?: {
+      makeupDate?: string;
+      timeOfDay?: string;
+    }
+  ): Promise<ParentMakeupSuggestion[]> => {
+    const res = await api.get<any>(PARENT_ENDPOINTS.MAKEUP_CREDIT_SUGGESTIONS(makeupCreditId), {
+      params,
+    });
+    return extractItems<ParentMakeupSuggestion>(res);
+  },
+
+  /** POST /api/makeup-credits/{id}/use */
+  useMakeupCredit: async (
+    makeupCreditId: string,
+    payload: ParentUseMakeupCreditPayload
+  ): Promise<ApiResponse<unknown>> => {
+    return await api.post<ApiResponse<unknown>>(
+      PARENT_ENDPOINTS.MAKEUP_CREDIT_USE(makeupCreditId),
+      payload
+    );
+  },
+
+  /** GET /api/media for parent gallery */
+  getMedia: async (params?: {
+    studentProfileId?: string;
+    pageNumber?: number;
+    pageSize?: number;
+  }): Promise<ParentMediaItem[]> => {
+    const res = await api.get<any>(MEDIA_ENDPOINTS.LIST, { params });
+    return extractItems<ParentMediaItem>(res);
+  },
+
+  /** GET /api/media/{id} */
+  getMediaDetail: async (id: string): Promise<ParentMediaItem | null> => {
+    const res = await api.get<any>(MEDIA_ENDPOINTS.DETAIL(id));
+    const data = res?.data ?? res;
+    if (!data || Array.isArray(data)) return null;
+    return data as ParentMediaItem;
   },
 };

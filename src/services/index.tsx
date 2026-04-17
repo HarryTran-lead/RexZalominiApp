@@ -8,6 +8,7 @@ export { studentService, gamificationService, examService } from "./studentServi
 export { meService } from "./meService";
 export { fileService } from "./fileService";
 export { notificationService } from "./notificationService";
+export { contentService } from "./contentService";
 export type { TeacherClass, ClassStudent } from "@/types/teacher";
 export type { Homework, HomeworkSubmission } from "@/types/teacher";
 export type {

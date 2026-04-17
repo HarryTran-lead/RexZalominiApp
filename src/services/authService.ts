@@ -20,6 +20,10 @@ import {
   SelectStudentResponse,
   ChangePinRequest,
   RequestPinResetRequest,
+  RequestPinResetZaloOtpResponse,
+  VerifyPinResetZaloOtpRequest,
+  VerifyPinResetZaloOtpResponse,
+  ResetPinRequest,
   UserProfile,
 } from "../types/auth";
 
@@ -143,5 +147,26 @@ export const authService = {
       AUTH_ENDPOINTS.REQUEST_PIN_RESET,
       data
     );
+  },
+
+  requestPinResetZaloOtp: async (): Promise<
+    ApiResponse<RequestPinResetZaloOtpResponse>
+  > => {
+    return await api.post<ApiResponse<RequestPinResetZaloOtpResponse>>(
+      AUTH_ENDPOINTS.REQUEST_PIN_RESET_ZALO_OTP
+    );
+  },
+
+  verifyPinResetZaloOtp: async (
+    data: VerifyPinResetZaloOtpRequest
+  ): Promise<ApiResponse<VerifyPinResetZaloOtpResponse>> => {
+    return await api.post<ApiResponse<VerifyPinResetZaloOtpResponse>>(
+      AUTH_ENDPOINTS.VERIFY_PIN_RESET_ZALO_OTP,
+      data
+    );
+  },
+
+  resetPin: async (data: ResetPinRequest): Promise<ApiResponse<void>> => {
+    return await api.post<ApiResponse<void>>(AUTH_ENDPOINTS.RESET_PIN, data);
   },
 };

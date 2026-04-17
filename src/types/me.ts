@@ -11,6 +11,7 @@ export interface Branch {
 export interface UserProfile {
   id: string;
   displayName: string;
+  avatarUrl?: string | null;
   profileType: "Student" | "Parent" | "Teacher" | string;
   lastLoginAt: string;
   lastSeenAt: string;
@@ -45,11 +46,23 @@ export interface UserResponse {
   data: UserData;
 }
 
+export interface UpdateProfileDisplayNameItem {
+  id: string;
+  displayName: string;
+}
+
 export interface UpdateProfileRequest {
   fullName: string;
   email: string;
   phoneNumber: string;
-  avatarUrl?: string;
+  avatar?: File;
+  targetProfileId?: string;
+  profiles?: UpdateProfileDisplayNameItem[];
 }
 
 export type UpdateProfile = UpdateProfileRequest;
+
+export interface MeProfileContext {
+  parentProfileId: string | null;
+  studentProfileId: string | null;
+}

@@ -24,8 +24,8 @@ const FAQS = [
         a: "Có. Bạn đăng nhập bằng số điện thoại đã đăng ký với Rex. Nếu chưa có tài khoản, liên hệ nhân viên trung tâm để được cấp.",
       },
       {
-        q: "Liên kết SĐT Zalo để vào nhanh như thế nào?",
-        a: 'Bấm nút "Liên kết SĐT Zalo" ở trang chủ, ứng dụng sẽ tự động dùng số điện thoại đã liên kết với Zalo của bạn để đăng nhập – không cần nhập tay.',
+        q: "Liên kết tài khoản để vào nhanh như thế nào?",
+        a: 'Bấm nút "Liên kết tài khoản" ở trang chủ, xác nhận liên kết trên popup và đồng ý quyền từ Zalo để đăng nhập nhanh mà không cần nhập thủ công.',
       },
       {
         q: "Tôi quên mật khẩu thì phải làm sao?",

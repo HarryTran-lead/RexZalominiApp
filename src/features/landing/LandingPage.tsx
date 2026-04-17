@@ -1,6 +1,7 @@
 import { useMemo, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Page, useSnackbar } from "zmp-ui";
+import ConfirmModal from "@/components/common/ConfirmModal";
 
 import logoRex from "../../assets/images/LogoRex.png";
 import { authService } from "../../services/authService";
@@ -59,6 +60,7 @@ function LandingPage() {
   const navigate = useNavigate();
   const { openSnackbar } = useSnackbar();
   const [isLinking, setIsLinking] = useState(false);
+  const [linkConfirmOpen, setLinkConfirmOpen] = useState(false);
 
   const activeTab = useMemo(
     () => detectCurrentTab(location.pathname),
@@ -104,10 +106,9 @@ function LandingPage() {
 
     if (!isMiniAppRuntime()) {
       openSnackbar({
-        text: "Đăng nhập liên kết Zalo chỉ dùng trong Mini App. Chuyển tới trang đăng nhập.",
+        text: "Liên kết tài khoản chỉ hoạt động trong môi trường Zalo Mini App.",
         type: "info",
       });
-      navigate("/login");
       return;
     }
 
@@ -148,13 +149,18 @@ function LandingPage() {
       const msg =
         error?.response?.data?.message ||
         error?.message ||
-        "Không thể liên kết SĐT Zalo. Vui lòng đăng nhập bằng số điện thoại.";
+        "Không thể liên kết tài khoản Zalo. Vui lòng thử lại.";
       openSnackbar({ text: msg, type: "error" });
-      navigate("/login");
     } finally {
       setIsLinking(false);
+      setLinkConfirmOpen(false);
     }
   }, [isLinking, navigate, openSnackbar, handleLoginSuccess]);
+
+  const handleOpenLinkConfirm = useCallback(() => {
+    if (isLinking) return;
+    setLinkConfirmOpen(true);
+  }, [isLinking]);
 
   // ─── CONTACT → ZALO OA trực tiếp ────────────────────────────
   const handleContactByZalo = useCallback(async () => {
@@ -249,7 +255,7 @@ function LandingPage() {
           {activeTab === "home" && (
             <HomeTab
               isLinking={isLinking}
-              onQuickZaloLink={handleQuickZaloLinkLogin}
+              onQuickZaloLink={handleOpenLinkConfirm}
             />
           )}
           {activeTab === "faq" && <FAQTab />}
@@ -317,6 +323,22 @@ function LandingPage() {
           activeTab={activeTab}
           onTabChange={handleTabChange}
           onContactPress={handleContactByZalo}
+        />
+
+        <ConfirmModal
+          isOpen={linkConfirmOpen}
+          title="Liên kết tài khoản Zalo"
+          message="Ứng dụng sẽ xin quyền số điện thoại từ Zalo để liên kết tài khoản và đăng nhập nhanh. Bạn có muốn tiếp tục?"
+          confirmText={isLinking ? "Đang liên kết..." : "Đồng ý liên kết"}
+          cancelText="Để sau"
+          confirmClassName="bg-[#BB0000] hover:bg-red-800"
+          isLoading={isLinking}
+          onConfirm={() => {
+            void handleQuickZaloLinkLogin();
+          }}
+          onCancel={() => {
+            if (!isLinking) setLinkConfirmOpen(false);
+          }}
         />
       </div>
     </Page>

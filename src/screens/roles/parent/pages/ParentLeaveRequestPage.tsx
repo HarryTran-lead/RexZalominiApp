@@ -25,6 +25,11 @@ import { storage } from "@/utils/storage";
 type ViewMode = "list" | "create";
 type RequestKind = "leave" | "pause";
 
+interface ParentLeaveRequestPageProps {
+  initialRequestKind?: RequestKind;
+  lockRequestKind?: boolean;
+}
+
 const DAY_LABELS = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
 
 function firstDayOfMonth(date: Date): Date {
@@ -90,10 +95,13 @@ function toDateInputValue(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-function ParentLeaveRequestPage() {
+function ParentLeaveRequestPage({
+  initialRequestKind = "leave",
+  lockRequestKind = true,
+}: ParentLeaveRequestPageProps) {
   const { openSnackbar } = useSnackbar();
   const [viewMode, setViewMode] = useState<ViewMode>("list");
-  const [requestKind, setRequestKind] = useState<RequestKind>("leave");
+  const [requestKind, setRequestKind] = useState<RequestKind>(initialRequestKind);
   const [leaveRequests, setLeaveRequests] = useState<ParentLeaveRequestsResponse[]>([]);
   const [pauseRequests, setPauseRequests] = useState<PauseEnrollmentRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -261,7 +269,14 @@ function ParentLeaveRequestPage() {
   );
 
   useEffect(() => {
-    fetchLeaveRequests();
+      if (initialRequestKind === "pause") {
+        const targetStudentId = pauseForm.studentProfileId || form.studentProfileId;
+        if (targetStudentId) {
+          fetchPauseRequests(targetStudentId);
+        }
+      } else {
+        fetchLeaveRequests();
+      }
     fetchStudents();
     // Run once on mount to avoid repeated bootstrap requests.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -433,7 +448,9 @@ function ParentLeaveRequestPage() {
         reason: "",
       }));
       setViewMode("list");
-      setRequestKind("pause");
+      if (!lockRequestKind) {
+        setRequestKind("pause");
+      }
       await fetchPauseRequests(pauseForm.studentProfileId);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Gửi đơn bảo lưu thất bại";
@@ -479,6 +496,8 @@ function ParentLeaveRequestPage() {
               ? requestKind === "pause"
                 ? "Tạo đơn bảo lưu"
                 : "Tạo đơn xin nghỉ"
+              : requestKind === "pause"
+              ? "Đơn bảo lưu"
               : "Đơn xin nghỉ"}
           </h1>
           {viewMode === "list" && (
@@ -493,28 +512,30 @@ function ParentLeaveRequestPage() {
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto pb-24">
-        <div className="px-4 pt-3">
-          <div className="grid grid-cols-2 rounded-xl border border-red-100 bg-white p-1">
-            <button
-              type="button"
-              onClick={() => setRequestKind("leave")}
-              className={`rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
-                requestKind === "leave" ? "bg-red-600 text-white" : "text-gray-600"
-              }`}
-            >
-              Nghỉ buổi
-            </button>
-            <button
-              type="button"
-              onClick={() => setRequestKind("pause")}
-              className={`rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
-                requestKind === "pause" ? "bg-red-600 text-white" : "text-gray-600"
-              }`}
-            >
-              Bảo lưu dài hạn
-            </button>
+        {!lockRequestKind && (
+          <div className="px-4 pt-3">
+            <div className="grid grid-cols-2 rounded-xl border border-red-100 bg-white p-1">
+              <button
+                type="button"
+                onClick={() => setRequestKind("leave")}
+                className={`rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
+                  requestKind === "leave" ? "bg-red-600 text-white" : "text-gray-600"
+                }`}
+              >
+                Nghỉ buổi
+              </button>
+              <button
+                type="button"
+                onClick={() => setRequestKind("pause")}
+                className={`rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
+                  requestKind === "pause" ? "bg-red-600 text-white" : "text-gray-600"
+                }`}
+              >
+                Bảo lưu dài hạn
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         {viewMode === "create" ? (
           requestKind === "leave" ? (

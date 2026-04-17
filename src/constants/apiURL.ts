@@ -19,6 +19,9 @@ export const AUTH_ENDPOINTS = {
   SELECT_STUDENT: "/auth/profiles/select-student",
   CHANGE_PIN: "/auth/change-pin",
   REQUEST_PIN_RESET: "/auth/profiles/request-pin-reset",
+  REQUEST_PIN_RESET_ZALO_OTP: "/auth/profiles/request-pin-reset-zalo-otp",
+  VERIFY_PIN_RESET_ZALO_OTP: "/auth/profiles/verify-pin-reset-zalo-otp",
+  RESET_PIN: "/auth/reset-pin",
 };
 
 export const ME_ENDPOINTS = {
@@ -29,6 +32,21 @@ export const ME_ENDPOINTS = {
 export const FILE_ENDPOINTS = {
   AVATAR: "/files/avatar",
   UPLOAD: "/files/upload",
+};
+
+export const BLOG_ENDPOINTS = {
+  PUBLISHED: "/blogs/published",
+  DETAIL: (id: string) => `/blogs/${id}`,
+};
+
+export const MEDIA_ENDPOINTS = {
+  LIST: "/media",
+  DETAIL: (id: string) => `/media/${id}`,
+};
+
+export const MONTHLY_REPORT_ENDPOINTS = {
+  LIST: "/monthly-reports",
+  DETAIL: (reportId: string) => `/monthly-reports/${reportId}`,
 };
 
 // Student Endpoints
@@ -68,9 +86,9 @@ export const TEACHER_ENDPOINTS = {
   SESSION_REPORT_AI_ENHANCE: "/session-reports/ai/enhance-feedback",
   TEACHER_MONTHLY_SESSION_REPORT: (teacherUserId: string) =>
     `/session-reports/teachers/${teacherUserId}/monthly`,
-  MONTHLY_REPORTS: "/monthly-reports",
+  MONTHLY_REPORTS: MONTHLY_REPORT_ENDPOINTS.LIST,
   MONTHLY_REPORT_DETAIL: (reportId: string) =>
-    `/monthly-reports/${reportId}`,
+    MONTHLY_REPORT_ENDPOINTS.DETAIL(reportId),
 };
 
 // Attendance Endpoints
@@ -95,6 +113,9 @@ export const PARENT_ENDPOINTS = {
   MEDIA: "/parent/media",
   PAUSE_ENROLLMENT_REQUESTS: "/pause-enrollment-requests",
   PAUSE_ENROLLMENT_REQUEST_DETAIL: (id: string) => `/pause-enrollment-requests/${id}`,
+  MAKEUP_CREDITS: "/makeup-credits",
+  MAKEUP_CREDIT_SUGGESTIONS: (id: string) => `/makeup-credits/${id}/suggestions`,
+  MAKEUP_CREDIT_USE: (id: string) => `/makeup-credits/${id}/use`,
 };
 
 export const NOTIFICATION_ENDPOINTS = {
@@ -164,6 +185,9 @@ export const API_ENDPOINTS = {
   AUTH: AUTH_ENDPOINTS,
   ME: ME_ENDPOINTS,
   FILE: FILE_ENDPOINTS,
+  BLOG: BLOG_ENDPOINTS,
+  MEDIA: MEDIA_ENDPOINTS,
+  MONTHLY_REPORT: MONTHLY_REPORT_ENDPOINTS,
   STUDENT: STUDENT_ENDPOINTS,
   TEACHER: TEACHER_ENDPOINTS,
   PARENT: PARENT_ENDPOINTS,
