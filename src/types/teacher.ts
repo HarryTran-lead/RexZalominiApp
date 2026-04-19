@@ -128,6 +128,8 @@ export interface MonthlyReport {
   status?: string;
   summary?: string;
   feedback?: string;
+  draftContent?: string;
+  finalContent?: string;
   publishedAt?: string;
   totalSessions?: number;
   completedSessions?: number;

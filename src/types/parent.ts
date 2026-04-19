@@ -115,44 +115,59 @@ export interface ParentNotificationsResponse {
 
 // ====== Leave Request ======
 
+export enum LeaveRequestStatus {
+  Pending = "Pending",
+  Approved = "Approved",
+  Rejected = "Rejected",
+  Cancelled = "Cancelled",
+}
+
 export interface ParentLeaveRequest {
   studentProfileId: string;
-  classId?: string;
-  sessionDate?: string;
+  classId: string;
+  sessionDate: string;
   endDate?: string | null;
   reason?: string | null;
 }
 
-export interface ParentLeaveRequestsResponse {
-    id: string;
-    studentProfileId: string;
-    classId: string;
-    sessionDate: string;
-    endDate: string | null;
-    reason: string;
-    noticeHours: number;
-    status: string;
-    requestedAt: string;
-    approvedAt: string | null;
+export interface CreateLeaveRequestPayload {
+  studentProfileId: string;
+  classId: string;
+  sessionDate: string;
+  endDate?: string | null;
+  reason?: string;
 }
 
+export interface LeaveRequest {
+  id: string;
+  studentProfileId: string;
+  classId: string;
+  sessionDate: string;
+  endDate: string | null;
+  reason: string;
+  noticeHours: number;
+  status: LeaveRequestStatus;
+  requestedAt: string;
+  approvedAt: string | null;
+}
+
+export type ParentLeaveRequestsResponse = LeaveRequest;
 
 // ====== Students with Makeup or Leave ======
 
-export interface StudentWithMakeupOrLeave {
+export interface StudentSummary {
   id: string;
-  studentProfileId: string;
-  studentName: string;
-  classId?: string;
-  classCode?: string;
-  classTitle?: string;
-  type?: string;
-  status?: string;
-  sessionDate?: string;
+  userId: string;
+  displayName: string;
+  userEmail?: string;
+  hasLeaveRequest: boolean;
+  hasMakeupCredit: boolean;
+  leaveRequestCount: number;
+  makeupCreditCount: number;
 }
 
 export interface StudentsWithMakeupOrLeaveResponse {
-  items: StudentWithMakeupOrLeave[];
+  items: StudentSummary[];
   totalCount?: number;
   pageNumber?: number;
   pageSize?: number;
@@ -168,8 +183,25 @@ export interface ParentAttendanceRecord {
   sessionDate?: string;
   studentName?: string;
   studentProfileId?: string;
-  attendanceStatus?: "Present" | "Absent" | "Makeup" | "NotMarked";
+  attendanceStatus?: AttendanceStatus;
   note?: string | null;
+}
+
+export enum AttendanceStatus {
+  Present = "Present",
+  Absent = "Absent",
+  Makeup = "Makeup",
+  NotMarked = "NotMarked",
+}
+
+export interface AttendanceHistoryItem {
+  id: string;
+  sessionId: string;
+  studentProfileId: string;
+  attendanceStatus: AttendanceStatus;
+  absenceType?: string;
+  markedAt: string;
+  note?: string;
 }
 
 export interface ParentAttendanceResponse {
@@ -213,6 +245,8 @@ export interface ParentMonthlyReport {
   status?: string;
   summary?: string;
   feedback?: string;
+  draftContent?: string;
+  finalContent?: string;
   publishedAt?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -287,45 +321,59 @@ export interface GetPauseRequestsParams {
 
 // ====== Makeup Credits ======
 
-export type MakeupCreditStatus = "Pending" | "Scheduled" | "Used" | "Expired" | string;
+export enum MakeupCreditStatus {
+  Available = "Available",
+  Used = "Used",
+  Expired = "Expired",
+}
+
+export type ParentMakeupCreditStatus = MakeupCreditStatus | "Pending" | "Scheduled" | string;
 
 export interface ParentMakeupCredit {
   id: string;
-  studentProfileId?: string;
+  studentProfileId: string;
+  sourceSessionId?: string;
   studentName?: string;
   classId?: string;
   classCode?: string;
   classTitle?: string;
-  status?: MakeupCreditStatus;
+  status?: ParentMakeupCreditStatus;
+  createdReason?: string;
   sourceSessionDate?: string;
   makeupDate?: string;
   reason?: string | null;
   expiresAt?: string | null;
+  usedSessionId?: string | null;
   usedAt?: string | null;
+  createdAt?: string;
 }
 
 export interface ParentMakeupSuggestion {
-  id: string;
-  classId?: string;
-  classCode?: string;
-  classTitle?: string;
-  teacherName?: string;
-  branchName?: string;
-  level?: string;
-  makeupDate?: string;
-  startTime?: string;
-  endTime?: string;
-  timeOfDay?: string;
-  availableSlots?: number;
+  id?: string;
+  sessionId: string;
+  classId: string;
+  classCode: string;
+  classTitle: string;
+  programName: string;
+  programCode: string;
+  branchId: string;
+  plannedDatetime: string;
+  plannedEndDatetime: string;
   [key: string]: unknown;
 }
 
 export interface ParentUseMakeupCreditPayload {
   studentProfileId: string;
-  suggestionId?: string;
-  makeupSlotId?: string;
-  sessionId?: string;
-  classSessionId?: string;
+  classId: string;
+  targetSessionId: string;
+}
+
+export interface MakeupAllocation {
+  id: string;
+  makeupCreditId: string;
+  targetSessionId: string;
+  assignedBy: string;
+  assignedAt: string;
 }
 
 // ====== Parent Media ======

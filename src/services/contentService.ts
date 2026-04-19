@@ -76,6 +76,12 @@ function normalizeBlogDetail(raw: unknown): BlogDetail {
   };
 }
 
+function toTimestamp(value?: string): number {
+  if (!value) return 0;
+  const timestamp = Date.parse(value);
+  return Number.isNaN(timestamp) ? 0 : timestamp;
+}
+
 export const contentService = {
   getPublishedBlogs: async (params?: {
     pageNumber?: number;
@@ -83,7 +89,13 @@ export const contentService = {
     keyword?: string;
   }): Promise<BlogSummary[]> => {
     const response = await api.get<unknown>(BLOG_ENDPOINTS.PUBLISHED, { params });
-    return findItems<unknown>(response).map(normalizeBlogSummary);
+    return findItems<unknown>(response)
+      .map(normalizeBlogSummary)
+      .sort(
+        (a, b) =>
+          Math.max(toTimestamp(b.publishedAt), toTimestamp(b.createdAt)) -
+          Math.max(toTimestamp(a.publishedAt), toTimestamp(a.createdAt))
+      );
   },
 
   getBlogById: async (id: string): Promise<BlogDetail | null> => {

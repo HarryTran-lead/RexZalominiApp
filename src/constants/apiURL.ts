@@ -114,8 +114,11 @@ export const PARENT_ENDPOINTS = {
   PAUSE_ENROLLMENT_REQUESTS: "/pause-enrollment-requests",
   PAUSE_ENROLLMENT_REQUEST_DETAIL: (id: string) => `/pause-enrollment-requests/${id}`,
   MAKEUP_CREDITS: "/makeup-credits",
-  MAKEUP_CREDIT_SUGGESTIONS: (id: string) => `/makeup-credits/${id}/suggestions`,
+  MAKEUP_CREDIT_AVAILABLE_SESSIONS: (id: string) => `/makeup-credits/${id}/parent/get-available-sessions`,
+  // Backward-compatible alias for old callsites.
+  MAKEUP_CREDIT_SUGGESTIONS: (id: string) => `/makeup-credits/${id}/parent/get-available-sessions`,
   MAKEUP_CREDIT_USE: (id: string) => `/makeup-credits/${id}/use`,
+  MAKEUP_CREDIT_ALLOCATIONS: "/makeup-credits/allocations",
 };
 
 export const NOTIFICATION_ENDPOINTS = {

@@ -43,6 +43,35 @@ type StudentClassListPayload =
       items?: StudentClass[];
     };
 
+function toTimestamp(value: unknown): number {
+  if (typeof value === "string" && value.trim()) {
+    const timestamp = Date.parse(value);
+    return Number.isNaN(timestamp) ? 0 : timestamp;
+  }
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  return 0;
+}
+
+function sortByNewest<T extends Record<string, unknown>>(items: T[], dateKeys: string[]): T[] {
+  return [...items].sort((a, b) => {
+    const bTime = dateKeys.reduce((latest, key) => Math.max(latest, toTimestamp(b[key])), 0);
+    const aTime = dateKeys.reduce((latest, key) => Math.max(latest, toTimestamp(a[key])), 0);
+    return bTime - aTime;
+  });
+}
+
+function sortPaginatedItemsByNewest<T extends Record<string, unknown>>(
+  payload: PaginatedResponse<T>,
+  dateKeys: string[]
+): PaginatedResponse<T> {
+  return {
+    ...payload,
+    items: sortByNewest(payload.items, dateKeys),
+  };
+}
+
 const normalizeClassList = (
   payload: StudentClassListPayload | undefined
 ): PaginatedResponse<StudentClass> => {
@@ -60,7 +89,7 @@ const normalizeClassList = (
 
   if (Array.isArray(payload)) {
     return {
-      items: payload,
+      items: sortByNewest(payload, ["startDate", "enrollDate", "createdAt"]),
       pageNumber: 1,
       pageSize: payload.length,
       totalCount: payload.length,
@@ -73,7 +102,7 @@ const normalizeClassList = (
   if (typeof payload === "object" && payload !== null && "items" in payload && Array.isArray(payload.items)) {
     const data = payload as PaginatedResponse<StudentClass>;
     return {
-      items: data.items,
+      items: sortByNewest(data.items, ["startDate", "enrollDate", "createdAt"]),
       pageNumber: data.pageNumber ?? 1,
       pageSize: data.pageSize ?? data.items.length,
       totalCount: data.totalCount ?? data.items.length,
@@ -86,7 +115,7 @@ const normalizeClassList = (
   if (typeof payload === "object" && payload !== null && "classes" in payload) {
     const wrapped = payload as { classes?: PaginatedResponse<StudentClass> };
     if (wrapped.classes && Array.isArray(wrapped.classes.items)) {
-      return wrapped.classes;
+      return sortPaginatedItemsByNewest(wrapped.classes, ["startDate", "enrollDate", "createdAt"]);
     }
   }
 
@@ -134,7 +163,7 @@ const normalizeHomeworkList = (
 
   if (Array.isArray(payload)) {
     return {
-      items: payload,
+      items: sortByNewest(payload, ["submittedAt", "gradedAt", "dueAt"]),
       pageNumber: 1,
       pageSize: payload.length,
       totalCount: payload.length,
@@ -147,7 +176,7 @@ const normalizeHomeworkList = (
   if (Array.isArray(payload.items)) {
     const data = payload as PaginatedResponse<HomeworkAssignment>;
     return {
-      items: data.items,
+      items: sortByNewest(data.items, ["submittedAt", "gradedAt", "dueAt"]),
       pageNumber: data.pageNumber ?? 1,
       pageSize: data.pageSize ?? data.items.length,
       totalCount: data.totalCount ?? data.items.length,
@@ -162,7 +191,7 @@ const normalizeHomeworkList = (
     if (wrapped.homeworks && Array.isArray(wrapped.homeworks.items)) {
       const data = wrapped.homeworks;
       return {
-        items: data.items,
+        items: sortByNewest(data.items, ["submittedAt", "gradedAt", "dueAt"]),
         pageNumber: data.pageNumber ?? 1,
         pageSize: data.pageSize ?? data.items.length,
         totalCount: data.totalCount ?? data.items.length,
@@ -186,8 +215,8 @@ const normalizeHomeworkList = (
 
 const normalizeExamList = (payload: StudentExamListPayload | undefined): Exam[] => {
   if (!payload) return [];
-  if (Array.isArray(payload)) return payload;
-  if (Array.isArray(payload.items)) return payload.items;
+  if (Array.isArray(payload)) return sortByNewest(payload, ["examDate", "createdAt"]);
+  if (Array.isArray(payload.items)) return sortByNewest(payload.items, ["examDate", "createdAt"]);
   return [];
 };
 
@@ -298,7 +327,7 @@ export const studentService = {
 
     return {
       ...response,
-      data: items as Ticket[],
+      data: sortByNewest(items as Ticket[], ["updatedAt", "createdAt"]),
     };
   },
 
@@ -347,10 +376,15 @@ export const gamificationService = {
   getMyMissionProgress: async (
     params?: BaseQueryParams
   ): Promise<ApiResponse<PaginatedResponse<MissionProgressItem>>> => {
-    return await api.get<ApiResponse<PaginatedResponse<MissionProgressItem>>>(
+    const response = await api.get<ApiResponse<PaginatedResponse<MissionProgressItem>>>(
       API_ENDPOINTS.GAMIFICATION.MISSIONS_ME_PROGRESS,
       { params }
     );
+
+    return {
+      ...response,
+      data: sortPaginatedItemsByNewest(response.data, ["dueAt", "updatedAt", "createdAt"]),
+    };
   },
 
   // Get active reward store items
@@ -377,10 +411,15 @@ export const gamificationService = {
   getMyRewardRedemptions: async (
     params?: RewardRedemptionQueryParams
   ): Promise<ApiResponse<PaginatedResponse<RewardRedemption>>> => {
-    return await api.get<ApiResponse<PaginatedResponse<RewardRedemption>>>(
+    const response = await api.get<ApiResponse<PaginatedResponse<RewardRedemption>>>(
       API_ENDPOINTS.GAMIFICATION.REWARD_REDEMPTIONS_ME,
       { params }
     );
+
+    return {
+      ...response,
+      data: sortPaginatedItemsByNewest(response.data, ["requestedAt", "processedAt", "createdAt"]),
+    };
   },
 
   // Confirm reward received
@@ -394,10 +433,15 @@ export const gamificationService = {
   getStarTransactions: async (
     params?: BaseQueryParams
   ): Promise<ApiResponse<PaginatedResponse<StarTransaction>>> => {
-    return await api.get<ApiResponse<PaginatedResponse<StarTransaction>>>(
+    const response = await api.get<ApiResponse<PaginatedResponse<StarTransaction>>>(
       API_ENDPOINTS.GAMIFICATION.STARS_TRANSACTIONS,
       { params }
     );
+
+    return {
+      ...response,
+      data: sortPaginatedItemsByNewest(response.data, ["transactionDate", "createdAt"]),
+    };
   },
 
   // Get available rewards
@@ -411,10 +455,15 @@ export const gamificationService = {
   getMyRedemptions: async (
     params?: BaseQueryParams
   ): Promise<ApiResponse<PaginatedResponse<RewardRedemption>>> => {
-    return await api.get<ApiResponse<PaginatedResponse<RewardRedemption>>>(
+    const response = await api.get<ApiResponse<PaginatedResponse<RewardRedemption>>>(
       API_ENDPOINTS.GAMIFICATION.REWARD_REDEMPTIONS_ME,
       { params }
     );
+
+    return {
+      ...response,
+      data: sortPaginatedItemsByNewest(response.data, ["requestedAt", "processedAt", "createdAt"]),
+    };
   },
 
   // Redeem reward

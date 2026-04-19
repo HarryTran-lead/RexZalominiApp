@@ -113,6 +113,25 @@ function normalizeHomeworkAttemptDetail(payload: unknown): MyHomeworkAttemptDeta
   return null;
 }
 
+function toTimestamp(value: unknown): number {
+  if (typeof value === "string" && value.trim()) {
+    const timestamp = Date.parse(value);
+    return Number.isNaN(timestamp) ? 0 : timestamp;
+  }
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  return 0;
+}
+
+function sortByNewest<T extends Record<string, unknown>>(items: T[], dateKeys: string[]): T[] {
+  return [...items].sort((a, b) => {
+    const bTime = dateKeys.reduce((latest, key) => Math.max(latest, toTimestamp(b[key])), 0);
+    const aTime = dateKeys.reduce((latest, key) => Math.max(latest, toTimestamp(a[key])), 0);
+    return bTime - aTime;
+  });
+}
+
 export interface TeacherHomeworkQuery {
   classId?: string;
   sessionId?: string;
@@ -135,7 +154,7 @@ export const homeworkService = {
       TEACHER_ENDPOINTS.HOMEWORK_LIST,
       { params }
     );
-    return normalizeTeacherHomeworkList(res?.data);
+    return sortByNewest(normalizeTeacherHomeworkList(res?.data), ["createdAt", "dueAt"]);
   },
 
   getTeacherHomeworkDetail: async (id: string): Promise<HomeworkAssignmentDetail | null> => {
@@ -149,7 +168,7 @@ export const homeworkService = {
     const res = await api.get<ApiResponse<HomeworkSubmissionListItem[]>>(
       TEACHER_ENDPOINTS.HOMEWORK_SUBMISSIONS,
     );
-    return extractItems<HomeworkSubmissionListItem>(res?.data);
+    return sortByNewest(extractItems<HomeworkSubmissionListItem>(res?.data), ["submittedAt", "gradedAt"]);
   },
 
   getHomeworkSubmissionDetail: async (
@@ -166,7 +185,7 @@ export const homeworkService = {
       STUDENT_ENDPOINTS.HOMEWORK_MY,
       { params }
     );
-    return normalizeStudentHomeworkList(res?.data);
+    return sortByNewest(normalizeStudentHomeworkList(res?.data), ["submittedAt", "gradedAt", "dueAt"]);
   },
 
   getMyHomeworkDetail: async (homeworkStudentId: string): Promise<MyHomeworkSubmissionDetail | null> => {
