@@ -6,17 +6,21 @@ import {
   STUDENT_ENDPOINTS,
   MEDIA_ENDPOINTS,
   MONTHLY_REPORT_ENDPOINTS,
+  ATTENDANCE_ENDPOINTS,
 } from "@/constants/apiURL";
 import {
+  AttendanceHistoryItem,
+  CreateLeaveRequestPayload,
   CreatePauseRequestPayload,
   GetPauseRequestsParams,
+  LeaveRequest,
+  MakeupAllocation,
   PaginatedPauseRequests,
   ParentOverviewResponse,
   ParentHomeworkItem,
   ParentExamResult,
-  ParentNotification,
-  ParentLeaveRequest,
   ParentLeaveRequestsResponse,
+  ParentNotification,
   ParentAttendanceRecord,
   ParentSessionReport,
   PauseEnrollmentRequest,
@@ -25,6 +29,7 @@ import {
   ParentUseMakeupCreditPayload,
   ParentMediaItem,
   ParentMonthlyReport,
+  StudentSummary,
 } from "@/types/parent";
 
 /**
@@ -54,7 +59,61 @@ function extractItems<T>(res: any): T[] {
   return [];
 }
 
+function extractObject<T>(res: any): T | null {
+  const data = res?.data ?? res;
+  if (!data || typeof data !== "object" || Array.isArray(data)) return null;
+  return data as T;
+}
+
+function toTimestamp(value: unknown): number {
+  if (typeof value === "string" && value.trim()) {
+    const timestamp = Date.parse(value);
+    return Number.isNaN(timestamp) ? 0 : timestamp;
+  }
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  return 0;
+}
+
+function toMonthYearTimestamp(month?: number, year?: number): number {
+  if (!month || !year) return 0;
+  return Date.UTC(year, month - 1, 1);
+}
+
+function sortByNewest<T extends Record<string, unknown>>(items: T[], dateKeys: string[]): T[] {
+  return [...items].sort((a, b) => {
+    const bTime = dateKeys.reduce((latest, key) => Math.max(latest, toTimestamp(b[key])), 0);
+    const aTime = dateKeys.reduce((latest, key) => Math.max(latest, toTimestamp(a[key])), 0);
+    return bTime - aTime;
+  });
+}
+
+function sortMonthlyReportsByNewest(items: ParentMonthlyReport[]): ParentMonthlyReport[] {
+  return [...items].sort((a, b) => {
+    const bTime = Math.max(
+      toTimestamp(b.publishedAt),
+      toTimestamp(b.updatedAt),
+      toTimestamp(b.createdAt),
+      toMonthYearTimestamp(b.month, b.year)
+    );
+    const aTime = Math.max(
+      toTimestamp(a.publishedAt),
+      toTimestamp(a.updatedAt),
+      toTimestamp(a.createdAt),
+      toMonthYearTimestamp(a.month, a.year)
+    );
+    return bTime - aTime;
+  });
+}
+
 export const parentService = {
+  /** GET /api/parent/students-with-makeup-or-leave */
+  getStudentsWithMakeupOrLeave: async (): Promise<StudentSummary[]> => {
+    const res = await api.get<any>(PARENT_ENDPOINTS.STUDENTS_MAKEUP_OR_LEAVE);
+    return extractItems<StudentSummary>(res);
+  },
+
   /** GET /api/parent/overview — dashboard stats, students, classes */
   getOverview: async (params?: {
     classId?: string;
@@ -74,7 +133,7 @@ export const parentService = {
   toDate?: string;
 }): Promise<ParentHomeworkItem[]> => {
   const res = await api.get<any>(STUDENT_ENDPOINTS.HOMEWORK_MY, { params });
-  return extractItems<ParentHomeworkItem>(res);
+  return sortByNewest(extractItems<ParentHomeworkItem>(res), ["submittedAt", "gradedAt", "dueAt"]);
 },
 
   /** GET /api/parent/exam-results */
@@ -84,7 +143,7 @@ export const parentService = {
     pageSize?: number;
   }): Promise<ParentExamResult[]> => {
     const res = await api.get<any>(PARENT_ENDPOINTS.EXAM_RESULTS, { params });
-    return extractItems<ParentExamResult>(res);
+    return sortByNewest(extractItems<ParentExamResult>(res), ["date", "createdAt", "updatedAt"]);
   },
 
   /** GET /api/parent/notifications */
@@ -94,7 +153,7 @@ export const parentService = {
     pageSize?: number;
   }): Promise<ParentNotification[]> => {
     const res = await api.get<any>(PARENT_ENDPOINTS.NOTIFICATIONS, { params });
-    return extractItems<ParentNotification>(res);
+    return sortByNewest(extractItems<ParentNotification>(res), ["createdAt", "sentAt"]);
   },
 
   /** GET /api/parent/attendance */
@@ -103,7 +162,7 @@ export const parentService = {
     pageSize?: number;
   }): Promise<ParentAttendanceRecord[]> => {
     const res = await api.get<any>(PARENT_ENDPOINTS.ATTENDANCE, { params });
-    return extractItems<ParentAttendanceRecord>(res);
+    return sortByNewest(extractItems<ParentAttendanceRecord>(res), ["sessionDate", "createdAt", "updatedAt"]);
   },
 
   /** GET /api/session-reports */
@@ -113,7 +172,7 @@ export const parentService = {
     classId?: string;
   }): Promise<ParentSessionReport[]> => {
     const res = await api.get<any>(PARENT_ENDPOINTS.SESSION_REPORTS, { params });
-    return extractItems<ParentSessionReport>(res);
+    return sortByNewest(extractItems<ParentSessionReport>(res), ["updatedAt", "reportDate", "sessionDate", "createdAt"]);
   },
 
   /** GET /api/monthly-reports */
@@ -123,7 +182,7 @@ export const parentService = {
     studentProfileId?: string;
   }): Promise<ParentMonthlyReport[]> => {
     const res = await api.get<any>(MONTHLY_REPORT_ENDPOINTS.LIST, { params });
-    return extractItems<ParentMonthlyReport>(res);
+    return sortMonthlyReportsByNewest(extractItems<ParentMonthlyReport>(res));
   },
 
   /** GET /api/monthly-reports/{reportId} */
@@ -146,18 +205,20 @@ export const parentService = {
 
   /** GET /api/leave-requests — list leave requests */
   getLeaveRequests: async (params?: {
+    studentProfileId?: string;
+    status?: string;
     pageNumber?: number;
     pageSize?: number;
-  }): Promise<ParentLeaveRequestsResponse[]> => {
+  }): Promise<LeaveRequest[]> => {
     const res = await api.get<any>(LEAVE_REQUEST_ENDPOINTS.LIST, { params });
-    return extractItems<ParentLeaveRequestsResponse>(res);
+    return sortByNewest(extractItems<LeaveRequest>(res), ["requestedAt", "sessionDate", "approvedAt"]);
   },
 
   /** POST /api/leave-requests — create a leave request */
   createLeaveRequest: async (
-    payload: ParentLeaveRequest
-  ): Promise<ApiResponse<ParentLeaveRequest>> => {
-    return await api.post<ApiResponse<ParentLeaveRequest>>(
+    payload: CreateLeaveRequestPayload
+  ): Promise<ApiResponse<ParentLeaveRequestsResponse>> => {
+    return await api.post<ApiResponse<ParentLeaveRequestsResponse>>(
       LEAVE_REQUEST_ENDPOINTS.LIST,
       payload
     );
@@ -172,8 +233,11 @@ export const parentService = {
     });
 
     const data = res?.data ?? res;
+    const items = Array.isArray(data?.items)
+      ? sortByNewest(data.items as PauseEnrollmentRequest[], ["requestedAt", "approvedAt", "cancelledAt", "outcomeAt"])
+      : [];
     return {
-      items: Array.isArray(data?.items) ? data.items : [],
+      items,
       pageNumber: Number(data?.pageNumber ?? params.pageNumber ?? 1),
       totalPages: Number(data?.totalPages ?? 1),
       totalCount: Number(data?.totalCount ?? 0),
@@ -197,10 +261,10 @@ export const parentService = {
     pageSize?: number;
   }): Promise<ParentMakeupCredit[]> => {
     const res = await api.get<any>(PARENT_ENDPOINTS.MAKEUP_CREDITS, { params });
-    return extractItems<ParentMakeupCredit>(res);
+    return sortByNewest(extractItems<ParentMakeupCredit>(res), ["createdAt", "sourceSessionDate", "makeupDate", "usedAt"]);
   },
 
-  /** GET /api/makeup-credits/{id}/suggestions */
+  /** GET /api/makeup-credits/{id}/parent/get-available-sessions */
   getMakeupSuggestions: async (
     makeupCreditId: string,
     params?: {
@@ -208,9 +272,16 @@ export const parentService = {
       timeOfDay?: string;
     }
   ): Promise<ParentMakeupSuggestion[]> => {
-    const res = await api.get<any>(PARENT_ENDPOINTS.MAKEUP_CREDIT_SUGGESTIONS(makeupCreditId), {
-      params,
-    });
+    const res = await api.get<any>(
+      PARENT_ENDPOINTS.MAKEUP_CREDIT_AVAILABLE_SESSIONS(makeupCreditId),
+      { params }
+    );
+    return extractItems<ParentMakeupSuggestion>(res);
+  },
+
+  /** Alias for readability in new parent makeup flow */
+  getAvailableMakeupSessions: async (makeupCreditId: string): Promise<ParentMakeupSuggestion[]> => {
+    const res = await api.get<any>(PARENT_ENDPOINTS.MAKEUP_CREDIT_AVAILABLE_SESSIONS(makeupCreditId));
     return extractItems<ParentMakeupSuggestion>(res);
   },
 
@@ -225,6 +296,26 @@ export const parentService = {
     );
   },
 
+  /** GET /api/makeup-credits/allocations?studentProfileId=... */
+  getMakeupAllocations: async (params: {
+    studentProfileId: string;
+    pageNumber?: number;
+    pageSize?: number;
+  }): Promise<MakeupAllocation[]> => {
+    const res = await api.get<any>(PARENT_ENDPOINTS.MAKEUP_CREDIT_ALLOCATIONS, { params });
+    return sortByNewest(extractItems<MakeupAllocation>(res), ["assignedAt"]);
+  },
+
+  /** GET /api/attendance/students?studentProfileId=... */
+  getAttendanceHistory: async (params: {
+    studentProfileId: string;
+    pageNumber?: number;
+    pageSize?: number;
+  }): Promise<AttendanceHistoryItem[]> => {
+    const res = await api.get<any>(ATTENDANCE_ENDPOINTS.GET_STUDENTS, { params });
+    return sortByNewest(extractItems<AttendanceHistoryItem>(res), ["markedAt"]);
+  },
+
   /** GET /api/media for parent gallery */
   getMedia: async (params?: {
     studentProfileId?: string;
@@ -232,14 +323,12 @@ export const parentService = {
     pageSize?: number;
   }): Promise<ParentMediaItem[]> => {
     const res = await api.get<any>(MEDIA_ENDPOINTS.LIST, { params });
-    return extractItems<ParentMediaItem>(res);
+    return sortByNewest(extractItems<ParentMediaItem>(res), ["createdAt", "publishedAt", "updatedAt"]);
   },
 
   /** GET /api/media/{id} */
   getMediaDetail: async (id: string): Promise<ParentMediaItem | null> => {
     const res = await api.get<any>(MEDIA_ENDPOINTS.DETAIL(id));
-    const data = res?.data ?? res;
-    if (!data || Array.isArray(data)) return null;
-    return data as ParentMediaItem;
+    return extractObject<ParentMediaItem>(res);
   },
 };

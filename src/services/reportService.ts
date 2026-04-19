@@ -11,6 +11,54 @@ import {
   UpdateSessionReportRequest,
 } from "@/types/teacher";
 
+function toTimestamp(value: unknown): number {
+  if (typeof value === "string" && value.trim()) {
+    const timestamp = Date.parse(value);
+    return Number.isNaN(timestamp) ? 0 : timestamp;
+  }
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  return 0;
+}
+
+function toMonthYearTimestamp(month?: number, year?: number): number {
+  if (!month || !year) return 0;
+  return Date.UTC(year, month - 1, 1);
+}
+
+function sortByNewest<T extends Record<string, unknown>>(items: T[], dateKeys: string[]): T[] {
+  return [...items].sort((a, b) => {
+    const bTime = dateKeys.reduce((latest, key) => Math.max(latest, toTimestamp(b[key])), 0);
+    const aTime = dateKeys.reduce((latest, key) => Math.max(latest, toTimestamp(a[key])), 0);
+    return bTime - aTime;
+  });
+}
+
+function sortMonthlyReportsByNewest<T extends Record<string, unknown>>(items: T[]): T[] {
+  return [...items].sort((a, b) => {
+    const bTime = Math.max(
+      toTimestamp(b.publishedAt),
+      toTimestamp(b.updatedAt),
+      toTimestamp(b.createdAt),
+      toMonthYearTimestamp(
+        typeof b.month === "number" ? b.month : undefined,
+        typeof b.year === "number" ? b.year : undefined
+      )
+    );
+    const aTime = Math.max(
+      toTimestamp(a.publishedAt),
+      toTimestamp(a.updatedAt),
+      toTimestamp(a.createdAt),
+      toMonthYearTimestamp(
+        typeof a.month === "number" ? a.month : undefined,
+        typeof a.year === "number" ? a.year : undefined
+      )
+    );
+    return bTime - aTime;
+  });
+}
+
 function extractItems<T>(payload: unknown, depth = 0): T[] {
   if (depth > 5) return [];
 
@@ -66,7 +114,9 @@ export const getSessionReports = async (): Promise<SessionReport[]> => {
   const res = await api.get<ApiResponse<SessionReport[]>>(
     TEACHER_ENDPOINTS.SESSION_REPORTS
   );
-  return Array.isArray(res?.data) ? res.data : (res?.data as any)?.sessionReports?.items ?? [];
+  const items =
+    Array.isArray(res?.data) ? res.data : extractItems<SessionReport>((res?.data as unknown) ?? res);
+  return sortByNewest(items, ["updatedAt", "reportDate", "sessionDate", "createdAt"]);
 };
 
 /**
@@ -153,7 +203,13 @@ export const getTeacherMonthlySessionReports = async (
   const res = await api.get<ApiResponse<MonthlySessionReport[]>>(
     TEACHER_ENDPOINTS.TEACHER_MONTHLY_SESSION_REPORT(teacherUserId)
   );
-  return Array.isArray(res?.data) ? res.data : (res?.data as any)?.items ?? [];
+  const items =
+    Array.isArray(res?.data) ? res.data : extractItems<MonthlySessionReport>((res?.data as unknown) ?? res);
+  return [...items].sort((a, b) => {
+    const bTime = toMonthYearTimestamp(b.month, b.year);
+    const aTime = toMonthYearTimestamp(a.month, a.year);
+    return bTime - aTime;
+  });
 };
 
 /**
@@ -165,7 +221,8 @@ export const getMonthlyReports = async (params?: {
   pageSize?: number;
 }): Promise<MonthlyReport[]> => {
   const res = await api.get<unknown>(TEACHER_ENDPOINTS.MONTHLY_REPORTS, { params });
-  return extractItems<MonthlyReport>(res);
+  const items = extractItems<MonthlyReport>(res);
+  return sortMonthlyReportsByNewest(items);
 };
 
 /**

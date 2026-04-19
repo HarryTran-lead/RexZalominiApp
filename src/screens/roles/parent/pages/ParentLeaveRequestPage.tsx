@@ -134,11 +134,19 @@ function ParentLeaveRequestPage({
     reason: "",
   });
 
-  const fetchLeaveRequests = useCallback(async () => {
+  const fetchLeaveRequests = useCallback(async (studentProfileId: string) => {
+    if (!studentProfileId) {
+      setLeaveRequests([]);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
-      const data = await parentService.getLeaveRequests({ pageSize: 50 });
+      const data = await parentService.getLeaveRequests({
+        studentProfileId,
+        pageSize: 50,
+      });
       setLeaveRequests(data);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Không thể tải danh sách đơn xin nghỉ";
@@ -269,14 +277,6 @@ function ParentLeaveRequestPage({
   );
 
   useEffect(() => {
-      if (initialRequestKind === "pause") {
-        const targetStudentId = pauseForm.studentProfileId || form.studentProfileId;
-        if (targetStudentId) {
-          fetchPauseRequests(targetStudentId);
-        }
-      } else {
-        fetchLeaveRequests();
-      }
     fetchStudents();
     // Run once on mount to avoid repeated bootstrap requests.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -285,7 +285,9 @@ function ParentLeaveRequestPage({
   useEffect(() => {
     if (viewMode !== "list") return;
     if (requestKind === "leave") {
-      fetchLeaveRequests();
+      if (form.studentProfileId) {
+        fetchLeaveRequests(form.studentProfileId);
+      }
       return;
     }
 
@@ -377,8 +379,8 @@ function ParentLeaveRequestPage({
   }, [sessionsByDate, form.sessionDate]);
 
   const handleSubmit = async () => {
-    if (!form.classId || !form.sessionDate || !form.reason?.trim()) {
-      openSnackbar({ text: "Vui lòng chọn lớp, ngày học hợp lệ và nhập lý do", type: "error" });
+    if (!form.classId || !form.sessionDate) {
+      openSnackbar({ text: "Vui lòng chọn lớp và ngày học hợp lệ", type: "error" });
       return;
     }
 
@@ -392,6 +394,7 @@ function ParentLeaveRequestPage({
       await parentService.createLeaveRequest({
         ...form,
         endDate: form.sessionDate,
+        reason: form.reason?.trim() || undefined,
       });
       openSnackbar({ text: "Gửi đơn xin nghỉ thành công", type: "success" });
       setForm((prev) => ({
@@ -402,7 +405,7 @@ function ParentLeaveRequestPage({
         reason: "",
       }));
       setViewMode("list");
-      fetchLeaveRequests();
+      fetchLeaveRequests(form.studentProfileId);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Gửi đơn thất bại";
       openSnackbar({ text: message, type: "error" });
@@ -542,6 +545,9 @@ function ParentLeaveRequestPage({
           <div className="px-4 pt-4 space-y-4">
             <div className="rounded-2xl border border-red-100 bg-red-50/70 px-3.5 py-3 text-xs text-red-700">
               Chỉ chọn được ngày có buổi học từ hôm nay trở đi. Các buổi quá khứ sẽ bị khóa.
+              <p className="mt-1 font-medium">
+                Nếu báo trước 24h, đơn sẽ được tự động duyệt và cấp quyền học bù ngay.
+              </p>
             </div>
 
             <div>
@@ -767,7 +773,7 @@ function ParentLeaveRequestPage({
             )}
 
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Lý do *</label>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Lý do</label>
               <textarea
                 value={form.reason || ""}
                 onChange={(e) => setForm((prev) => ({ ...prev, reason: e.target.value }))}
@@ -783,7 +789,6 @@ function ParentLeaveRequestPage({
                 submitting ||
                 !form.classId ||
                 !form.sessionDate ||
-                !form.reason?.trim() ||
                 !sessionsByDate[form.sessionDate]?.length
               }
               className="w-full bg-red-600 text-white py-3 rounded-xl font-semibold text-sm disabled:opacity-50 active:bg-red-700 transition-colors"
@@ -902,7 +907,9 @@ function ParentLeaveRequestPage({
                         fetchPauseRequests(targetStudentId);
                       }
                     } else {
-                      fetchLeaveRequests();
+                      if (form.studentProfileId) {
+                        fetchLeaveRequests(form.studentProfileId);
+                      }
                     }
                   }}
                   className="text-red-600 text-sm font-semibold"

@@ -32,7 +32,7 @@ function monthLabel(report: ParentMonthlyReport): string {
 }
 
 function detailContent(report: ParentMonthlyReport): string {
-  return report.feedback || report.summary || "Không có nội dung chi tiết.";
+  return report.finalContent || report.draftContent || report.feedback || report.summary || "Không có nội dung chi tiết.";
 }
 
 const ParentMonthlyReportsPage: React.FC = () => {

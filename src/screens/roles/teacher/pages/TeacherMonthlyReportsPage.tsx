@@ -43,7 +43,7 @@ function statusMeta(status?: string): { label: string; className: string } {
 }
 
 function detailContent(report: MonthlyReport): string {
-  return report.feedback || report.summary || "Không có nội dung chi tiết.";
+  return report.finalContent || report.draftContent || report.feedback || report.summary || "Không có nội dung chi tiết.";
 }
 
 const TeacherMonthlyReportsPage: React.FC = () => {
