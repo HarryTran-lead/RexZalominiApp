@@ -1,75 +1,13 @@
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Spinner } from "zmp-ui";
+import { faqService } from "@/services/faqService";
+import { FAQItem as FAQItemType } from "@/types/faq";
 
-const FAQS = [
-  {
-    category: "Về Mini App",
-    icon: "📱",
-    items: [
-      {
-        q: "Rex Mini App dùng để làm gì?",
-        a: "Phụ huynh, học viên, giáo viên theo dõi lịch học, điểm danh, bài tập và thông báo trên cùng một ứng dụng. Tất cả trong lòng bàn tay qua Zalo.",
-      },
-      {
-        q: "Mini App có miễn phí không?",
-        a: "Hoàn toàn miễn phí! Bạn chỉ cần có tài khoản Zalo và đã đăng ký học tại Rex English Centre là có thể dùng ngay.",
-      },
-    ],
-  },
-  {
-    category: "Đăng nhập & Tài khoản",
-    icon: "🔐",
-    items: [
-      {
-        q: "Tôi có thể đăng nhập bằng số điện thoại không?",
-        a: "Có. Bạn đăng nhập bằng số điện thoại đã đăng ký với Rex. Nếu chưa có tài khoản, liên hệ nhân viên trung tâm để được cấp.",
-      },
-      {
-        q: "Liên kết tài khoản để vào nhanh như thế nào?",
-        a: 'Bấm nút "Liên kết tài khoản" ở trang chủ, xác nhận liên kết trên popup và đồng ý quyền từ Zalo để đăng nhập nhanh mà không cần nhập thủ công.',
-      },
-      {
-        q: "Tôi quên mật khẩu thì phải làm sao?",
-        a: 'Liên hệ nhân viên Rex qua nút "Liên hệ" ở bottom bar để được hỗ trợ đặt lại mật khẩu nhanh chóng.',
-      },
-    ],
-  },
-  {
-    category: "Học tập & Lịch học",
-    icon: "📚",
-    items: [
-      {
-        q: "Tôi có thể xem lịch học của con ở đâu?",
-        a: 'Sau khi đăng nhập với vai trò Phụ huynh, vào mục "Thời khoá biểu" để xem đầy đủ lịch học theo tuần.',
-      },
-      {
-        q: "Thầy cô có thể điểm danh qua Mini App không?",
-        a: 'Có! Giáo viên đăng nhập bằng tài khoản GV, vào mục "Điểm danh" và điểm danh ngay trên Mini App theo từng buổi học.',
-      },
-      {
-        q: "Bài tập về nhà được giao như thế nào?",
-        a: 'Giáo viên đăng bài tập trực tiếp trên hệ thống. Học viên và phụ huynh sẽ thấy ngay trong mục "Bài tập" và nhận thông báo qua Zalo.',
-      },
-    ],
-  },
-  {
-    category: "Khóa học & Học phí",
-    icon: "💰",
-    items: [
-      {
-        q: "Một lớp có bao nhiêu học viên?",
-        a: "Rex áp dụng mô hình lớp nhỏ – tối đa 8 học viên mỗi lớp để giáo viên có thể theo sát từng bé.",
-      },
-      {
-        q: "Test đầu vào có tốn phí không?",
-        a: "Hoàn toàn miễn phí! Rex cung cấp bài kiểm tra đầu vào và đầu ra để xếp lớp chính xác và đo lường tiến bộ.",
-      },
-      {
-        q: "Rex có dạy Cambridge không?",
-        a: "Có. Rex có lộ trình Cambridge Starters → Movers → Flyers đầy đủ với giáo viên chuyên luyện thi có kinh nghiệm 8–12 năm.",
-      },
-    ],
-  },
-];
+const PAGE_SIZE = 8;
+
+function toCategoryLabel(item: FAQItemType): string {
+  return item.categoryName || item.category?.name || "Khác";
+}
 
 function FAQItem({ q, a, index }: { q: string; a: string; index: number }) {
   const [open, setOpen] = useState(false);
@@ -113,6 +51,137 @@ function FAQItem({ q, a, index }: { q: string; a: string; index: number }) {
 }
 
 function FAQTab() {
+  const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("all");
+
+  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+
+  const [faqs, setFaqs] = useState<FAQItemType[]>([]);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+
+  const [loadingInitial, setLoadingInitial] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const requestIdRef = useRef(0);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebouncedSearchTerm(searchInput.trim());
+    }, 320);
+
+    return () => window.clearTimeout(timer);
+  }, [searchInput]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchCategories = async () => {
+      setCategoriesLoading(true);
+      try {
+        const data = await faqService.getPublicCategories();
+        if (!mounted) return;
+        setCategories(data.map((item) => ({ id: item.id, name: item.name })));
+      } catch {
+        if (!mounted) return;
+        setCategories([]);
+      } finally {
+        if (mounted) {
+          setCategoriesLoading(false);
+        }
+      }
+    };
+
+    fetchCategories();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const fetchFaqs = useCallback(
+    async (targetPage: number, append: boolean) => {
+      const currentRequestId = ++requestIdRef.current;
+
+      if (append) {
+        setLoadingMore(true);
+      } else {
+        setLoadingInitial(true);
+      }
+
+      if (!append) {
+        setError(null);
+      }
+
+      try {
+        const result = await faqService.getPublicFaqs({
+          categoryId: selectedCategoryId === "all" ? undefined : selectedCategoryId,
+          searchTerm: debouncedSearchTerm || undefined,
+          pageNumber: targetPage,
+          pageSize: PAGE_SIZE,
+        });
+
+        if (requestIdRef.current !== currentRequestId) return;
+
+        setFaqs((prev) => (append ? [...prev, ...result.items] : result.items));
+        setPageNumber(result.pageNumber);
+        setHasNextPage(result.hasNextPage);
+        setTotalCount(result.totalCount);
+      } catch (err: unknown) {
+        if (requestIdRef.current !== currentRequestId) return;
+
+        const message = err instanceof Error ? err.message : "Không thể tải dữ liệu FAQ";
+        setError(message);
+
+        if (!append) {
+          setFaqs([]);
+          setPageNumber(1);
+          setHasNextPage(false);
+          setTotalCount(0);
+        }
+      } finally {
+        if (requestIdRef.current === currentRequestId) {
+          setLoadingInitial(false);
+          setLoadingMore(false);
+        }
+      }
+    },
+    [debouncedSearchTerm, selectedCategoryId]
+  );
+
+  useEffect(() => {
+    fetchFaqs(1, false);
+  }, [fetchFaqs]);
+
+  const groupedFaqs = useMemo(() => {
+    const groups = new Map<string, FAQItemType[]>();
+
+    faqs.forEach((item) => {
+      const key = toCategoryLabel(item);
+      if (!groups.has(key)) {
+        groups.set(key, []);
+      }
+      groups.get(key)?.push(item);
+    });
+
+    return Array.from(groups.entries()).map(([category, items]) => ({
+      category,
+      items,
+    }));
+  }, [faqs]);
+
+  const handleLoadMore = useCallback(() => {
+    if (loadingMore || loadingInitial || !hasNextPage) return;
+    fetchFaqs(pageNumber + 1, true);
+  }, [fetchFaqs, hasNextPage, loadingInitial, loadingMore, pageNumber]);
+
+  const handleRetry = useCallback(() => {
+    fetchFaqs(1, false);
+  }, [fetchFaqs]);
+
   return (
     <div className="space-y-5 pb-4">
       {/* ─── HEADER BANNER ─── */}
@@ -140,8 +209,99 @@ function FAQTab() {
         </div>
       </div>
 
-      {/* ─── FAQ ACCORDION BY CATEGORY ─── */}
-      {FAQS.map((group, groupIndex) => (
+      <section className="space-y-3">
+        <div className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm">
+          <label htmlFor="faq-search" className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-500">
+            Tìm kiếm nhanh
+          </label>
+          <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2">
+            <svg
+              className="h-4 w-4 text-slate-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35m1.35-5.15a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              id="faq-search"
+              value={searchInput}
+              onChange={(event) => setSearchInput(event.target.value)}
+              placeholder="Nhập từ khóa câu hỏi, câu trả lời, chủ đề..."
+              className="w-full bg-transparent text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
+            />
+            {searchInput && (
+              <button
+                type="button"
+                onClick={() => setSearchInput("")}
+                className="rounded-lg bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-600"
+              >
+                Xóa
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="-mx-4 px-4">
+          <div className="flex gap-2 overflow-x-auto pb-1 hide-scrollbar">
+            <button
+              type="button"
+              onClick={() => setSelectedCategoryId("all")}
+              className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-bold transition-all active:scale-95 ${
+                selectedCategoryId === "all"
+                  ? "bg-gradient-to-r from-red-600 to-red-500 text-white shadow-md"
+                  : "border border-slate-200 bg-white text-slate-600"
+              }`}
+            >
+              Tất cả
+            </button>
+
+            {!categoriesLoading &&
+              categories.map((category) => (
+                <button
+                  key={category.id}
+                  type="button"
+                  onClick={() => setSelectedCategoryId(category.id)}
+                  className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-bold transition-all active:scale-95 ${
+                    selectedCategoryId === category.id
+                      ? "bg-gradient-to-r from-red-600 to-red-500 text-white shadow-md"
+                      : "border border-slate-200 bg-white text-slate-600"
+                  }`}
+                >
+                  {category.name}
+                </button>
+              ))}
+          </div>
+        </div>
+
+        <div className="px-1">
+          <p className="text-[11px] text-slate-500">
+            {loadingInitial ? "Đang tải danh sách câu hỏi..." : `Hiển thị ${faqs.length}/${totalCount} câu hỏi`}
+          </p>
+        </div>
+      </section>
+
+      {loadingInitial && (
+        <div className="flex items-center justify-center rounded-2xl border border-slate-100 bg-white py-12">
+          <Spinner />
+        </div>
+      )}
+
+      {!loadingInitial && error && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-center">
+          <p className="text-sm text-red-600">{error}</p>
+          <button
+            type="button"
+            onClick={handleRetry}
+            className="mt-3 rounded-xl bg-red-600 px-4 py-2 text-xs font-semibold text-white"
+          >
+            Thử lại
+          </button>
+        </div>
+      )}
+
+      {!loadingInitial && !error && groupedFaqs.map((group, groupIndex) => (
         <section
           key={group.category}
           className="animate-slide-up"
@@ -149,7 +309,7 @@ function FAQTab() {
         >
           <div className="mb-2.5 flex items-center gap-2">
             <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-red-100 text-sm">
-              {group.icon}
+              ❓
             </span>
             <h3 className="text-xs font-extrabold uppercase tracking-wider text-red-600">
               {group.category}
@@ -158,15 +318,36 @@ function FAQTab() {
           <div className="space-y-2">
             {group.items.map((item, itemIndex) => (
               <FAQItem
-                key={item.q}
-                q={item.q}
-                a={item.a}
-                index={groupIndex * 3 + itemIndex}
+                key={item.id || `${item.question}-${itemIndex}`}
+                q={item.question}
+                a={item.answer}
+                index={groupIndex * PAGE_SIZE + itemIndex}
               />
             ))}
           </div>
         </section>
       ))}
+
+      {!loadingInitial && !error && faqs.length === 0 && (
+        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-10 text-center">
+          <p className="text-sm font-bold text-slate-700">Không tìm thấy câu hỏi phù hợp</p>
+          <p className="mt-1 text-xs text-slate-500">Hãy thử từ khóa khác hoặc bỏ bộ lọc chủ đề.</p>
+        </div>
+      )}
+
+      {!loadingInitial && !error && hasNextPage && (
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={handleLoadMore}
+            disabled={loadingMore}
+            className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-white px-4 py-2 text-xs font-bold text-red-600 shadow-sm disabled:opacity-60"
+          >
+            {loadingMore ? <Spinner size="small" /> : null}
+            {loadingMore ? "Đang tải thêm..." : "Tải thêm câu hỏi"}
+          </button>
+        </div>
+      )}
 
       {/* ─── CTA BOTTOM ─── */}
       <div className="rounded-2xl border border-red-100 bg-gradient-to-r from-red-50 to-orange-50 px-4 py-4 text-center shadow-sm animate-fade-in">

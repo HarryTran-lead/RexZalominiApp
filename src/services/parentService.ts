@@ -7,7 +7,9 @@ import {
   MEDIA_ENDPOINTS,
   MONTHLY_REPORT_ENDPOINTS,
   ATTENDANCE_ENDPOINTS,
+  SESSION_ENDPOINTS,
 } from "@/constants/apiURL";
+import { TimetableSession } from "@/types/timetable";
 import {
   AttendanceHistoryItem,
   CreateLeaveRequestPayload,
@@ -81,10 +83,12 @@ function toMonthYearTimestamp(month?: number, year?: number): number {
   return Date.UTC(year, month - 1, 1);
 }
 
-function sortByNewest<T extends Record<string, unknown>>(items: T[], dateKeys: string[]): T[] {
+function sortByNewest<T>(items: T[], dateKeys: string[]): T[] {
   return [...items].sort((a, b) => {
-    const bTime = dateKeys.reduce((latest, key) => Math.max(latest, toTimestamp(b[key])), 0);
-    const aTime = dateKeys.reduce((latest, key) => Math.max(latest, toTimestamp(a[key])), 0);
+    const bRec = b as Record<string, unknown>;
+    const aRec = a as Record<string, unknown>;
+    const bTime = dateKeys.reduce((latest, key) => Math.max(latest, toTimestamp(bRec[key])), 0);
+    const aTime = dateKeys.reduce((latest, key) => Math.max(latest, toTimestamp(aRec[key])), 0);
     return bTime - aTime;
   });
 }
@@ -254,6 +258,14 @@ export const parentService = {
     );
   },
 
+  /** GET /api/pause-enrollment-requests/{id} — detail of a pause request */
+  getPauseRequestDetail: async (id: string): Promise<PauseEnrollmentRequest | null> => {
+    const res = await api.get<any>(PARENT_ENDPOINTS.PAUSE_ENROLLMENT_REQUEST_DETAIL(id));
+    const raw = res?.data ?? res;
+    if (!raw || !raw.id) return null;
+    return raw as PauseEnrollmentRequest;
+  },
+
   /** GET /api/makeup-credits?studentProfileId={id} */
   getMakeupCredits: async (params: {
     studentProfileId: string;
@@ -314,6 +326,20 @@ export const parentService = {
   }): Promise<AttendanceHistoryItem[]> => {
     const res = await api.get<any>(ATTENDANCE_ENDPOINTS.GET_STUDENTS, { params });
     return sortByNewest(extractItems<AttendanceHistoryItem>(res), ["markedAt"]);
+  },
+
+  /** GET /api/sessions/{sessionId} — full session detail (used to enrich attendance history) */
+  getSessionDetail: async (sessionId: string): Promise<TimetableSession | null> => {
+    try {
+      const res = await api.get<any>(SESSION_ENDPOINTS.DETAIL(sessionId));
+      const data = res?.data ?? res;
+      // API returns { session: { ... } } or { data: { session: { ... } } }
+      const session = data?.session ?? data;
+      if (!session || !session.id) return null;
+      return session as TimetableSession;
+    } catch {
+      return null;
+    }
   },
 
   /** GET /api/media for parent gallery */

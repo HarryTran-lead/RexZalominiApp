@@ -44,6 +44,11 @@ export const MEDIA_ENDPOINTS = {
   DETAIL: (id: string) => `/media/${id}`,
 };
 
+export const FAQ_ENDPOINTS = {
+  CATEGORIES: "/faqs/categories",
+  LIST: "/faqs",
+};
+
 export const MONTHLY_REPORT_ENDPOINTS = {
   LIST: "/monthly-reports",
   DETAIL: (reportId: string) => `/monthly-reports/${reportId}`,
@@ -121,6 +126,10 @@ export const PARENT_ENDPOINTS = {
   MAKEUP_CREDIT_ALLOCATIONS: "/makeup-credits/allocations",
 };
 
+export const SESSION_ENDPOINTS = {
+  DETAIL: (sessionId: string) => `/sessions/${sessionId}`,
+};
+
 export const NOTIFICATION_ENDPOINTS = {
   LIST: "/notifications",
   MARK_AS_READ: (id: string) => `/notifications/${id}/read`,
@@ -190,6 +199,7 @@ export const API_ENDPOINTS = {
   FILE: FILE_ENDPOINTS,
   BLOG: BLOG_ENDPOINTS,
   MEDIA: MEDIA_ENDPOINTS,
+  FAQ: FAQ_ENDPOINTS,
   MONTHLY_REPORT: MONTHLY_REPORT_ENDPOINTS,
   STUDENT: STUDENT_ENDPOINTS,
   TEACHER: TEACHER_ENDPOINTS,

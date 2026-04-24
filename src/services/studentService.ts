@@ -54,21 +54,26 @@ function toTimestamp(value: unknown): number {
   return 0;
 }
 
-function sortByNewest<T extends Record<string, unknown>>(items: T[], dateKeys: string[]): T[] {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function sortByNewest<T>(items: T[], dateKeys: string[]): T[] {
   return [...items].sort((a, b) => {
-    const bTime = dateKeys.reduce((latest, key) => Math.max(latest, toTimestamp(b[key])), 0);
-    const aTime = dateKeys.reduce((latest, key) => Math.max(latest, toTimestamp(a[key])), 0);
+    const aRec = a as Record<string, unknown>;
+    const bRec = b as Record<string, unknown>;
+    const bTime = dateKeys.reduce((latest, key) => Math.max(latest, toTimestamp(bRec[key])), 0);
+    const aTime = dateKeys.reduce((latest, key) => Math.max(latest, toTimestamp(aRec[key])), 0);
     return bTime - aTime;
   });
 }
 
-function sortPaginatedItemsByNewest<T extends Record<string, unknown>>(
-  payload: PaginatedResponse<T>,
-  dateKeys: string[]
-): PaginatedResponse<T> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function sortPaginatedItemsByNewest<T>(payload: any, dateKeys: string[]): PaginatedResponse<T> {
+  if (!payload || !Array.isArray(payload.items)) {
+    // Items are nested or unavailable — return as-is for downstream extractItems normalization
+    return payload as PaginatedResponse<T>;
+  }
   return {
     ...payload,
-    items: sortByNewest(payload.items, dateKeys),
+    items: sortByNewest(payload.items as T[], dateKeys),
   };
 }
 

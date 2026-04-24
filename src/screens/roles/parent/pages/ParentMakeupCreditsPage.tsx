@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Page, Spinner, useSnackbar } from "zmp-ui";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "@headlessui/react";
-import { CalendarClock, CheckCircle2, ChevronsUpDown } from "lucide-react";
+import { CalendarClock, ChevronsUpDown } from "lucide-react";
 import UserAvatar from "@/components/common/UserAvatar";
 import { authService } from "@/services/authService";
 import { parentService } from "@/services/parentService";
@@ -9,18 +9,17 @@ import {
   AttendanceHistoryItem,
   MakeupAllocation,
   ParentMakeupCredit,
-  ParentMakeupSuggestion,
 } from "@/types/parent";
+import { TimetableSession } from "@/types/timetable";
 import { UserProfile } from "@/types/auth";
 import { storage } from "@/utils/storage";
-
-type SuggestionMap = Record<string, ParentMakeupSuggestion[]>;
-type LoadingMap = Record<string, boolean>;
-type SelectedMap = Record<string, string>;
+import MakeupScheduleModal from "@/components/parent/MakeupScheduleModal";
 
 function formatDate(value?: string): string {
   if (!value) return "--";
-  const date = new Date(value);
+  // Strip trailing Z to display backend local time without UTC offset shift
+  const clean = value.replace(/Z$/i, "");
+  const date = new Date(clean);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleString("vi-VN", {
     day: "2-digit",
@@ -59,6 +58,17 @@ function attendanceStatusBadge(status?: string): { text: string; className: stri
   }
 }
 
+function formatCreatedReason(reason?: string): string {
+  if (!reason) return "Không rõ";
+  const map: Record<string, string> = {
+    approvedleave24h: "Nghỉ phép đã duyệt (trước 24h)",
+    approvedleave: "Nghỉ phép đã duyệt",
+    manualcredit: "Cấp thủ công",
+    systemcredit: "Hệ thống tự cấp",
+  };
+  return map[reason.toLowerCase()] ?? reason;
+}
+
 function ParentMakeupCreditsPage() {
   const { openSnackbar } = useSnackbar();
 
@@ -69,14 +79,13 @@ function ParentMakeupCreditsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [suggestionsMap, setSuggestionsMap] = useState<SuggestionMap>({});
-  const [loadingSuggestionsMap, setLoadingSuggestionsMap] = useState<LoadingMap>({});
-  const [selectedSuggestionMap, setSelectedSuggestionMap] = useState<SelectedMap>({});
   const [makeupAllocations, setMakeupAllocations] = useState<MakeupAllocation[]>([]);
   const [attendanceHistory, setAttendanceHistory] = useState<AttendanceHistoryItem[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
-  const [submittingId, setSubmittingId] = useState("");
+  const [sessionDetailsMap, setSessionDetailsMap] = useState<Record<string, TimetableSession>>({});
+  const [loadingSessionDetails, setLoadingSessionDetails] = useState(false);
+  const [wizardCredit, setWizardCredit] = useState<ParentMakeupCredit | null>(null);
   const loadedStudentsRef = useRef(false);
 
   const selectedStudent = useMemo(
@@ -135,6 +144,27 @@ function ParentMakeupCreditsPage() {
     }
   }, [selectedStudentId]);
 
+  // Batch-fetch session details for attendance history items that have a sessionId
+  const loadSessionDetails = useCallback(async (items: AttendanceHistoryItem[]) => {
+    const ids = items.map((i) => i.sessionId).filter(Boolean);
+    if (ids.length === 0) return;
+    setLoadingSessionDetails(true);
+    try {
+      const results = await Promise.all(
+        ids.map((id) => parentService.getSessionDetail(id).catch(() => null))
+      );
+      const map: Record<string, TimetableSession> = {};
+      results.forEach((result, idx) => {
+        if (result) {
+          map[ids[idx]] = result;
+        }
+      });
+      setSessionDetailsMap(map);
+    } finally {
+      setLoadingSessionDetails(false);
+    }
+  }, []);
+
   const availableCredits = useMemo(
     () => credits.filter((item) => (item.status || "").toLowerCase() === "available"),
     [credits]
@@ -166,72 +196,23 @@ function ParentMakeupCreditsPage() {
 
   useEffect(() => {
     if (!selectedStudentId) return;
-    loadCredits();
-    loadHistories();
-    setSuggestionsMap({});
-    setSelectedSuggestionMap({});
+    void loadCredits();
+    void loadHistories();
+    setSessionDetailsMap({});
   }, [selectedStudentId, loadCredits, loadHistories]);
 
-  const loadSuggestions = useCallback(
-    async (creditId: string) => {
-      setLoadingSuggestionsMap((prev) => ({ ...prev, [creditId]: true }));
-      try {
-        const suggestions = await parentService.getAvailableMakeupSessions(creditId);
+  // Load session details whenever attendance history changes
+  useEffect(() => {
+    if (attendanceHistory.length > 0) {
+      void loadSessionDetails(attendanceHistory);
+    }
+  }, [attendanceHistory, loadSessionDetails]);
 
-        setSuggestionsMap((prev) => ({ ...prev, [creditId]: suggestions }));
-        if (suggestions.length > 0) {
-          setSelectedSuggestionMap((prev) => ({ ...prev, [creditId]: suggestions[0].sessionId }));
-        }
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "Không thể tải gợi ý lịch học bù";
-        openSnackbar({ text: message, type: "error" });
-      } finally {
-        setLoadingSuggestionsMap((prev) => ({ ...prev, [creditId]: false }));
-      }
-    },
-    [openSnackbar]
-  );
-
-  const submitUseCredit = useCallback(
-    async (credit: ParentMakeupCredit) => {
-      const selectedSuggestionId = selectedSuggestionMap[credit.id];
-      const suggestions = suggestionsMap[credit.id] || [];
-      const suggestion = suggestions.find((item) => item.sessionId === selectedSuggestionId);
-
-      if (!selectedStudentId) {
-        openSnackbar({ text: "Vui lòng chọn học sinh", type: "error" });
-        return;
-      }
-
-      if (!suggestion) {
-        openSnackbar({ text: "Vui lòng chọn 1 gợi ý lịch học bù", type: "error" });
-        return;
-      }
-
-      setSubmittingId(credit.id);
-      try {
-        await parentService.useMakeupCredit(credit.id, {
-          studentProfileId: selectedStudentId,
-          classId: suggestion.classId,
-          targetSessionId: suggestion.sessionId,
-        });
-
-        openSnackbar({
-          text: "Đăng ký học bù thành công",
-          type: "success",
-        });
-
-        await Promise.all([loadCredits(), loadHistories()]);
-        setSuggestionsMap((prev) => ({ ...prev, [credit.id]: [] }));
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "Không thể đăng ký lịch học bù";
-        openSnackbar({ text: message, type: "error" });
-      } finally {
-        setSubmittingId("");
-      }
-    },
-    [loadCredits, loadHistories, openSnackbar, selectedStudentId, selectedSuggestionMap, suggestionsMap]
-  );
+  const handleWizardSuccess = useCallback(async () => {
+    setWizardCredit(null);
+    openSnackbar({ text: "Đăng ký học bù thành công", type: "success" });
+    await Promise.all([loadCredits(), loadHistories()]);
+  }, [loadCredits, loadHistories, openSnackbar]);
 
   return (
     <Page className="flex h-full min-h-0 flex-col bg-gray-100">
@@ -239,7 +220,7 @@ function ParentMakeupCreditsPage() {
         <h1 className="text-center text-lg font-bold text-white">Quyền học bù</h1>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-24 pt-4">
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-24 pt-4 space-y-4">
         <div className="rounded-2xl border border-red-100 bg-white p-3">
           <label className="mb-1 block text-xs font-semibold text-gray-600">Học sinh</label>
           <Listbox value={selectedStudentId} onChange={setSelectedStudentId}>
@@ -285,8 +266,8 @@ function ParentMakeupCreditsPage() {
           </Listbox>
         </div>
 
-        <div className="mt-4 rounded-2xl border border-red-100 bg-red-50 p-3 text-xs text-red-700">
-          Chỉ các credit trạng thái Available mới có thể đăng ký học bù. Chọn 1 credit để xem danh sách buổi học bù gợi ý và xác nhận.
+        <div className="rounded-2xl border border-red-100 bg-red-50 p-3 text-xs text-red-700">
+          Chỉ các quyền học bù ở trạng thái <strong>Sẵn sàng</strong> mới có thể đăng ký. Nhấn <strong>Thay đổi lịch học bù</strong> để chọn buổi bù phù hợp.
         </div>
 
         {loading && (
@@ -296,14 +277,11 @@ function ParentMakeupCreditsPage() {
         )}
 
         {!loading && error && (
-          <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-center">
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-center">
             <p className="text-sm text-red-600">{error}</p>
             <button
               type="button"
-              onClick={() => {
-                void loadCredits();
-                void loadHistories();
-              }}
+              onClick={() => { void loadCredits(); void loadHistories(); }}
               className="mt-3 rounded-xl bg-red-600 px-4 py-2 text-xs font-semibold text-white"
             >
               Thử lại
@@ -312,106 +290,104 @@ function ParentMakeupCreditsPage() {
         )}
 
         {!loading && !error && availableCredits.length === 0 && (
-          <div className="py-12 text-center text-sm text-gray-500">
-            Không có credit Available cho học sinh này.
+          <div className="rounded-2xl border border-gray-100 bg-white py-12 text-center">
+            <p className="text-sm text-gray-500">Không có quyền học bù nào đang sẵn sàng.</p>
           </div>
         )}
 
         {!loading && !error && availableCredits.length > 0 && (
-          <div className="mt-4 space-y-3">
+          <div className="space-y-3">
+            <p className="text-xs font-semibold text-gray-600 px-1">
+              Quyền học bù sẵn sàng ({availableCredits.length})
+            </p>
             {availableCredits.map((credit) => {
               const badge = statusBadge(credit.status);
-              const suggestions = suggestionsMap[credit.id] || [];
-              const loadingSuggestions = loadingSuggestionsMap[credit.id];
 
               return (
                 <div key={credit.id} className="rounded-2xl bg-white p-4 shadow-sm">
                   <div className="mb-3 flex items-start justify-between gap-2">
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <h3 className="text-sm font-bold text-gray-800">
                         {credit.classTitle || credit.classCode || "Lượt học bù"}
                       </h3>
                       <p className="mt-0.5 text-xs text-gray-500">
-                        Nguồn vắng: {formatDate(credit.sourceSessionDate || credit.createdAt)}
+                        Buổi vắng: {formatDate(credit.sourceSessionDate || credit.createdAt)}
                       </p>
+                      {credit.createdReason && (
+                        <p className="mt-0.5 text-xs text-gray-500">
+                          Lý do: {formatCreatedReason(credit.createdReason)}
+                        </p>
+                      )}
+                      {credit.expiresAt && (
+                        <p className="mt-0.5 text-xs font-medium text-orange-600">
+                          Hết hạn: {formatDate(credit.expiresAt)}
+                        </p>
+                      )}
                     </div>
-                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${badge.className}`}>
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${badge.className}`}>
                       {badge.text}
                     </span>
                   </div>
 
                   <button
                     type="button"
-                    onClick={() => loadSuggestions(credit.id)}
-                    disabled={loadingSuggestions}
-                    className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700"
+                    onClick={() => setWizardCredit(credit)}
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 py-2.5 text-xs font-semibold text-white active:bg-red-700"
                   >
                     <CalendarClock className="h-4 w-4" />
-                    {loadingSuggestions ? "Đang lấy gợi ý..." : "Xem gợi ý lịch học bù"}
+                    Thay đổi lịch học bù
                   </button>
-
-                  {loadingSuggestions && (
-                    <div className="mt-3 flex items-center gap-2 text-xs text-gray-500">
-                      <Spinner /> Đang tải khung giờ...
-                    </div>
-                  )}
-
-                  {!loadingSuggestions && suggestions.length > 0 && (
-                    <div className="mt-3 space-y-2 rounded-xl border border-gray-100 bg-gray-50 p-2.5">
-                      {suggestions.map((item) => {
-                        const selected = selectedSuggestionMap[credit.id] === item.sessionId;
-                        return (
-                          <button
-                            key={item.sessionId}
-                            type="button"
-                            onClick={() =>
-                              setSelectedSuggestionMap((prev) => ({ ...prev, [credit.id]: item.sessionId }))
-                            }
-                            className={`w-full rounded-xl border px-3 py-2 text-left transition-colors ${
-                              selected
-                                ? "border-red-300 bg-red-50"
-                                : "border-gray-200 bg-white"
-                            }`}
-                          >
-                            <div className="flex items-start justify-between gap-3">
-                              <div>
-                                <p className="text-xs font-semibold text-gray-800">
-                                  {item.classTitle || item.classCode || "Buổi học gợi ý"}
-                                </p>
-                                <p className="mt-0.5 text-[11px] text-gray-500">
-                                  {formatDate(item.plannedDatetime)} - {formatDate(item.plannedEndDatetime)}
-                                </p>
-                                {item.programName && (
-                                  <p className="mt-0.5 text-[11px] text-gray-500">Chương trình: {item.programName}</p>
-                                )}
-                              </div>
-                              {selected && <CheckCircle2 className="h-4 w-4 text-red-600" />}
-                            </div>
-                          </button>
-                        );
-                      })}
-
-                      <button
-                        type="button"
-                        onClick={() => submitUseCredit(credit)}
-                        disabled={submittingId === credit.id}
-                        className="w-full rounded-xl bg-red-600 py-2.5 text-xs font-semibold text-white disabled:opacity-60"
-                      >
-                        {submittingId === credit.id ? "Đang xử lý..." : "Xác nhận dùng credit"}
-                      </button>
-                    </div>
-                  )}
-
-                  {!loadingSuggestions && suggestionsMap[credit.id] && suggestions.length === 0 && (
-                    <p className="mt-3 text-xs text-gray-500">Không tìm thấy lịch học bù phù hợp.</p>
-                  )}
                 </div>
               );
             })}
           </div>
         )}
 
-        <div className="mt-6 rounded-2xl border border-red-100 bg-white p-4">
+        {!loading && (
+          <div className="rounded-2xl border border-red-100 bg-white p-4">
+            <h3 className="mb-3 text-sm font-bold text-gray-800">Lịch sử quyền học bù</h3>
+            {credits.filter((c) => (c.status || "").toLowerCase() !== "available").length === 0 ? (
+              <p className="text-xs text-gray-500">Chưa có lịch sử sử dụng quyền học bù.</p>
+            ) : (
+              <div className="space-y-2">
+                {credits
+                  .filter((c) => (c.status || "").toLowerCase() !== "available")
+                  .map((credit) => {
+                    const badge = statusBadge(credit.status);
+                    return (
+                      <div key={credit.id} className="rounded-xl border border-gray-100 bg-gray-50 px-3 py-2.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-semibold text-gray-800">
+                              {credit.classTitle || credit.classCode || "Lớp học"}
+                            </p>
+                            <p className="mt-0.5 text-[11px] text-gray-500">
+                              Buổi vắng: {formatDate(credit.sourceSessionDate || credit.createdAt)}
+                            </p>
+                            {credit.usedAt && (
+                              <p className="mt-0.5 text-[11px] text-gray-500">
+                                Đã dùng lúc: {formatDate(credit.usedAt)}
+                              </p>
+                            )}
+                            {credit.createdReason && (
+                              <p className="mt-0.5 text-[11px] text-gray-500">
+                                Lý do: {formatCreatedReason(credit.createdReason)}
+                              </p>
+                            )}
+                          </div>
+                          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${badge.className}`}>
+                            {badge.text}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="rounded-2xl border border-red-100 bg-white p-4">
           <h3 className="text-sm font-bold text-gray-800">Lịch sử phân bổ học bù</h3>
           {loadingHistory ? (
             <div className="mt-3 flex items-center gap-2 text-xs text-gray-500">
@@ -426,10 +402,15 @@ function ParentMakeupCreditsPage() {
               {makeupAllocations.map((allocation) => (
                 <div key={allocation.id} className="rounded-xl border border-gray-100 bg-gray-50 px-3 py-2">
                   <p className="text-xs font-semibold text-gray-700">
-                    Session đích: {allocation.targetSessionId}
+                    {allocation.targetClassTitle || allocation.targetClassCode || "Buổi học bù đã đăng ký"}
                   </p>
+                  {(allocation.targetSessionDate || allocation.targetPlannedDatetime) && (
+                    <p className="mt-0.5 text-[11px] text-gray-500">
+                      Ngày học bù: {formatDate(allocation.targetSessionDate || allocation.targetPlannedDatetime)}
+                    </p>
+                  )}
                   <p className="mt-0.5 text-[11px] text-gray-500">
-                    Phân bổ lúc: {formatDate(allocation.assignedAt)}
+                    Được phân bổ: {formatDate(allocation.assignedAt)}
                   </p>
                 </div>
               ))}
@@ -437,7 +418,7 @@ function ParentMakeupCreditsPage() {
           )}
         </div>
 
-        <div className="mt-4 rounded-2xl border border-red-100 bg-white p-4">
+        <div className="rounded-2xl border border-red-100 bg-white p-4">
           <h3 className="text-sm font-bold text-gray-800">Lịch sử điểm danh</h3>
           {loadingHistory ? (
             <div className="mt-3 flex items-center gap-2 text-xs text-gray-500">
@@ -449,17 +430,39 @@ function ParentMakeupCreditsPage() {
             <p className="mt-3 text-xs text-gray-500">Chưa có lịch sử điểm danh.</p>
           ) : (
             <div className="mt-3 space-y-2">
+              {loadingSessionDetails && (
+                <p className="text-[11px] text-gray-400 flex items-center gap-1"><Spinner /> Đang tải chi tiết buổi học...</p>
+              )}
               {attendanceHistory.map((item) => {
                 const badge = attendanceStatusBadge(item.attendanceStatus);
+                const detail = sessionDetailsMap[item.sessionId];
+                // Prefer enriched session detail over flat fields on the item
+                const displayClass = detail?.classTitle ?? detail?.classCode ?? item.classTitle ?? item.classCode ?? "Buổi học";
+                const plannedDt = detail?.plannedDatetime ?? detail?.actualDatetime;
+                const branchName = detail?.branchName;
+                const roomName = detail?.actualRoomName ?? detail?.plannedRoomName;
+                const teacherName = detail?.actualTeacherName ?? detail?.plannedTeacherName;
+                const duration = detail?.durationMinutes;
                 return (
-                  <div key={item.id} className="rounded-xl border border-gray-100 bg-gray-50 px-3 py-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-xs font-semibold text-gray-700">Session: {item.sessionId}</p>
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${badge.className}`}>
+                  <div key={item.id} className="rounded-xl border border-gray-100 bg-gray-50 px-3 py-2.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-xs font-semibold text-gray-800 flex-1 min-w-0">{displayClass}</p>
+                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${badge.className}`}>
                         {badge.text}
                       </span>
                     </div>
-                    <p className="mt-0.5 text-[11px] text-gray-500">Đánh dấu lúc: {formatDate(item.markedAt)}</p>
+                    {plannedDt && (
+                      <p className="mt-0.5 text-[11px] text-gray-600 font-medium">
+                        {formatDate(plannedDt)}{duration ? ` • ${duration} phút` : ""}
+                      </p>
+                    )}
+                    {branchName && (
+                      <p className="mt-0.5 text-[11px] text-gray-500">Ðịa điểm: {branchName}{roomName ? ` • ${roomName}` : ""}</p>
+                    )}
+                    {teacherName && (
+                      <p className="mt-0.5 text-[11px] text-gray-500">Giáo viên: {teacherName}</p>
+                    )}
+                    <p className="mt-0.5 text-[11px] text-gray-400">Điểm danh lúc: {formatDate(item.markedAt)}</p>
                     {item.note && <p className="mt-0.5 text-[11px] text-gray-500">Ghi chú: {item.note}</p>}
                   </div>
                 );
@@ -468,6 +471,15 @@ function ParentMakeupCreditsPage() {
           )}
         </div>
       </div>
+
+      {wizardCredit && selectedStudentId && (
+        <MakeupScheduleModal
+          credit={wizardCredit}
+          studentProfileId={selectedStudentId}
+          onClose={() => setWizardCredit(null)}
+          onSuccess={() => void handleWizardSuccess()}
+        />
+      )}
     </Page>
   );
 }

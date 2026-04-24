@@ -5,6 +5,9 @@ export interface TimetableSession {
   classId: string;
   classCode: string;
   classTitle: string;
+  branchId?: string;
+  branchName?: string;
+  color?: string | null;
   plannedDatetime: string;
   actualDatetime?: string | null;
   durationMinutes: number;

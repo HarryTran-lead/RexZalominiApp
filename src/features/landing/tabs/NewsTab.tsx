@@ -1,8 +1,25 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { SyntheticEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Spinner } from "zmp-ui";
 import { contentService } from "@/services/contentService";
 import { BlogDetail, BlogSummary } from "@/types/content";
 import { firstResolvedAssetUrl } from "@/utils/assetUrl";
+
+const NEWS_PLACEHOLDER = "https://placehold.co/600x380/F3F4F6/9CA3AF?text=Rex+News";
+
+function isVercelBlobUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url, typeof window !== "undefined" ? window.location.origin : "http://localhost");
+    return parsed.hostname.includes(".blob.vercel-storage.com");
+  } catch {
+    return false;
+  }
+}
+
+function handleNewsImageError(event: SyntheticEvent<HTMLImageElement, Event>) {
+  const target = event.currentTarget;
+  if (target.src === NEWS_PLACEHOLDER) return;
+  target.src = NEWS_PLACEHOLDER;
+}
 
 function useCarousel(itemCount: number, autoPlayMs = 5000) {
   const [current, setCurrent] = useState(0);
@@ -72,15 +89,18 @@ function previewText(item: BlogSummary): string {
 }
 
 function imageUrl(item: BlogSummary): string {
-  return (
-    firstResolvedAssetUrl(
-      item.featuredImageUrl,
-      item.thumbnailUrl,
-      item.coverImageUrl,
-      item.attachmentImageUrl,
-      item.attachmentFileUrl
-    ) || "https://placehold.co/600x380/F3F4F6/9CA3AF?text=Rex+News"
-  );
+  const resolvedCandidates = [
+    item.featuredImageUrl,
+    item.thumbnailUrl,
+    item.coverImageUrl,
+    item.attachmentImageUrl,
+    item.attachmentFileUrl,
+  ]
+    .map((candidate) => firstResolvedAssetUrl(candidate))
+    .filter(Boolean);
+
+  const nonBlob = resolvedCandidates.find((url) => !isVercelBlobUrl(url));
+  return nonBlob || NEWS_PLACEHOLDER;
 }
 
 function NewsCard({ item, onOpen }: { item: BlogSummary; onOpen: (id: string) => void }) {
@@ -91,7 +111,12 @@ function NewsCard({ item, onOpen }: { item: BlogSummary; onOpen: (id: string) =>
       className="flex h-28 w-full overflow-hidden rounded-2xl border border-slate-100 bg-white text-left shadow-sm transition-all active:scale-[0.98]"
     >
       <div className="relative h-28 w-24 shrink-0 overflow-hidden">
-        <img src={imageUrl(item)} alt={item.title || "Bản tin"} className="h-full w-full object-cover" />
+        <img
+          src={imageUrl(item)}
+          alt={item.title || "Bản tin"}
+          className="h-full w-full object-cover"
+          onError={handleNewsImageError}
+        />
       </div>
       <div className="flex flex-1 flex-col justify-between px-3 py-2.5">
         <div>
@@ -242,7 +267,12 @@ function NewsTab() {
                       onClick={() => openDetail(item.id)}
                       className="relative h-48 w-full shrink-0 overflow-hidden text-left"
                     >
-                      <img src={imageUrl(item)} alt={item.title || "Bản tin"} className="h-full w-full object-cover" />
+                      <img
+                        src={imageUrl(item)}
+                        alt={item.title || "Bản tin"}
+                        className="h-full w-full object-cover"
+                        onError={handleNewsImageError}
+                      />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
                       <span
                         className={`absolute left-3 top-3 rounded-full px-2.5 py-0.5 text-[10px] font-bold shadow-sm ${getTagColor(item.category)}`}
@@ -319,6 +349,7 @@ function NewsTab() {
                   src={imageUrl(selectedBlog)}
                   alt={selectedBlog.title || "Bản tin"}
                   className="h-44 w-full rounded-2xl object-cover"
+                  onError={handleNewsImageError}
                 />
                 <p className="mt-3 text-[11px] font-semibold uppercase tracking-wide text-red-600">
                   {selectedBlog.category || "Bản tin"}

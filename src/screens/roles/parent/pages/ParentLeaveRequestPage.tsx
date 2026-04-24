@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Page, Spinner, useSnackbar } from "zmp-ui";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "@headlessui/react";
-import { AlertCircle, CalendarDays, ChevronsUpDown, FileText } from "lucide-react";
+import { AlertCircle, CalendarDays, ChevronRight, ChevronsUpDown, FileText, X } from "lucide-react";
 import { parentService } from "@/services/parentService";
 import { authService } from "@/services/authService";
 import { studentService } from "@/services/studentService";
@@ -10,6 +10,7 @@ import {
   CreatePauseRequestPayload,
   ParentLeaveRequest,
   ParentLeaveRequestsResponse,
+  PauseEnrollmentOutcome,
   PauseEnrollmentRequest,
 } from "@/types/parent";
 import { UserProfile } from "@/types/auth";
@@ -95,6 +96,192 @@ function toDateInputValue(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
+function outcomeLabel(outcome?: PauseEnrollmentOutcome | null): string {
+  switch (outcome) {
+    case PauseEnrollmentOutcome.CONTINUE_SAME_CLASS:
+      return "Tiếp tục lớp cũ";
+    case PauseEnrollmentOutcome.REASSIGN_EQUIVALENT_CLASS:
+      return "Chuyển sang lớp tương đương";
+    case PauseEnrollmentOutcome.CONTINUE_WITH_TUTORING:
+      return "Học bù kèm riêng";
+    default:
+      return outcome ?? "Chưa xử lý";
+  }
+}
+
+function classStatusLabel(status?: string): string {
+  switch ((status || "").toLowerCase()) {
+    case "active": return "Đang học";
+    case "paused": return "Đang bảo lưu";
+    case "completed": return "Đã hoàn thành";
+    case "cancelled": return "Đã hủy";
+    default: return status || "Không rõ";
+  }
+}
+
+interface PauseDetailDrawerProps {
+  item: PauseEnrollmentRequest;
+  studentName: string;
+  onClose: () => void;
+}
+
+function PauseDetailDrawer({ item, studentName, onClose }: PauseDetailDrawerProps) {
+  const statusMap: Record<string, { label: string; className: string }> = {
+    Pending: { label: "Đang chờ duyệt", className: "bg-yellow-100 text-yellow-700" },
+    Approved: { label: "Đã duyệt", className: "bg-green-100 text-green-700" },
+    Rejected: { label: "Từ chối", className: "bg-red-100 text-red-700" },
+    Cancelled: { label: "Đã hủy", className: "bg-gray-100 text-gray-600" },
+  };
+  const badge = statusMap[item.status] ?? { label: item.status, className: "bg-gray-100 text-gray-600" };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end bg-black/50" onClick={onClose}>
+      <div
+        className="w-full max-h-[92vh] flex flex-col rounded-t-3xl bg-white overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Red header */}
+        <div className="shrink-0 rounded-t-3xl bg-[#BB0000] px-4 pt-4 pb-5 text-white">
+          <div className="flex justify-center mb-3">
+            <div className="h-1 w-10 rounded-full bg-white/40" />
+          </div>
+          <div className="flex items-start justify-between">
+            <div>
+              <h2 className="text-base font-bold">Chi tiết đơn bảo lưu</h2>
+              <p className="mt-0.5 text-xs text-white/70">{studentName}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${badge.className}`}>
+                {badge.label}
+              </span>
+              <button onClick={onClose} className="ml-1 rounded-full p-1 active:bg-white/10">
+                <X className="h-5 w-5 text-white" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Scrollable body */}
+        <div className="flex-1 overflow-y-auto bg-gray-50 px-4 py-4 space-y-3 pb-8">
+
+          {/* Period */}
+          <div className="rounded-2xl bg-white px-4 py-3.5">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-2">Thời gian bảo lưu</p>
+            <div className="flex items-center gap-2">
+              <CalendarDays className="h-4 w-4 text-red-500 shrink-0" />
+              <p className="text-sm font-semibold text-gray-800">
+                {formatDate(item.pauseFrom)} – {formatDate(item.pauseTo)}
+              </p>
+            </div>
+          </div>
+
+          {/* Reason */}
+          {item.reason && (
+            <div className="rounded-2xl bg-white px-4 py-3.5">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5">Lý do</p>
+              <p className="text-sm text-gray-700">{item.reason}</p>
+            </div>
+          )}
+
+          {/* Timeline */}
+          <div className="rounded-2xl bg-white px-4 py-3.5">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-2.5">Tiến trình</p>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-500">Ngày gửi đơn</span>
+                <span className="text-xs font-medium text-gray-800">{formatDate(item.requestedAt)}</span>
+              </div>
+              {item.approvedAt && (
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">Ngày duyệt</span>
+                  <span className="text-xs font-medium text-gray-800">{formatDate(item.approvedAt)}</span>
+                </div>
+              )}
+              {item.cancelledAt && (
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">Ngày hủy</span>
+                  <span className="text-xs font-medium text-gray-800">{formatDate(item.cancelledAt)}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Outcome */}
+          {item.outcome && (
+            <div className="rounded-2xl bg-blue-50 border border-blue-100 px-4 py-3.5">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-blue-500 mb-2.5">Kết quả xử lý</p>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">Hướng xử lý</span>
+                  <span className="text-xs font-semibold text-blue-700">{outcomeLabel(item.outcome)}</span>
+                </div>
+                {item.reservedSessionCount != null && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500">Số buổi bảo lưu</span>
+                    <span className="text-xs font-semibold text-gray-800">{item.reservedSessionCount} buổi</span>
+                  </div>
+                )}
+                {item.reservationExpiresOn && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500">Hạn học bù</span>
+                    <span className="text-xs font-semibold text-orange-500">{formatDate(item.reservationExpiresOn)}</span>
+                  </div>
+                )}
+                {item.outcomeAt && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500">Xử lý lúc</span>
+                    <span className="text-xs font-medium text-gray-800">{formatDate(item.outcomeAt)}</span>
+                  </div>
+                )}
+                {item.outcomeNote && (
+                  <div className="pt-1 border-t border-blue-100">
+                    <p className="text-xs text-gray-500 mb-0.5">Ghi chú</p>
+                    <p className="text-xs text-gray-700">{item.outcomeNote}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Classes */}
+          {item.classes && item.classes.length > 0 && (
+            <div className="rounded-2xl bg-white px-4 py-3.5">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-2.5">
+                Lớp học được bảo lưu ({item.classes.length})
+              </p>
+              <div className="space-y-2">
+                {item.classes.map((cls) => (
+                  <div key={cls.id} className="rounded-xl border border-gray-100 bg-gray-50 px-3 py-2.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-gray-800">{cls.title || cls.code}</p>
+                        <p className="mt-0.5 text-[11px] text-gray-500">{cls.programName}</p>
+                        <p className="mt-0.5 text-[11px] text-gray-400">Chi nhánh: {cls.branchName}</p>
+                        <p className="mt-0.5 text-[11px] text-gray-400">
+                          {formatDate(cls.startDate)} – {formatDate(cls.endDate)}
+                        </p>
+                      </div>
+                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                        cls.status?.toLowerCase() === "active"
+                          ? "bg-green-100 text-green-700"
+                          : cls.status?.toLowerCase() === "paused"
+                          ? "bg-yellow-100 text-yellow-700"
+                          : "bg-gray-100 text-gray-600"
+                      }`}>
+                        {classStatusLabel(cls.status)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ParentLeaveRequestPage({
   initialRequestKind = "leave",
   lockRequestKind = true,
@@ -107,6 +294,7 @@ function ParentLeaveRequestPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [detailPauseItem, setDetailPauseItem] = useState<PauseEnrollmentRequest | null>(null);
 
   const [students, setStudents] = useState<UserProfile[]>([]);
   const [classes, setClasses] = useState<StudentClass[]>([]);
@@ -971,31 +1159,45 @@ function ParentLeaveRequestPage({
                       const badge = getStatusBadge(item.status);
                       const studentName = students.find((s) => s.id === item.studentProfileId)?.displayName || "Học sinh";
                       return (
-                        <div key={item.id} className="bg-white rounded-2xl shadow-sm p-4">
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => setDetailPauseItem(item)}
+                          className="w-full bg-white rounded-2xl shadow-sm p-4 text-left active:bg-gray-50"
+                        >
                           <div className="flex items-start justify-between mb-2">
                             <div className="flex-1 mr-2">
                               <h3 className="font-bold text-gray-800 text-sm">{studentName}</h3>
                               <p className="text-xs text-gray-500 mt-0.5">Bảo lưu toàn bộ lớp</p>
                             </div>
-                            <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${badge.className}`}>
-                              {badge.label}
-                            </span>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${badge.className}`}>
+                                {badge.label}
+                              </span>
+                              <ChevronRight className="h-4 w-4 text-gray-400" />
+                            </div>
                           </div>
 
                           <div className="flex items-center gap-1.5 mb-1.5">
                             <CalendarDays className="h-3.5 w-3.5 text-gray-400" />
                             <span className="text-xs text-gray-500">
-                              {formatDate(item.pauseFrom)} - {formatDate(item.pauseTo)}
+                              {formatDate(item.pauseFrom)} – {formatDate(item.pauseTo)}
                             </span>
                           </div>
 
                           {item.reason && (
                             <div className="bg-gray-50 rounded-lg p-2 mt-2">
                               <p className="text-[11px] text-gray-500 font-semibold mb-0.5">Lý do:</p>
-                              <p className="text-xs text-gray-700">{item.reason}</p>
+                              <p className="text-xs text-gray-700 text-left">{item.reason}</p>
                             </div>
                           )}
-                        </div>
+
+                          {item.reservedSessionCount != null && item.reservedSessionCount > 0 && (
+                            <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
+                              {item.reservedSessionCount} buổi bảo lưu
+                            </div>
+                          )}
+                        </button>
                       );
                     })}
               </div>
@@ -1003,6 +1205,14 @@ function ParentLeaveRequestPage({
           </div>
         )}
       </div>
+
+      {detailPauseItem && (
+        <PauseDetailDrawer
+          item={detailPauseItem}
+          studentName={students.find((s) => s.id === detailPauseItem.studentProfileId)?.displayName || "Học sinh"}
+          onClose={() => setDetailPauseItem(null)}
+        />
+      )}
     </Page>
   );
 }
