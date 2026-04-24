@@ -1,5 +1,26 @@
 import { API_CONFIG } from "@/constants/apiURL";
 
+function toBlobProxyUrl(rawUrl: string): string {
+  return `/api/blob-proxy?url=${encodeURIComponent(rawUrl)}`;
+}
+
+function normalizeExternalAssetUrl(rawUrl: string): string {
+  try {
+    const parsed = new URL(rawUrl, typeof window !== "undefined" ? window.location.origin : "http://localhost");
+    if (parsed.pathname.startsWith("/api/blob-proxy")) {
+      return rawUrl;
+    }
+
+    if (parsed.hostname.includes(".blob.vercel-storage.com")) {
+      return toBlobProxyUrl(parsed.toString());
+    }
+
+    return rawUrl;
+  } catch {
+    return rawUrl;
+  }
+}
+
 export function resolveBackendAssetUrl(rawUrl?: string | null): string {
   if (!rawUrl) return "";
 
@@ -11,7 +32,7 @@ export function resolveBackendAssetUrl(rawUrl?: string | null): string {
     normalized.startsWith("data:") ||
     normalized.startsWith("blob:")
   ) {
-    return normalized;
+    return normalizeExternalAssetUrl(normalized);
   }
 
   const base = API_CONFIG.BASE_URL || "";

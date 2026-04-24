@@ -92,9 +92,7 @@ function StudentGamificationPage() {
         setQuantityByItemId((prev) => {
           const next: Record<string, number> = {};
           items.forEach((item) => {
-            const prevQty = prev[item.id] ?? 1;
-            const maxQty = Math.max(1, Number(item.quantity ?? 1));
-            next[item.id] = Math.min(Math.max(prevQty, 1), maxQty);
+            next[item.id] = Math.max(prev[item.id] ?? 1, 1);
           });
           return next;
         });
@@ -261,7 +259,7 @@ function StudentGamificationPage() {
     return (
       <Page className="flex h-full min-h-0 flex-col bg-gray-100">
         <div className="sticky top-0 z-20 shrink-0 bg-[#BB0000] px-4 py-4 flex items-center">
-          <h1 className="text-white font-bold text-lg w-full text-center">Gamification</h1>
+          <h1 className="text-white font-bold text-lg w-full text-center">Tích điểm & Phần thưởng</h1>
         </div>
         <div className="flex flex-1 items-center justify-center">
           <Spinner />
@@ -274,7 +272,7 @@ function StudentGamificationPage() {
     return (
       <Page className="flex h-full min-h-0 flex-col bg-gray-100">
         <div className="sticky top-0 z-20 shrink-0 bg-[#BB0000] px-4 py-4 flex items-center">
-          <h1 className="text-white font-bold text-lg w-full text-center">Gamification</h1>
+          <h1 className="text-white font-bold text-lg w-full text-center">Tích điểm & Phần thưởng</h1>
         </div>
         <div className="flex-1 px-4 py-8 text-center">
           <p className="text-sm text-gray-500">{error}</p>
@@ -289,7 +287,7 @@ function StudentGamificationPage() {
   return (
     <Page className="flex h-full min-h-0 flex-col bg-gray-100">
       <div className="sticky top-0 z-20 shrink-0 bg-[#BB0000] px-4 py-4 flex items-center">
-        <h1 className="text-white font-bold text-lg w-full text-center">Gamification</h1>
+        <h1 className="text-white font-bold text-lg w-full text-center">Tích điểm & Phần thưởng</h1>
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 pb-24">

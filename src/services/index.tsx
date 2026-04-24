@@ -9,6 +9,7 @@ export { meService } from "./meService";
 export { fileService } from "./fileService";
 export { notificationService } from "./notificationService";
 export { contentService } from "./contentService";
+export { faqService } from "./faqService";
 export type { TeacherClass, ClassStudent } from "@/types/teacher";
 export type { Homework, HomeworkSubmission } from "@/types/teacher";
 export type {

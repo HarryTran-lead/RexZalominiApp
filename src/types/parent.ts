@@ -197,6 +197,9 @@ export enum AttendanceStatus {
 export interface AttendanceHistoryItem {
   id: string;
   sessionId: string;
+  classTitle?: string;
+  classCode?: string;
+  sessionDate?: string;
   studentProfileId: string;
   attendanceStatus: AttendanceStatus;
   absenceType?: string;
@@ -276,6 +279,7 @@ export interface PauseClassInfo {
   startDate: string;
   endDate: string;
   status: string;
+  enrollmentId?: string;
 }
 
 export interface PauseEnrollmentRequest {
@@ -295,6 +299,13 @@ export interface PauseEnrollmentRequest {
   outcomeNote?: string | null;
   outcomeBy?: string | null;
   outcomeAt?: string | null;
+  outcomeCompletedBy?: string | null;
+  outcomeCompletedAt?: string | null;
+  reAssignedClassId?: string | null;
+  reAssignedEnrollmentId?: string | null;
+  reservedSessionCount?: number | null;
+  reservationExpiresOn?: string | null;
+  reservationSnapshotAt?: string | null;
   classes: PauseClassInfo[];
 }
 
@@ -372,7 +383,13 @@ export interface MakeupAllocation {
   id: string;
   makeupCreditId: string;
   targetSessionId: string;
+  targetSessionDate?: string;
+  targetPlannedDatetime?: string;
+  targetClassTitle?: string;
+  targetClassCode?: string;
+  branchName?: string;
   assignedBy: string;
+  assignedByName?: string;
   assignedAt: string;
 }
 

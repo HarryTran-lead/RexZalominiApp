@@ -30,6 +30,12 @@ export default ({ mode }: { mode: string }) => {
           target: env.VITE_BACKEND_URL,
           changeOrigin: true,
           secure: false,
+          bypass: (req) => {
+            if (req.url?.startsWith('/api/blob-proxy')) {
+              return req.url;
+            }
+            return undefined;
+          },
         },
       },
     },
